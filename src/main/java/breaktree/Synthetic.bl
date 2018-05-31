@@ -1,0 +1,24 @@
+package breaktree
+
+model Synthetic {
+  param GlobalDataSource data
+  param Plate<Integer> cells
+  param Plate<Integer> loci
+  
+  param RealVar stdDev ?: 0.5
+  random PerfectPhylo phylo ?: new PerfectPhylo(cells.indices.size, loci.indices.size)
+  random Plated<RealVar> observations
+  
+  laws {
+    phylo ~ Uniform
+    
+    for (Index<Integer> cell : cells.indices) {
+      for (Index<Integer> locus : loci.indices(cell)) {
+        observations.get(cell, locus) | 
+          TipIndicator tipIndicator = phylo.tipIndicator(cell.key, locus.key),
+          stdDev 
+          ~ Normal(if (tipIndicator.included) 1 else 0, pow(stdDev, 2)) 
+      }
+    }
+  }
+}

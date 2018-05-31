@@ -1,0 +1,43 @@
+plugins {
+  id 'org.xtext.xtend' version '1.0.19'
+  id 'org.xtext.builder' version '1.0.19'
+  id 'java'
+  id 'eclipse'
+  id 'application'
+}
+
+dependencies {
+  xtextLanguages "ca.ubc.stat.blang:ca.ubc.stat.blang:3.25.2"
+  compile group: 'ca.ubc.stat', name: 'conifer', version: '2.0.4'
+  compile group: 'ca.ubc.stat', name: 'blangSDK', version: '1.9.0'
+}
+
+xtext {
+  languages {
+    blang {
+      setup = 'ca.ubc.stat.blang.BlangDslStandaloneSetup'
+      fileExtension = 'bl'
+      generator.outlet.producesJava = true
+      generator.javaSourceLevel = '1.8'
+    }
+  }
+}
+
+repositories {
+  mavenCentral()
+  jcenter()
+  maven {
+    url "https://www.stat.ubc.ca/~bouchard/maven/"
+  }
+  maven {
+    url "http://www.biojava.org/download/maven/"
+  }
+}
+
+xtend {
+  generator {
+    javaSourceLevel = 1.8
+  }
+}
+
+mainClassName = "demo.Example"

@@ -1,0 +1,15 @@
+package breaktree
+
+model Uniform {
+  random PerfectPhylo tree
+  
+  laws {
+    logf(tree) {
+      throw new RuntimeException
+    }
+  }
+  
+  generate (rand) {
+    throw new RuntimeException
+  }
+}
