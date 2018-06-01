@@ -1,4 +1,4 @@
-package breaktree
+package corrupt
 
 model Synthetic {
   param GlobalDataSource data

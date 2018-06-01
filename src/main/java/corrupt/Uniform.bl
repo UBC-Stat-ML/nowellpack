@@ -1,4 +1,4 @@
-package breaktree
+package corrupt
 
 model Uniform {
   random PerfectPhylo tree

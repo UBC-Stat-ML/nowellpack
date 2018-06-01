@@ -1,4 +1,4 @@
-package breaktree
+package corrupt
 
 import blang.mcmc.Sampler
 import bayonet.distributions.Random
@@ -11,11 +11,8 @@ import java.util.ArrayList
 import static blang.runtime.internals.objectgraph.StaticUtils.node
 
 class SplitSampler implements Sampler {
-  
   @SampledVariable public Split split
-  
   @ConnectedFactor public List<LogScaleFactor> numericFactors
-  
   List<List<LogScaleFactor>> sortedNumericFactors
   
   override execute(Random rand) {
@@ -36,7 +33,6 @@ class SplitSampler implements Sampler {
     val indic = split.tipIndicators.get(index)
     val backup = indic.included
     indic.included = value
-    
     val factors = sortedNumericFactors.get(index)
     var result = 0.0
     for (factor : factors)
@@ -54,5 +50,4 @@ class SplitSampler implements Sampler {
     }
     return true
   }
-  
 }
