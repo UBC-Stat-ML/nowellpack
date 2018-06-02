@@ -3,7 +3,7 @@ package corrupt
 import blang.mcmc.Samplers
 import java.util.List
 import java.util.ArrayList
-import static corrupt.Root.root
+import static corrupt.Locus.root
 import java.util.Collection
 import org.eclipse.xtend.lib.annotations.Accessors
 
@@ -11,11 +11,21 @@ import org.eclipse.xtend.lib.annotations.Accessors
 class Split {
   val DirectedTree<TreeNode> tree
   val Locus locus
-  @Accessors(PACKAGE_GETTER)
+  @Accessors(PUBLIC_GETTER)
   val List<TipIndicator> tipIndicators
   
   def void moveTo(TreeNode parent, List<TreeNode> movedChildren) {
     tree.collapseEdge(locus)
+    tree.addEdge(parent, locus, movedChildren)
+    updateTips
+  }
+  
+  def void remove() {
+    tree.collapseEdge(locus)
+    updateTips
+  }
+  
+  def void reAttach(TreeNode parent, List<TreeNode> movedChildren) {
     tree.addEdge(parent, locus, movedChildren)
     updateTips
   }

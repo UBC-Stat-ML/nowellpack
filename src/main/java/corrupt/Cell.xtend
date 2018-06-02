@@ -1,7 +1,7 @@
 package corrupt
 
-class Cell extends TreeNode {
-  new(int index) {
-    super(index, 1)
-  }
+import org.eclipse.xtend.lib.annotations.Data
+
+@Data class Cell implements TreeNode {
+  val int index
 }

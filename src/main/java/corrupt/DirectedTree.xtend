@@ -23,8 +23,8 @@ import java.util.Collection
     return pick(set)
   }
   
-  def Collection<T> children(T node) {
-    return graph.successors(node)
+  def List<T> children(T node) {
+    return new ArrayList(graph.successors(node))
   }
   
   def boolean isLeaf(T node) {
@@ -35,11 +35,13 @@ import java.util.Collection
     return graph.nodes.contains(node)
   }
   
+  def Collection<T> nodes() { return graph.nodes }
+  
   def List<T> collapseEdge(T bottomOfEdge) {
     val topOfEdge = parent(bottomOfEdge)
     if (topOfEdge === null) 
       throw new RuntimeException("This does not define an edge: no parent for " + bottomOfEdge)
-    val movedChildren = new ArrayList(children(bottomOfEdge))
+    val movedChildren = children(bottomOfEdge)
     for (child : movedChildren) {
       graph.removeEdge(bottomOfEdge, child)
       graph.putEdge(topOfEdge, child)

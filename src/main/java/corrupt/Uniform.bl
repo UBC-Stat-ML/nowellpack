@@ -1,15 +1,15 @@
 package corrupt
 
 model Uniform {
-  random PerfectPhylo tree
+  random PerfectPhylo phylo
   
   laws {
-    logf(tree) {
-      throw new RuntimeException
+    logf(phylo) {
+      - (phylo.nLoci + phylo.nCells - 2) * log(phylo.nLoci)
     }
   }
   
   generate (rand) {
-    throw new RuntimeException
+    phylo.sampleUniform(rand.generator) 
   }
 }

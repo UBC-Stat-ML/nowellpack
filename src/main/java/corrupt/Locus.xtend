@@ -1,8 +1,8 @@
 package corrupt
 
+import org.eclipse.xtend.lib.annotations.Data
 
-class Locus extends TreeNode {
-  new(int index) {
-    super(index, 2)
-  }
+@Data class Locus implements TreeNode {
+  public val static Locus root = new Locus("ROOT")
+  val String id
 }

@@ -3,7 +3,6 @@ plugins {
   id 'org.xtext.builder' version '1.0.19'
   id 'java'
   id 'eclipse'
-  id 'application'
 }
 
 dependencies {
@@ -41,4 +40,3 @@ xtend {
   }
 }
 
-mainClassName = "demo.Example"

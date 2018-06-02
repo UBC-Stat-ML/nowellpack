@@ -1,21 +1,23 @@
 package corrupt
 
+import static extension corrupt.CorruptUtils.set
+
 model Synthetic {
   param GlobalDataSource data
   param Plate<Integer> cells
-  param Plate<Integer> loci
+  param Plate<String> loci
   
   param RealVar stdDev ?: 0.5
-  random PerfectPhylo phylo ?: new PerfectPhylo(cells.indices.size, loci.indices.size)
+  random PerfectPhylo phylo ?: new PerfectPhylo(cells.indices.size, loci.set)
   random Plated<RealVar> observations
   
   laws {
     phylo ~ Uniform
     
     for (Index<Integer> cell : cells.indices) {
-      for (Index<Integer> locus : loci.indices(cell)) {
+      for (Index<String> locus : loci.indices(cell)) {
         observations.get(cell, locus) | 
-          TipIndicator tipIndicator = phylo.tipIndicator(cell.key, locus.key),
+          TipIndicator tipIndicator = phylo.tipIndicator(new Cell(cell.key), new Locus(locus.key)),
           stdDev 
           ~ Normal(if (tipIndicator.included) 1 else 0, pow(stdDev, 2)) 
       }
