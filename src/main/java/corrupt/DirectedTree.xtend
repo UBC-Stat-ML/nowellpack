@@ -9,6 +9,7 @@ import org.eclipse.xtend.lib.annotations.Data
 import org.eclipse.xtend.lib.annotations.Accessors
 import static java.util.Collections.emptyList
 import com.google.common.graph.ElementOrder
+import java.util.Collection
 
 @Data class DirectedTree<T> { 
   @Accessors(NONE)
@@ -22,6 +23,14 @@ import com.google.common.graph.ElementOrder
     return pick(set)
   }
   
+  def Collection<T> children(T node) {
+    return graph.successors(node)
+  }
+  
+  def boolean isLeaf(T node) {
+    return children(node).size === 0
+  }
+  
   def boolean hasNode(T node) {
     return graph.nodes.contains(node)
   }
@@ -30,7 +39,7 @@ import com.google.common.graph.ElementOrder
     val topOfEdge = parent(bottomOfEdge)
     if (topOfEdge === null) 
       throw new RuntimeException("This does not define an edge: no parent for " + bottomOfEdge)
-    val movedChildren = new ArrayList(graph.successors(bottomOfEdge))
+    val movedChildren = new ArrayList(children(bottomOfEdge))
     for (child : movedChildren) {
       graph.removeEdge(bottomOfEdge, child)
       graph.putEdge(topOfEdge, child)

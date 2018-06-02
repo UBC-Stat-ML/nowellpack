@@ -1,6 +1,6 @@
-package nowellpack
+package corrupt
 
-import breaktree.DirectedTree
+import corrupt.DirectedTree
 import org.junit.Test
 import static org.junit.Assert.assertTrue
 
