@@ -7,8 +7,8 @@ import java.util.LinkedHashMap
 import bayonet.distributions.Random
 
 import static extension corrupt.CorruptUtils.uniformElement
-import static extension corrupt.CorruptUtils.loci
 import static extension corrupt.CorruptUtils.uniformSubset
+import static extension corrupt.CorruptUtils.lociAndRoot
 
 class PerfectPhylo {
   val DirectedTree<TreeNode> tree
@@ -32,7 +32,7 @@ class PerfectPhylo {
     for (split : splits.values) 
       split.remove
     for (split : splits.values) {
-      val parent = random.uniformElement(tree.loci)
+      val parent = random.uniformElement(tree.lociAndRoot)
       val movedChildren = random.uniformSubset(tree.children(parent))
       split.reAttach(parent, movedChildren) 
     }

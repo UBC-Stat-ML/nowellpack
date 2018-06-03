@@ -14,7 +14,7 @@ class EITest {
   
   @Test
   def void testDerminism() {
-    val phylo = new PerfectPhylo(1, syntheticLoci(1))
+    val phylo = new PerfectPhylo(10, syntheticLoci(5))
     val model = new Uniform.Builder().setPhylo(phylo).build
     new DeterminismTest => [
       check(new Instance(model, testFunction))

@@ -13,7 +13,7 @@ class CorruptUtils {
   def static Collection<Locus> syntheticLoci(int n) {
     (0 ..< n).map[new Locus("syntheticLocus_" + it)].toList
   }
-  def static List<Locus> loci(DirectedTree<TreeNode> tree) {
+  def static List<Locus> lociAndRoot(DirectedTree<TreeNode> tree) {
     tree.nodes.filter[it instanceof Locus].map[it as Locus].toList
   }
   def static <T> T uniformElement(Random rand, List<T> list) {

@@ -5,7 +5,7 @@ model Uniform {
   
   laws {
     logf(phylo) {
-      - (phylo.nLoci + phylo.nCells - 2) * log(phylo.nLoci)
+      - (phylo.nLoci + phylo.nCells - 1) * log(phylo.nLoci + 1)
     }
   }
   

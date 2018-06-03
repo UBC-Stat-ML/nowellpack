@@ -10,7 +10,7 @@ import java.io.File
 class UniformTest {
   @Test
   def void testUniformNormalization() {
-    val phylo = new PerfectPhylo(1, syntheticLoci(1))
+    val phylo = new PerfectPhylo(1, syntheticLoci(2))
     val model = new Uniform.Builder().setPhylo(phylo).build
     val sModel = new SampledModel(model)
     val exact = new Exact => [
