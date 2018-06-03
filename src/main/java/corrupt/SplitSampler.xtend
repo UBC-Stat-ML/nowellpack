@@ -9,6 +9,7 @@ import blang.core.LogScaleFactor
 import java.util.List
 import java.util.ArrayList
 import static blang.runtime.internals.objectgraph.StaticUtils.node
+import static briefj.BriefLog.warnOnce
 
 class SplitSampler implements Sampler {
   @SampledVariable public Split split
@@ -16,7 +17,7 @@ class SplitSampler implements Sampler {
   List<List<LogScaleFactor>> sortedNumericFactors
   
   override execute(Random rand) {
-    throw new UnsupportedOperationException("TODO: auto-generated method stub")
+    warnOnce("Not yet implemented!")
   }
   
   def List<Double> normalizedTipInclusionProbabilities() {

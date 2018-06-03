@@ -17,10 +17,11 @@ import java.util.Collection
   val T root
   
   def T parent(T node) {
-    val set = graph.predecessors(node)
-    if (set.empty) return null
-    if (set.size > 1) throw new RuntimeException
-    return pick(set)
+    val iterator = graph.predecessors(node).iterator
+    if (!iterator.hasNext) return null
+    val result = iterator.next
+    if (iterator.hasNext) throw new RuntimeException
+    return result
   }
   
   def List<T> children(T node) {
@@ -64,6 +65,7 @@ import java.util.Collection
       if (!graph.removeEdge(existingTopNode, child))
         throw new RuntimeException
       graph.putEdge(newBottomNode, child)
+      graph.removeEdge(existingTopNode, child)
     }
   }
 }

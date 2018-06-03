@@ -29,7 +29,7 @@ class PerfectPhylo {
   }
   
   def void sampleUniform(Random random) {
-    for (split : splits.values)
+    for (split : splits.values) 
       split.remove
     for (split : splits.values) {
       val parent = random.uniformElement(tree.loci)
