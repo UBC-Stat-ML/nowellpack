@@ -9,7 +9,7 @@ dependencies {
   xtextLanguages "ca.ubc.stat.blang:ca.ubc.stat.blang:3.25.2"
   compile group: 'ca.ubc.stat', name: 'conifer', version: '2.0.4'
   compile group: 'ca.ubc.stat', name: 'blangSDK', version: '1.9.0'
-  compile group: 'com.google.guava', name: 'guava', version: '24.1.1-jre'
+  compile group: 'ca.ubc.stat', name: 'bayonet', version: '4.1.0'
 }
 
 xtext {

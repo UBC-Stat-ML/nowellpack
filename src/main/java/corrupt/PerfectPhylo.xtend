@@ -44,4 +44,6 @@ class PerfectPhylo {
   def TipIndicator tipIndicator(Cell cell, Locus locus) {
     return splits.get(locus).tip(cell)
   }
+  
+  override toString() { tree.toString }
 }

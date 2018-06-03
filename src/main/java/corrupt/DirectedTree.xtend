@@ -1,42 +1,47 @@
 package corrupt
 
-import com.google.common.graph.MutableGraph
-import com.google.common.graph.GraphBuilder
-import static briefj.BriefCollections.pick
 import java.util.List
 import java.util.ArrayList
 import org.eclipse.xtend.lib.annotations.Data
 import org.eclipse.xtend.lib.annotations.Accessors
 import static java.util.Collections.emptyList
-import com.google.common.graph.ElementOrder
 import java.util.Collection
+import bayonet.graphs.GraphUtils
 
 @Data class DirectedTree<T> { 
   @Accessors(NONE)
-  val MutableGraph<T> graph = GraphBuilder.directed.allowsSelfLoops(false).nodeOrder(ElementOrder.insertion).build
+  val graph = GraphUtils.<T>newDirectedGraph
   val T root
   
+  new(T root) {
+    this.root = root
+    graph.addVertex(root)
+  }
+  
   def T parent(T node) {
-    val iterator = graph.predecessors(node).iterator
+    val iterator = graph.incomingEdgesOf(node).iterator
     if (!iterator.hasNext) return null
     val result = iterator.next
     if (iterator.hasNext) throw new RuntimeException
-    return result
+    return result.left
   }
   
   def List<T> children(T node) {
-    return new ArrayList(graph.successors(node))
+    val result = new ArrayList
+    for (edge : graph.outgoingEdgesOf(node))
+     result.add(edge.right)
+    return result
   }
   
   def boolean isLeaf(T node) {
-    return children(node).size === 0
+    return graph.outDegreeOf(node) === 0
   }
   
   def boolean hasNode(T node) {
-    return graph.nodes.contains(node)
+    return graph.vertexSet.contains(node)
   }
   
-  def Collection<T> nodes() { return graph.nodes }
+  def Collection<T> nodes() { return graph.vertexSet }
   
   def List<T> collapseEdge(T bottomOfEdge) {
     val topOfEdge = parent(bottomOfEdge)
@@ -45,9 +50,9 @@ import java.util.Collection
     val movedChildren = children(bottomOfEdge)
     for (child : movedChildren) {
       graph.removeEdge(bottomOfEdge, child)
-      graph.putEdge(topOfEdge, child)
+      graph.addEdge(topOfEdge, child)
     }
-    graph.removeNode(bottomOfEdge) 
+    graph.removeVertex(bottomOfEdge) 
     return movedChildren
   }
   
@@ -56,16 +61,15 @@ import java.util.Collection
   }
 
   def void addEdge(T existingTopNode, T newBottomNode, List<T> movedChildren) {
-    if (!graph.addNode(newBottomNode))
+    if (!graph.addVertex(newBottomNode))
       throw new RuntimeException("Should not be in the tree: " + newBottomNode)
-    if (!graph.nodes.contains(newBottomNode))
+    if (!graph.vertexSet.contains(newBottomNode))
       throw new RuntimeException("Should be in the tree: " + existingTopNode) 
-    graph.putEdge(existingTopNode, newBottomNode)
+    graph.addEdge(existingTopNode, newBottomNode)
     for (child : movedChildren) {
-      if (!graph.removeEdge(existingTopNode, child))
+      if (graph.removeEdge(existingTopNode, child) === null)
         throw new RuntimeException
-      graph.putEdge(newBottomNode, child)
-      graph.removeEdge(existingTopNode, child)
+      graph.addEdge(newBottomNode, child)
     }
   }
 }
