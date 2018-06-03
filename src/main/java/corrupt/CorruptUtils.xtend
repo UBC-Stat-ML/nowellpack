@@ -26,4 +26,7 @@ class CorruptUtils {
         result.add(item)
     return result
   }
+  def static double logNPerfectPhylo(int nCells, int nLoci) {
+    return (nLoci + nCells - 1) * Math.log(nLoci + 1)
+  }
 }

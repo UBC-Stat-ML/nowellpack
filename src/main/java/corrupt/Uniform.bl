@@ -1,15 +1,18 @@
 package corrupt
 
+import static corrupt.CorruptUtils.*
+
 model Uniform {
   random PerfectPhylo phylo
   
   laws {
     logf(phylo) {
-      - (phylo.nLoci + phylo.nCells - 1) * log(phylo.nLoci + 1)
+      - logNPerfectPhylo(phylo.nCells, phylo.nLoci)
     }
   }
   
   generate (rand) {
-    phylo.sampleUniform(rand.generator) 
+    // TODO: could create one based on conifer
+    throw new RuntimeException
   }
 }
