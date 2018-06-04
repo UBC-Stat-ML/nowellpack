@@ -72,4 +72,17 @@ import bayonet.graphs.GraphUtils
       graph.addEdge(newBottomNode, child)
     }
   }
+  
+  override String toString() {
+    return toString(0, root).toString
+  }
+  
+  def private StringBuilder toString(int pad, T node) {
+    val result = new StringBuilder
+    result.append((0..<pad).map["  "].join(""))
+    result.append(node + "\n")
+    for (child : children(node)) 
+      result.append(toString(pad+1, child))
+    return result
+  }
 }

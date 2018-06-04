@@ -29,7 +29,7 @@ class PerfectPhyloGibbsSampler implements Sampler {
     for (cell : split.tree.cells) {
       val logP = unnormalizedCellInclusionExclusionLogPr(cell, true)
       val logQ = unnormalizedCellInclusionExclusionLogPr(cell, false)
-      result.put(cell, new SubtreeLikelihood(logP, logQ))
+      result.put(cell, SubtreeLikelihood::tip(logP, logQ))
     }
     return result
   }

@@ -6,6 +6,7 @@ import java.util.Set
 
 import static corrupt.TreeNode.root
 import org.eclipse.xtend.lib.annotations.Data
+import bayonet.distributions.Random
 
 @Data class PerfectPhylo {
   val DirectedTree<TreeNode> tree
@@ -30,4 +31,15 @@ import org.eclipse.xtend.lib.annotations.Data
   def TipIndicator tipIndicator(Cell cell, Locus locus) {
     return splits.get(locus).tipIndicators.get(cell)
   }
+  
+  def void sampleUniform(Random rand) {
+    for (locus : loci)
+      tree.collapseEdge(locus)
+    for (locus : loci) 
+      SplitSampler::fromPrior(tree, locus).sample(rand)
+    for (split : splits.values)
+      split.updateTips
+  }
+  
+  override String toString() { tree.toString }
 }
