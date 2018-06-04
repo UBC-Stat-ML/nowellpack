@@ -7,7 +7,7 @@ model Uniform {
   
   laws {
     logf(phylo) {
-      - logNPerfectPhylo(phylo.nCells, phylo.nLoci)
+      - logNPerfectPhylo(phylo.cells.size, phylo.loci.size)
     }
   }
   

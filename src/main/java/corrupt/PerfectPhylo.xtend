@@ -1,34 +1,33 @@
 package corrupt
 
-import static corrupt.Locus.root
-import java.util.Collection
 import java.util.Map
 import java.util.LinkedHashMap
+import java.util.Set
 
-class PerfectPhylo {
-  val protected DirectedTree<TreeNode> tree
-  val protected Map<Locus, Split> splits
-  val int nCells
+import static corrupt.TreeNode.root
+import org.eclipse.xtend.lib.annotations.Data
+
+@Data class PerfectPhylo {
+  val DirectedTree<TreeNode> tree
+  val Map<Locus, Split> splits
+  val Set<Locus> loci
+  val Set<Cell> cells
   
   /**
    * Initialized with a star tree.
    */
-  new(int nCells, Collection<Locus> loci) { 
-    this.nCells = nCells
+  new(Set<Cell> cells, Set<Locus> loci) { 
+    this.cells = cells
+    this.loci = loci
     tree = new DirectedTree(root)
     splits = new LinkedHashMap
-    for (cellIndex : 0 ..< nCells)
-      tree.addEdge(root, new Cell(cellIndex))
+    for (cell : cells)
+      tree.addEdge(root, cell)
     for (locus : loci) 
-      splits.put(locus, new Split(tree, locus, nCells))
+      splits.put(locus, Split::initializeEmpty(tree, locus, cells))
   }
-  
-  def int nCells() { return nCells }
-  def int nLoci() { return splits.size }
   
   def TipIndicator tipIndicator(Cell cell, Locus locus) {
-    return splits.get(locus).tip(cell)
+    return splits.get(locus).tipIndicators.get(cell)
   }
-  
-  override toString() { tree.toString }
 }

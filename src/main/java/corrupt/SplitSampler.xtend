@@ -1,54 +1,50 @@
 package corrupt
 
-import blang.mcmc.Sampler
-import bayonet.distributions.Random
-import blang.mcmc.SampledVariable
-import blang.mcmc.internals.SamplerBuilderContext
-import blang.mcmc.ConnectedFactor
-import blang.core.LogScaleFactor
-import java.util.List
-import java.util.ArrayList
-import static blang.runtime.internals.objectgraph.StaticUtils.node
-import static briefj.BriefLog.warnOnce
+import java.util.Map
+import java.util.LinkedHashMap
+import briefj.Indexer
 
-class SplitSampler implements Sampler {
-  @SampledVariable public Split split
-  @ConnectedFactor public List<LogScaleFactor> numericFactors
-  List<List<LogScaleFactor>> sortedNumericFactors
+import static extension corrupt.CorruptUtils.lociAndRoot
+import bayonet.distributions.Random
+
+class SplitSampler {
+  val DirectedTree<TreeNode> phylogeny 
+  val Map<TreeNode, SubtreeLikelihood> likelihoods = new LinkedHashMap
+  val double rootExclLog
+  val Indexer<TreeNode> rootLociIndexer = new Indexer
   
-  override execute(Random rand) {
-    warnOnce("Not yet implemented!")
+  new (DirectedTree<TreeNode> phylogeny, Locus locusToAdd, Map<Cell, SubtreeLikelihood> cellLikelihoods) {
+    this.phylogeny = phylogeny
+    rootLociIndexer.addAllToIndex(phylogeny.lociAndRoot) 
+    if (rootLociIndexer.containsObject(locusToAdd))
+      throw new RuntimeException
+    likelihoods.putAll(cellLikelihoods) // (1)
+    rootExclLog = computeLikelihood(phylogeny.root).exclusionLog
   }
   
-  def List<Double> normalizedTipInclusionProbabilities() {
-    val result = new ArrayList
-    for (index : 0 ..< split.nCells) {
-      val p = eval(index, true)
-      val q = eval(index, false)
-      result.add(p / (p + q))
+  /**
+   * Sample from the likelihood times a uniform prior.
+   */
+  def void sample(Random random) {
+    
+    
+//    val double [] prs = newDoubleArrayOfSize(rootLociIndexer.size)
+//    for (parentIndex : 0 ..< rootLociIndexer.size)
+//      prs.set(parentIndex, )
+  }
+  
+  def private SubtreeLikelihood computeLikelihood(TreeNode node) {
+    if (node instanceof Cell) 
+      return likelihoods.get(node) // see (1)
+    var sumLogIncl = 0.0
+    var sumLogExcl = 0.0
+    for (child : phylogeny.children(node)) {
+      var childLikelihood = computeLikelihood(child)
+      sumLogIncl += childLikelihood.inclusionLog
+      sumLogExcl += childLikelihood.exclusionLog
     }
+    val result = new SubtreeLikelihood(sumLogIncl, sumLogExcl)
+    likelihoods.put(node, result)
     return result
-  }
-  
-  def private double eval(int index, boolean value) {
-    val indic = split.tipIndicators.get(index)
-    val backup = indic.included
-    indic.included = value
-    val factors = sortedNumericFactors.get(index)
-    var result = 0.0
-    for (factor : factors)
-      result += factor.logDensity
-    indic.included = backup
-    return result
-  }
-  
-  override setup(SamplerBuilderContext context) {
-    // TODO: check for loops
-    sortedNumericFactors = new ArrayList
-    for (indicator : split.tipIndicators) {
-      val factors = context.connectedFactors(node(indicator))
-      sortedNumericFactors.add(factors.toArray as List<LogScaleFactor>)
-    }
-    return true
   }
 }

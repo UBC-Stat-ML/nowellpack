@@ -1,9 +1,9 @@
 package corrupt
 
-import org.eclipse.xtend.lib.annotations.Data
+import blang.inits.DesignatedConstructor
+import blang.inits.Input
 
-@Data class Locus implements TreeNode {
-  public val static Locus root = new Locus("ROOT")
-  val String id
-  override toString() { id }
+class Locus extends TreeNode {
+  @DesignatedConstructor new(@Input String id) { super(id) }
+  override toString() { "locus_" + id }
 }

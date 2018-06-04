@@ -2,6 +2,7 @@ package corrupt
 
 import org.junit.Test
 import static corrupt.CorruptUtils.syntheticLoci
+import static corrupt.CorruptUtils.syntheticCells
 
 import static extension corrupt.CorruptUtils.uniformElement
 import static extension corrupt.CorruptUtils.uniformSubset
@@ -15,23 +16,21 @@ import bayonet.distributions.ExhaustiveDebugRandom
 import static org.junit.Assert.assertEquals
 import bayonet.math.NumericalUtils
 
-class MovesCoverSpaceTest extends PerfectPhylo {
+class MovesCoverSpaceTest {
   
   val static nCells = 3
   val static nLoci = 2
   
-  new() {
-    super(nCells, syntheticLoci(nLoci))
-  }
-  
   def void sampleNonUniform(Random random) {
-    for (split : splits.values) 
-      split.remove
-    for (split : splits.values) {
-      val parent = random.uniformElement(tree.lociAndRoot)
-      val movedChildren = random.uniformSubset(tree.children(parent))
-      split.reAttach(parent, movedChildren) 
-    }
+    new PerfectPhylo(syntheticCells(nCells), syntheticLoci(nLoci)) => [
+      for (split : splits.values) 
+        split.tree.collapseEdge(split.locus)
+      for (split : splits.values) {
+        val parent = random.uniformElement(tree.lociAndRoot)
+        val movedChildren = random.uniformSubset(tree.children(parent))
+        split.tree.addEdge(parent, split.locus, movedChildren) 
+      }
+    ]
   }
   
   @Test

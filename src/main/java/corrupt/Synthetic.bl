@@ -4,20 +4,20 @@ import static extension corrupt.CorruptUtils.set
 
 model Synthetic {
   param GlobalDataSource data
-  param Plate<Integer> cells
-  param Plate<String> loci
+  param Plate<Cell> cells
+  param Plate<Locus> loci
   
   param RealVar stdDev ?: 0.5
-  random PerfectPhylo phylo ?: new PerfectPhylo(cells.indices.size, loci.set)
+  random PerfectPhylo phylo ?: new PerfectPhylo(cells.set, loci.set)
   random Plated<RealVar> observations
   
   laws {
     phylo ~ Uniform
     
-    for (Index<Integer> cell : cells.indices) {
-      for (Index<String> locus : loci.indices(cell)) {
+    for (Index<Cell> cell : cells.indices) {
+      for (Index<Locus> locus : loci.indices(cell)) {
         observations.get(cell, locus) | 
-          TipIndicator tipIndicator = phylo.tipIndicator(new Cell(cell.key), new Locus(locus.key)),
+          TipIndicator tipIndicator = phylo.tipIndicator(cell.key, locus.key),
           stdDev 
           ~ Normal(if (tipIndicator.included) 1 else 0, pow(stdDev, 2)) 
       }

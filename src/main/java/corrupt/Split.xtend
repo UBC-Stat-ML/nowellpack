@@ -1,45 +1,25 @@
 package corrupt
 
 import blang.mcmc.Samplers
-import java.util.List
-import java.util.ArrayList
-import static corrupt.Locus.root
-import java.util.Collection
-import org.eclipse.xtend.lib.annotations.Accessors
+import java.util.LinkedHashMap
+import java.util.Map
+import java.util.Set
+import org.eclipse.xtend.lib.annotations.Data
 
-@Samplers(SplitSampler)
-class Split {
+import static corrupt.TreeNode.root
+
+@Samplers(PerfectPhyloGibbsSampler)
+@Data class Split {
   val DirectedTree<TreeNode> tree
   val Locus locus
-  @Accessors(PUBLIC_GETTER)
-  val List<TipIndicator> tipIndicators
+  val Map<Cell, TipIndicator> tipIndicators
   
-  def void moveTo(TreeNode parent, List<TreeNode> movedChildren) {
-    tree.collapseEdge(locus)
-    tree.addEdge(parent, locus, movedChildren)
-    updateTips
-  }
-  
-  def void remove() {
-    tree.collapseEdge(locus)
-    updateTips
-  }
-  
-  def void reAttach(TreeNode parent, List<TreeNode> movedChildren) {
-    tree.addEdge(parent, locus, movedChildren)
-    updateTips
-  }
-  
-  def Collection<TreeNode> children(TreeNode node) {
-    tree.children(node)
-  }
-  
-  def private void updateTips() { _updateTips(tree.root, false) }
+  def public void updateTips() { _updateTips(tree.root, false) }
   def private void _updateTips(TreeNode node, boolean active) {
     switch node {
       Cell : {
         if (!tree.isLeaf(node)) throw new RuntimeException
-        tip(node).included = active
+        tipIndicators.get(node).included = active
       }
       default : {
         val childrenActive = active || node == locus
@@ -49,26 +29,17 @@ class Split {
     }
   }
   
-  def TipIndicator tip(Cell cell) {
-    return tipIndicators.get(cell.index)
-  }
-  
   /**
    * Initialize the split to a leaf connected to the root. 
-   * I.e. no cell having the trait. 
+   * I.e. no cell having the corresponding trait. 
    */
-  new (DirectedTree<TreeNode> tree, Locus locus, int nCells) {
-    this.tree = tree
+  def static Split initializeEmpty(DirectedTree<TreeNode> tree, Locus locus, Set<Cell> cells) {
     if (tree.hasNode(locus))
       throw new RuntimeException
-    this.locus = locus
-    this.tipIndicators = new ArrayList(nCells)
-    for (i : 0 ..< nCells)
-      this.tipIndicators.add(new TipIndicator)
+    val Map<Cell, TipIndicator> tips = new LinkedHashMap
+    for (cell : cells) 
+      tips.put(cell, new TipIndicator(cell, locus))
     tree.addEdge(root, locus)
-  }
-  
-  def nCells() {
-    tipIndicators.size
+    return new Split(tree, locus, tips) 
   }
 }
