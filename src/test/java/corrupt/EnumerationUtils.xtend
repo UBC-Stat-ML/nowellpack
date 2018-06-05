@@ -19,6 +19,8 @@ import blang.runtime.internals.objectgraph.GraphAnalysis
 import blang.runtime.Observations
 import blang.types.internals.SimplePlate
 import blang.mcmc.internals.SamplerBuilder
+import blang.types.Plate
+import blang.core.RealVar
 
 class EnumerationUtils {
   
@@ -35,13 +37,21 @@ class EnumerationUtils {
     return result 
   }
   
-  def static List<SampledModel> enumerateSyntheticModels(int nCells, int nLoci) {
-    val model = new Synthetic.Builder()
+  def static syntheticModel(int nCells, int nLoci, Plated<RealVar> observations) {
+    return new Synthetic.Builder()
       .setData(GlobalDataSource.empty)
       .setCells(new SimplePlate("cells", syntheticCells(nCells))) 
       .setLoci( new SimplePlate("loci",  syntheticLoci(nLoci))) 
-      .setObservations(generateObservations(nCells, nLoci))
+      .setObservations(observations)
       .build 
+  }
+  
+  def static syntheticModel(int nCells, int nLoci) {
+    return syntheticModel(nCells, nLoci, Plated::latent("observations", [StaticUtils::latentReal]))
+  }
+  
+  def static List<SampledModel> enumerateSyntheticModels(int nCells, int nLoci) {
+    val model = syntheticModel(nCells, nLoci, generateObservations(nCells, nLoci))
     var sModel = new SampledModel(model)
     
     val result = new ArrayList
@@ -60,12 +70,7 @@ class EnumerationUtils {
   }
   
   def static generateObservations(int nCells, int nLoci) {
-    val model = new Synthetic.Builder()
-      .setData(GlobalDataSource.empty)
-      .setCells(new SimplePlate("cells", syntheticCells(nCells))) 
-      .setLoci( new SimplePlate("loci",  syntheticLoci(nLoci))) 
-      .setObservations(Plated::latent("observations", [StaticUtils::latentReal]))
-      .build 
+    val model = syntheticModel(nCells, nLoci)
     var sModel = new SampledModel(model)
     // do forward simulation
     sModel.forwardSample(new Random(1), false)
