@@ -10,7 +10,6 @@ import bayonet.math.NumericalUtils
 
 import static extension corrupt.CorruptExtensionUtils.*
 import static corrupt.CorruptStaticUtils.*
-import java.util.ArrayList
 import static corrupt.EnumerationUtils.enumerateUniformModels
 
 class MovesCoverSpaceTest {

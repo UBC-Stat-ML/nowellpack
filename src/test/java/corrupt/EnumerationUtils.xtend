@@ -2,7 +2,6 @@ package corrupt
 
 import java.util.List
 import blang.runtime.SampledModel
-import java.util.Set
 import bayonet.distributions.ExhaustiveDebugRandom
 import java.util.LinkedHashMap
 import java.util.Map
@@ -13,15 +12,13 @@ import static extension corrupt.CorruptExtensionUtils.*
 import static corrupt.CorruptStaticUtils.*
 import corrupt.Synthetic
 import blang.io.GlobalDataSource
-import blang.types.Plate
-import com.google.inject.TypeLiteral
 import blang.types.Plated
 import blang.types.StaticUtils
 import bayonet.distributions.Random
 import blang.runtime.internals.objectgraph.GraphAnalysis
 import blang.runtime.Observations
 import blang.types.internals.SimplePlate
-import blang.types.internals.ColumnName
+import blang.mcmc.internals.SamplerBuilder
 
 class EnumerationUtils {
   
@@ -43,12 +40,9 @@ class EnumerationUtils {
       .setData(GlobalDataSource.empty)
       .setCells(new SimplePlate("cells", syntheticCells(nCells))) 
       .setLoci( new SimplePlate("loci",  syntheticLoci(nLoci))) 
-      .setObservations(Plated::latent("observations", [StaticUtils::latentReal]))
+      .setObservations(generateObservations(nCells, nLoci))
       .build 
     var sModel = new SampledModel(model)
-    // do forward simulation
-    sModel.forwardSample(new Random(1), false)
-    println("Tree used to generate data:\n" + model.phylo)
     
     val result = new ArrayList
     val exhaustive = new ExhaustiveDebugRandom
@@ -59,10 +53,25 @@ class EnumerationUtils {
       observations.markAsObserved((copy.model as Synthetic).observations)
       sampleNonUniform(exhaustive, (copy.model as Synthetic).phylo)
       val graphAnalysis = new GraphAnalysis(copy.model, observations)
-      copy = new SampledModel(graphAnalysis)
+      copy = new SampledModel(graphAnalysis, SamplerBuilder.build(graphAnalysis), null)
       result.add(copy)
     }
     return result 
+  }
+  
+  def static generateObservations(int nCells, int nLoci) {
+    val model = new Synthetic.Builder()
+      .setData(GlobalDataSource.empty)
+      .setCells(new SimplePlate("cells", syntheticCells(nCells))) 
+      .setLoci( new SimplePlate("loci",  syntheticLoci(nLoci))) 
+      .setObservations(Plated::latent("observations", [StaticUtils::latentReal]))
+      .build 
+    var sModel = new SampledModel(model)
+    // do forward simulation
+    sModel.forwardSample(new Random(1), false)
+    println("Tree used to generate data:\n" + model.phylo)
+    println("Data:\n" + model.observations)
+    return model.observations
   }
   
   def static private void sampleNonUniform(ExhaustiveDebugRandom rand, PerfectPhylo phylo) {

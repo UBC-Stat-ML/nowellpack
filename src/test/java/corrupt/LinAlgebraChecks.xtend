@@ -2,7 +2,6 @@ package corrupt
 
 import org.junit.Test
 import blang.validation.DiscreteMCTest
-import java.util.ArrayList
 
 import static extension corrupt.CorruptExtensionUtils.*
 import static corrupt.CorruptStaticUtils.*

@@ -8,7 +8,10 @@ import static extension corrupt.CorruptExtensionUtils.*
 import static corrupt.CorruptStaticUtils.*
 import org.eclipse.xtend.lib.annotations.Data
 import bayonet.distributions.Random
-import briefj.BriefLog
+import org.jgrapht.UndirectedGraph
+import briefj.collections.UnorderedPair
+import java.util.ArrayList
+import java.util.List
 
 @Data class PerfectPhylo {
   // Warning: updates on the tree need to be mirrored to the splits
@@ -41,12 +44,34 @@ import briefj.BriefLog
   }
   
   def void sampleUniform(Random rand) {
-    BriefLog.warnOnce("Sample Uniform not  yet implemented!")
-//    for (node : tree.nodes)
-//      if (node !== root)
-//        tree.collapseEdge(node)
-//    val lociTopology = rand.sampleUniformUndirectedTree(loci.size + 1)
+    for (cell : cells)
+      tree.collapseEdge(cell)
+    for (locus : loci)
+      tree.collapseEdge(locus)
+    val lociTopology = rand.uniformUndirectedTree(loci.size + 1)
+    val orderedNodes = new ArrayList<TreeNode>(loci)
+    orderedNodes.add(root)
+    addSampledLociTopology(lociTopology, loci.size, -1, orderedNodes)
+    for (cell : cells)
+      tree.addEdge(rand.uniformElement(orderedNodes), cell)
     updateAllSplits
+  }
+  
+  def private void addSampledLociTopology(
+    UndirectedGraph<Integer, UnorderedPair<Integer, Integer>> graph, 
+    int current, 
+    int parent, 
+    List<TreeNode> orderedNodes
+  ) {
+    val currentNode = if (current === loci.size) root else orderedNodes.get(current)
+    for (edge : graph.edgesOf(current)) {
+      val otherEnd = if (edge.first == current) edge.second else edge.first
+      if (otherEnd != parent) {
+        val childNode = orderedNodes.get(otherEnd)
+        tree.addEdge(currentNode, childNode)
+        addSampledLociTopology(graph, otherEnd, current, orderedNodes)
+      }
+    }
   }
   
   override String toString() { tree.toString }
