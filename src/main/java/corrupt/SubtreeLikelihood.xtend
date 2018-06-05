@@ -1,15 +1,15 @@
 package corrupt
 
-import org.eclipse.xtend.lib.annotations.Accessors
+import org.eclipse.xtend.lib.annotations.Data
 
 /**
  * Product over all inclusion and exclusion probabilities of a subtree,
  * stored in log scale. 
  */
-class SubtreeLikelihood {
-  @Accessors(PUBLIC_GETTER) val double inclusionLog  // p
-  @Accessors(PUBLIC_GETTER) val double exclusionLog  // q
-  @Accessors(PUBLIC_GETTER) val double logProductPQ // Used for sampling: log ( \product_{children c} (p_c + q_c) 
+@Data class SubtreeLikelihood {
+  val double inclusionLog  // p
+  val double exclusionLog  // q
+  val double logProductPQ  // log ( \product_{children c} (p_c + q_c) 
   new (double logP, double logQ, double logProductPQ) {
     inclusionLog = logP
     exclusionLog = logQ

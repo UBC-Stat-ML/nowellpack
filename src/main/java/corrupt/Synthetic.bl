@@ -8,7 +8,7 @@ model Synthetic {
   param Plate<Cell> cells
   param Plate<Locus> loci
   
-  param RealVar stdDev ?: 0.5
+  param RealVar stdDev ?: 0.3
   random PerfectPhylo phylo ?: new PerfectPhylo(cells.set, loci.set)
   random Plated<RealVar> observations
   

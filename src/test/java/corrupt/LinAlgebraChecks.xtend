@@ -14,12 +14,12 @@ import static corrupt.EnumerationUtils.*
 
 class LinAlgebraChecks {
   
-  val static nCells = 1
-  val static nLoci = 1
+  val static nCells = 3
+  val static nLoci = 2
   
   @Test
   def void test() {
-    for (useData : #[true]) {
+    for (useData : #[false, true]) {
       val list = 
         if (useData)
           enumerateSyntheticModels(nCells, nLoci) 
@@ -30,7 +30,7 @@ class LinAlgebraChecks {
           [SampledModel m | (m.model as Synthetic).phylo.tree]
         else
           [SampledModel m | (m.model as Uniform).phylo.tree]
-      val test = new DiscreteMCTest(list, equality)
+      val test = new DiscreteMCTest(list, equality, false)
       test.verbose = true
       test.checkInvariance
       test.checkIrreducibility

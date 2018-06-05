@@ -48,19 +48,18 @@ class EnumerationUtils {
     var sModel = new SampledModel(model)
     // do forward simulation
     sModel.forwardSample(new Random(1), false)
-    
-    // freeze observation
-    val observations = new Observations => [
-      markAsObserved(model.observations)
-    ]
-    val graphAnalysis = new GraphAnalysis(model, observations)
-    sModel = new SampledModel(graphAnalysis)
+    println("Tree used to generate data:\n" + model.phylo)
     
     val result = new ArrayList
     val exhaustive = new ExhaustiveDebugRandom
     while (exhaustive.hasNext) {
-      val copy = sModel.duplicate
+      // freeze observation
+      var copy = sModel.duplicate
+      val observations = new Observations
+      observations.markAsObserved((copy.model as Synthetic).observations)
       sampleNonUniform(exhaustive, (copy.model as Synthetic).phylo)
+      val graphAnalysis = new GraphAnalysis(copy.model, observations)
+      copy = new SampledModel(graphAnalysis)
       result.add(copy)
     }
     return result 

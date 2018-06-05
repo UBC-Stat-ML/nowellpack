@@ -13,4 +13,6 @@ class TipIndicator {
     this.cell = cell
     this.locus = locus
   }
+  
+  override toString() { "tip(" + included + ")" }
 }
