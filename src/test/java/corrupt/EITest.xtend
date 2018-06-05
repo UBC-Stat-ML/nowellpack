@@ -1,12 +1,12 @@
 package corrupt
 
 import org.junit.Test
-import static corrupt.CorruptUtils.syntheticLoci
-import static corrupt.CorruptUtils.syntheticCells
 import blang.validation.Instance
 import blang.validation.DeterminismTest
 
 import static extension briefj.BriefCollections.pick
+import static extension corrupt.CorruptExtensionUtils.*
+import static corrupt.CorruptStaticUtils.*
 
 class EITest {
   

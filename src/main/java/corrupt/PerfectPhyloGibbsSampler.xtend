@@ -11,7 +11,8 @@ import static blang.runtime.internals.objectgraph.StaticUtils.node
 import java.util.Map
 import java.util.LinkedHashMap
 
-import static extension corrupt.CorruptUtils.cells
+import static extension corrupt.CorruptExtensionUtils.*
+import static corrupt.CorruptStaticUtils.*
 
 class PerfectPhyloGibbsSampler implements Sampler {
   @SampledVariable public Split split

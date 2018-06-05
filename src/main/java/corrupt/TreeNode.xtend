@@ -7,6 +7,6 @@ import org.eclipse.xtend.lib.annotations.Data
  */
 @Data class TreeNode {
   val String id
-  public static val TreeNode root = new TreeNode("ROOT")
+  
   override toString() { id }
 }

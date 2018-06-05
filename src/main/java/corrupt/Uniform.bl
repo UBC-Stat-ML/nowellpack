@@ -1,6 +1,6 @@
 package corrupt
 
-import static corrupt.CorruptUtils.*
+import static corrupt.CorruptStaticUtils.*
 
 model Uniform {
   random PerfectPhylo phylo

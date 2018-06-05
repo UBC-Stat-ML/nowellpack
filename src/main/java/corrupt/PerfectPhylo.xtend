@@ -4,12 +4,14 @@ import java.util.Map
 import java.util.LinkedHashMap
 import java.util.Set
 
-import static corrupt.TreeNode.root
+import static extension corrupt.CorruptExtensionUtils.*
+import static corrupt.CorruptStaticUtils.*
 import org.eclipse.xtend.lib.annotations.Data
 import bayonet.distributions.Random
+import briefj.BriefLog
 
 @Data class PerfectPhylo {
-  val DirectedTree<TreeNode> tree
+  val DirectedTree<TreeNode> tree 
   val Map<Locus, Split> splits
   val Set<Locus> loci
   val Set<Cell> cells
@@ -32,13 +34,18 @@ import bayonet.distributions.Random
     return splits.get(locus).tipIndicators.get(cell)
   }
   
-  def void sampleUniform(Random rand) {
-    for (locus : loci)
-      tree.collapseEdge(locus)
-    for (locus : loci) 
-      SplitSampler::fromPrior(tree, locus).sample(rand)
+  def void updateAllSplits() {
     for (split : splits.values)
       split.updateTips
+  }
+  
+  def void sampleUniform(Random rand) {
+    BriefLog.warnOnce("Sample Uniform not  yet implemented!")
+//    for (node : tree.nodes)
+//      if (node !== root)
+//        tree.collapseEdge(node)
+//    val lociTopology = rand.sampleUniformUndirectedTree(loci.size + 1)
+    updateAllSplits
   }
   
   override String toString() { tree.toString }

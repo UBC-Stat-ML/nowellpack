@@ -6,7 +6,8 @@ import java.util.Map
 import java.util.Set
 import org.eclipse.xtend.lib.annotations.Data
 
-import static corrupt.TreeNode.root
+import static extension corrupt.CorruptExtensionUtils.*
+import static corrupt.CorruptStaticUtils.*
 
 @Samplers(PerfectPhyloGibbsSampler)
 @Data class Split {

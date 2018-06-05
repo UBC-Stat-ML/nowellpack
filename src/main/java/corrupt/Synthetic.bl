@@ -1,6 +1,7 @@
 package corrupt
 
-import static extension corrupt.CorruptUtils.set
+import static extension corrupt.CorruptExtensionUtils.*
+import static corrupt.CorruptStaticUtils.*
 
 model Synthetic {
   param GlobalDataSource data

@@ -4,8 +4,6 @@ import java.util.Map
 import java.util.LinkedHashMap
 import briefj.Indexer
 
-import static extension corrupt.CorruptUtils.lociAndRoot
-import static extension corrupt.CorruptUtils.cells
 import bayonet.distributions.Random
 import static java.lang.Math.log
 import static java.lang.Math.exp
@@ -14,7 +12,8 @@ import static bayonet.distributions.Multinomial.expNormalize
 
 import static bayonet.math.NumericalUtils.logAdd
 import java.util.ArrayList
-import java.util.List
+import static extension corrupt.CorruptExtensionUtils.*
+import static corrupt.CorruptStaticUtils.*
 
 class SplitSampler {
   val DirectedTree<TreeNode> phylogeny 
@@ -33,17 +32,6 @@ class SplitSampler {
     rootExclLog = computeLikelihood(phylogeny.root).exclusionLog
   }
   
-  def static SplitSampler fromPrior(DirectedTree<TreeNode> phylogeny, Locus locusToAdd) {
-    return new SplitSampler(phylogeny, locusToAdd, missingTips(phylogeny.cells))
-  }
-  
-  def static Map<Cell, SubtreeLikelihood> missingTips(List<Cell> cells) {
-    val result = new LinkedHashMap
-    for (cell : cells)
-      result.put(cell, SubtreeLikelihood::missingTip)
-    return result
-  }
-  
   /**
    * Sample from the likelihood times a uniform prior. 
    * Modifies the phylogeny in place.
@@ -54,16 +42,15 @@ class SplitSampler {
     for (parentIndex : 0 ..< rootLociIndexer.size) {
       val node = rootLociIndexer.i2o(parentIndex)
       val recursions = likelihoods.get(node)
-      val nChildren = phylogeny.children(node).size
-      val nConfigs = nChildren * log(2.0) // FIX
       val likelihood = rootExclLog + recursions.logProductPQ - recursions.exclusionLog
-      prs.set(parentIndex, nConfigs + likelihood)
-      throw new RuntimeException // FIX
+      prs.set(parentIndex, likelihood)
     }
     expNormalize(prs)
     val sampledParent = rootLociIndexer.i2o(random.nextCategorical(prs)) 
+    println("parent=" + sampledParent)
     // children to move
     val children = phylogeny.children(sampledParent)
+    println("childre=" + children)
     val childrenToMove = new ArrayList
     for (child : children) {
       val recursions = likelihoods.get(child)
@@ -71,6 +58,7 @@ class SplitSampler {
       if (include)
         childrenToMove.add(child)
     }
+    println("moved=" + childrenToMove)
     phylogeny.addEdge(sampledParent, locusToAdd, childrenToMove)
   }
   
