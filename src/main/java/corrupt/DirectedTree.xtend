@@ -7,42 +7,41 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import static java.util.Collections.emptyList
 import java.util.Collection
 import bayonet.graphs.GraphUtils
-import java.util.Map
-import java.util.Set
-import java.util.LinkedHashMap
-import java.util.LinkedHashSet
 
 @Data class DirectedTree<T> { 
-  val Map<T, Set<T>> childrenPtrs = new LinkedHashMap
-  val Map<T, T> parentPtrs = new LinkedHashMap
+  @Accessors(NONE)
+  val graph = GraphUtils.<T>newDirectedGraph
   val T root
   
   new(T root) {
     this.root = root
-    childrenPtrs.put(root, new LinkedHashSet)
+    graph.addVertex(root)
   }
   
   def T parent(T node) {
-    if (!hasNode(node))
-      throw new RuntimeException
-    return parentPtrs.get(node)
+    val iterator = graph.incomingEdgesOf(node).iterator
+    if (!iterator.hasNext) return null
+    val result = iterator.next
+    if (iterator.hasNext) throw new RuntimeException
+    return result.left
   }
   
-  def Collection<T> children(T node) {
-    if (!hasNode(node))
-      throw new RuntimeException
-    return childrenPtrs.get(node)
+  def List<T> children(T node) {
+    val result = new ArrayList
+    for (edge : graph.outgoingEdgesOf(node))
+     result.add(edge.right)
+    return result
   }
   
   def boolean isLeaf(T node) {
-    return children(node).size === 0
+    return graph.outDegreeOf(node) === 0
   }
   
   def boolean hasNode(T node) {
-    return nodes.contains(node)
+    return graph.vertexSet.contains(node)
   }
   
-  def Collection<T> nodes() { return childrenPtrs.keySet }
+  def Collection<T> nodes() { return graph.vertexSet }
   
   def List<T> collapseEdge(T bottomOfEdge) {
     val topOfEdge = parent(bottomOfEdge)
@@ -50,13 +49,11 @@ import java.util.LinkedHashSet
       throw new RuntimeException("This does not define an edge: no parent for " + bottomOfEdge)
     val movedChildren = children(bottomOfEdge)
     for (child : movedChildren) {
-      parentPtrs.put(child, topOfEdge)
-      childrenPtrs.get(topOfEdge).add(child)
+      graph.removeEdge(bottomOfEdge, child)
+      graph.addEdge(topOfEdge, child)
     }
-    parentPtrs.remove(bottomOfEdge)
-    childrenPtrs.remove(bottomOfEdge)
-    childrenPtrs.get(topOfEdge).remove(bottomOfEdge)
-    return new ArrayList(movedChildren)
+    graph.removeVertex(bottomOfEdge) 
+    return movedChildren
   }
   
   def void addEdge(T existingTopNode, T newBottomNode) {
@@ -64,20 +61,15 @@ import java.util.LinkedHashSet
   }
 
   def void addEdge(T existingTopNode, T newBottomNode, List<T> movedChildren) {
-    if (hasNode(newBottomNode))
+    if (!graph.addVertex(newBottomNode))
       throw new RuntimeException("Should not be in the tree: " + newBottomNode)
-    if (!hasNode(existingTopNode))
+    if (!graph.vertexSet.contains(newBottomNode))
       throw new RuntimeException("Should be in the tree: " + existingTopNode) 
-    childrenPtrs.put(newBottomNode, new LinkedHashSet)
-    parentPtrs.put(newBottomNode, existingTopNode)
-    childrenPtrs.get(existingTopNode).add(newBottomNode)
+    graph.addEdge(existingTopNode, newBottomNode)
     for (child : movedChildren) {
-      parentPtrs.put(child, newBottomNode)
-      childrenPtrs.get(existingTopNode).remove(child)
-      childrenPtrs.get(newBottomNode).add(child)
-//      if (graph.removeEdge(existingTopNode, child) === null)
-//        throw new RuntimeException
-//      graph.addEdge(newBottomNode, child)
+      if (graph.removeEdge(existingTopNode, child) === null)
+        throw new RuntimeException
+      graph.addEdge(newBottomNode, child)
     }
   }
   

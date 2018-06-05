@@ -47,10 +47,8 @@ class SplitSampler {
     }
     expNormalize(prs)
     val sampledParent = rootLociIndexer.i2o(random.nextCategorical(prs)) 
-    println("parent=" + sampledParent)
     // children to move
     val children = phylogeny.children(sampledParent)
-    println("childre=" + children)
     val childrenToMove = new ArrayList
     for (child : children) {
       val recursions = likelihoods.get(child)
@@ -58,7 +56,6 @@ class SplitSampler {
       if (include)
         childrenToMove.add(child)
     }
-    println("moved=" + childrenToMove)
     phylogeny.addEdge(sampledParent, locusToAdd, childrenToMove)
   }
   

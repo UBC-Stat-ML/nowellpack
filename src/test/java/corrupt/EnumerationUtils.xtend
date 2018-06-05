@@ -18,14 +18,11 @@ class EnumerationUtils {
     val current = new SampledModel(new Uniform.Builder().setPhylo(phylo).build)
     val result = new ArrayList
     val exhaustive = new ExhaustiveDebugRandom
-    println("---")
     while (exhaustive.hasNext) {
       val copy = current.duplicate
       sampleNonUniform(exhaustive, (copy.model as Uniform).phylo)
       result.add(copy)
-      println((current.model as Uniform).phylo)
     }
-    println("---")
     return result 
   }
   
