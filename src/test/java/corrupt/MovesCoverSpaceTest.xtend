@@ -4,7 +4,6 @@ import org.junit.Test
 
 import static java.lang.Math.exp
 import bayonet.distributions.Random
-import static corrupt.EnumerationUtils.enumerate
 
 import static org.junit.Assert.assertEquals
 import bayonet.math.NumericalUtils
@@ -12,6 +11,7 @@ import bayonet.math.NumericalUtils
 import static extension corrupt.CorruptExtensionUtils.*
 import static corrupt.CorruptStaticUtils.*
 import java.util.ArrayList
+import static corrupt.EnumerationUtils.enumerateUniformModels
 
 class MovesCoverSpaceTest {
   
@@ -24,7 +24,7 @@ class MovesCoverSpaceTest {
         split.tree.collapseEdge(split.locus)
       for (split : splits.values) {
         val parent = random.uniformElement(tree.lociAndRoot)
-        val movedChildren = random.uniformSubset(new ArrayList(tree.children(parent)))
+        val movedChildren = random.uniformSubset((tree.children(parent)))
         split.tree.addEdge(parent, split.locus, movedChildren) 
       }
     ]
@@ -34,7 +34,7 @@ class MovesCoverSpaceTest {
   def void test() {
     assertEquals(
       println(exp(logNPerfectPhylo(nCells, nLoci))), 
-      enumerate(syntheticCells(nCells), syntheticLoci(nLoci)).size,  
+      enumerateUniformModels(nCells, nLoci).size,  
       NumericalUtils.THRESHOLD
     )
   }

@@ -5,7 +5,6 @@ import java.util.LinkedHashMap
 import briefj.Indexer
 
 import bayonet.distributions.Random
-import static java.lang.Math.log
 import static java.lang.Math.exp
 
 import static bayonet.distributions.Multinomial.expNormalize 
@@ -14,15 +13,31 @@ import static bayonet.math.NumericalUtils.logAdd
 import java.util.ArrayList
 import static extension corrupt.CorruptExtensionUtils.*
 import static corrupt.CorruptStaticUtils.*
+import org.eclipse.xtend.lib.annotations.Accessors
 
 class SplitSampler {
+  
+  @Accessors(PUBLIC_GETTER) var double logNormalization
+  
+  /**
+   * Sample from the likelihood times a uniform prior. 
+   * Modifies the phylogeny in place.
+   */
+  def static SplitSampler sampleInPlace(DirectedTree<TreeNode> phylogeny, Locus locusToAdd, Map<Cell, SubtreeLikelihood> cellLikelihoods, Random rand) {
+    val result = new SplitSampler(phylogeny, locusToAdd, cellLikelihoods)
+    result.sample(rand)
+    return result
+  }
+  
   val DirectedTree<TreeNode> phylogeny 
   val Map<TreeNode, SubtreeLikelihood> likelihoods = new LinkedHashMap
   val double rootExclLog
   val Indexer<TreeNode> rootLociIndexer = new Indexer
   val Locus locusToAdd
   
-  new (DirectedTree<TreeNode> phylogeny, Locus locusToAdd, Map<Cell, SubtreeLikelihood> cellLikelihoods) {
+
+  
+  private new (DirectedTree<TreeNode> phylogeny, Locus locusToAdd, Map<Cell, SubtreeLikelihood> cellLikelihoods) {
     this.locusToAdd = locusToAdd
     this.phylogeny = phylogeny
     rootLociIndexer.addAllToIndex(phylogeny.lociAndRoot) 
@@ -32,11 +47,7 @@ class SplitSampler {
     rootExclLog = computeLikelihood(phylogeny.root).exclusionLog
   }
   
-  /**
-   * Sample from the likelihood times a uniform prior. 
-   * Modifies the phylogeny in place.
-   */
-  def void sample(Random random) {
+  private def void sample(Random random) {
     // parent    
     val double [] prs = newDoubleArrayOfSize(rootLociIndexer.size)
     for (parentIndex : 0 ..< rootLociIndexer.size) {
@@ -45,7 +56,7 @@ class SplitSampler {
       val likelihood = rootExclLog + recursions.logProductPQ - recursions.exclusionLog
       prs.set(parentIndex, likelihood)
     }
-    expNormalize(prs)
+    logNormalization = expNormalize(prs)
     val sampledParent = rootLociIndexer.i2o(random.nextCategorical(prs)) 
     // children to move
     val children = phylogeny.children(sampledParent)

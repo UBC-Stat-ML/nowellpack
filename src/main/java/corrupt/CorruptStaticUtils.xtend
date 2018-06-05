@@ -1,21 +1,6 @@
 package corrupt
 
-import blang.types.Plate
-import java.util.List
-import bayonet.distributions.Random
-import java.util.ArrayList
 import java.util.Set
-import briefj.collections.UnorderedPair
-import bayonet.math.SamplingUtils
-import java.util.Collection
-import java.util.Queue
-import java.util.Collections
-import org.jgrapht.Graph
-import bayonet.graphs.GraphUtils
-
-import static bayonet.graphs.GraphUtils.newUndirectedGraph
-import org.jgrapht.UndirectedGraph
-import java.util.LinkedHashSet
 
 class CorruptStaticUtils {
   

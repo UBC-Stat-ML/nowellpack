@@ -11,9 +11,9 @@ import bayonet.distributions.Random
 import briefj.BriefLog
 
 @Data class PerfectPhylo {
+  // Warning: updates on the tree need to be mirrored to the splits
   val DirectedTree<TreeNode> tree 
   val Map<Locus, Split> splits
-  val Set<Locus> loci
   val Set<Cell> cells
   
   /**
@@ -21,7 +21,6 @@ import briefj.BriefLog
    */
   new(Set<Cell> cells, Set<Locus> loci) { 
     this.cells = cells
-    this.loci = loci
     tree = new DirectedTree(root)
     splits = new LinkedHashMap
     for (cell : cells)
@@ -29,6 +28,8 @@ import briefj.BriefLog
     for (locus : loci) 
       splits.put(locus, Split::initializeEmpty(tree, locus, cells))
   }
+  
+  def Set<Locus> getLoci() { splits.keySet }
   
   def TipIndicator tipIndicator(Cell cell, Locus locus) {
     return splits.get(locus).tipIndicators.get(cell)

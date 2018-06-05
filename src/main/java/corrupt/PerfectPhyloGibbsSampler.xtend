@@ -10,6 +10,7 @@ import java.util.List
 import static blang.runtime.internals.objectgraph.StaticUtils.node
 import java.util.Map
 import java.util.LinkedHashMap
+import static extension corrupt.SplitSampler.sampleInPlace
 
 import static extension corrupt.CorruptExtensionUtils.*
 import static corrupt.CorruptStaticUtils.*
@@ -21,7 +22,7 @@ class PerfectPhyloGibbsSampler implements Sampler {
   
   override execute(Random rand) {
     split.tree.collapseEdge(split.locus)
-    new SplitSampler(split.tree, split.locus, cellInclusionLogProbabilities).sample(rand)
+    split.tree.sampleInPlace(split.locus, cellInclusionLogProbabilities, rand)
     split.updateTips 
   }
   

@@ -11,6 +11,7 @@ import static corrupt.CorruptStaticUtils.*
 
 @Samplers(PerfectPhyloGibbsSampler)
 @Data class Split {
+  // Warning: updates on the tree need to be mirrored to the splits
   val DirectedTree<TreeNode> tree
   val Locus locus
   val Map<Cell, TipIndicator> tipIndicators

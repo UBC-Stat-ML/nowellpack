@@ -7,20 +7,34 @@ import java.util.ArrayList
 import static extension corrupt.CorruptExtensionUtils.*
 import static corrupt.CorruptStaticUtils.*
 
-import static corrupt.EnumerationUtils.enumerate
+import static java.lang.Math.*
+
 import blang.runtime.SampledModel
+import static corrupt.EnumerationUtils.*
 
 class LinAlgebraChecks {
   
-  val static nCells = 3
-  val static nLoci = 2
+  val static nCells = 1
+  val static nLoci = 1
   
   @Test
   def void test() {
-    val list = enumerate(syntheticCells(nCells), syntheticLoci(nLoci))
-    val equality = [SampledModel m | (m.model as Uniform).phylo.tree]
-    val test = new DiscreteMCTest(list, equality)
-    test.checkInvariance
-    test.checkIrreducibility
+    for (useData : #[true]) {
+      val list = 
+        if (useData)
+          enumerateSyntheticModels(nCells, nLoci) 
+        else
+          enumerateUniformModels(nCells, nLoci)
+      val equality = 
+        if (useData) 
+          [SampledModel m | (m.model as Synthetic).phylo.tree]
+        else
+          [SampledModel m | (m.model as Uniform).phylo.tree]
+      val test = new DiscreteMCTest(list, equality)
+      test.verbose = true
+      test.checkInvariance
+      test.checkIrreducibility
+      test.checkStateSpaceSize(round(exp(logNPerfectPhylo(nCells, nLoci))) as int)
+    }
   }
 }

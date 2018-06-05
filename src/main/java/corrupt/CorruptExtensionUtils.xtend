@@ -38,7 +38,7 @@ class CorruptExtensionUtils {
     return result
   }
   
-  def static sampleUniformUndirectedTree(Random rand, int size) {
+  def static uniformUndirectedTree(Random rand, int size) {
     val result = newUndirectedGraph
     if (size < 0) throw new RuntimeException
     if (size == 0) return result
