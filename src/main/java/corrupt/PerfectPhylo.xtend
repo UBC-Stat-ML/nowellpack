@@ -83,11 +83,11 @@ import java.util.List
   
   def void toNewick(TreeNode node, StringBuilder builder, List<String> loci) {
     val children = tree.children(node)
-    if (node !== root)
+    if (node != root)
         loci.add(node.toString)
     if (children.size == 1 && children.get(0) instanceof Locus) {
       // collapse lists of loci
-      toNewick()
+      toNewick(children.get(0), builder, loci)
     } else {
       if (!children.empty) {
         builder.append("(")
@@ -96,6 +96,7 @@ import java.util.List
           if (cIndex !== children.size - 1)
             builder.append(",")
         }
+        builder.append(")")
       }
       val label = loci.join("+")
       if (label.contains("(") || 
