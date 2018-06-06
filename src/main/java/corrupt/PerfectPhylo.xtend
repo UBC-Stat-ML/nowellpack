@@ -74,5 +74,39 @@ import java.util.List
     }
   }
   
-  override String toString() { tree.toString }
+  def String toNewick() {
+    val result = new StringBuilder()
+    toNewick(tree.root, result, new ArrayList)
+    result.append(";")
+    return result.toString
+  }
+  
+  def void toNewick(TreeNode node, StringBuilder builder, List<String> loci) {
+    val children = tree.children(node)
+    if (node !== root)
+        loci.add(node.toString)
+    if (children.size == 1 && children.get(0) instanceof Locus) {
+      // collapse lists of loci
+      toNewick()
+    } else {
+      if (!children.empty) {
+        builder.append("(")
+        for (var int cIndex = 0; cIndex < children.size(); cIndex++) {
+          toNewick(children.get(cIndex), builder, new ArrayList)
+          if (cIndex !== children.size - 1)
+            builder.append(",")
+        }
+      }
+      val label = loci.join("+")
+      if (label.contains("(") || 
+          label.contains(")") || 
+          label.contains(",") || 
+          label.contains(":") ||
+          label.contains(";"))
+        throw new RuntimeException();
+      builder.append(label);
+    }
+  }
+  
+  override String toString() { toNewick }
 }
