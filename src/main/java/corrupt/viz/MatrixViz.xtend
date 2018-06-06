@@ -1,6 +1,5 @@
 package corrupt.viz
 
-import processing.core.PApplet
 import xlinear.Matrix
 import org.eclipse.xtend.lib.annotations.Data
 import bayonet.distributions.Random
@@ -9,7 +8,7 @@ import xlinear.MatrixOperations
 @Data class MatrixViz extends Viz  {
   val Matrix m
   
-  override draw(extension PApplet applet) {
+  override draw() {
     noStroke
     for (var float r = 0; r < m.nRows; r++) { 
       for (var float c = 0; c < m.nCols; c++) { 
@@ -25,9 +24,6 @@ import xlinear.MatrixOperations
     val mtx = MatrixOperations::dense(20,30)
     val random = new Random(1)
     mtx.editInPlace[r, c, v| random.nextDouble]
-    new MatrixViz(mtx) => [
-      output("test2.pdf") 
-      show
-    ]
+    new MatrixViz(mtx).show
   }
 }
