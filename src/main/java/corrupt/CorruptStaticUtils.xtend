@@ -19,14 +19,9 @@ class CorruptStaticUtils {
     return (nLoci + nCells - 1) * Math.log(nLoci + 1)
   }
   
-  def static List<TreeNode> parse(String description) {
-         if (description.startsWith(Locus::PREFIX)) return                                 loci(description.replaceFirst(Locus::PREFIX, ""))
-    else if (description.startsWith(Cell::PREFIX )) return Collections::singletonList(new Cell (description.replaceFirst(Cell::PREFIX,  "")))
-    else if (description == root.toString) return Collections::singletonList(root)
-    else throw new RuntimeException
-  }
-  
-  private def static List<TreeNode> loci(String string) {
-    throw new UnsupportedOperationException("TODO: auto-generated method stub")
+  def static TreeNode parse(String description) {
+         if (description.startsWith(Locus::PREFIX)) return new Locus(description.replaceFirst(Locus::PREFIX, ""))
+    else if (description.startsWith(Cell::PREFIX )) return new Cell (description.replaceFirst(Cell::PREFIX,  ""))
+    else return root
   }
 }

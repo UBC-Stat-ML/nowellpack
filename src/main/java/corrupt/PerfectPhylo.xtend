@@ -17,6 +17,8 @@ import blang.inits.Input
 import blang.inits.DesignatedConstructor
 import java.util.LinkedHashSet
 import briefj.collections.Tree
+import briefj.BriefIO
+import java.io.File
 
 @Data class PerfectPhylo {
   // Warning: updates on the tree need to be mirrored to the splits
@@ -40,17 +42,33 @@ import briefj.collections.Tree
   }
   
   @DesignatedConstructor
-  new(@Input String newickString) {
-    val parser = new NewickParser(newickString)
+  new(@Input(formatDescription = "Newick string (or 'file ' followed by file from which to load such string)") String newickString) {
+    val parser = new NewickParser(
+      if (newickString.startsWith("file "))
+        BriefIO::fileToString(new File(newickString.replaceFirst("files\\s+", "")))  
+      else 
+        newickString
+    )
     this.cells = new LinkedHashSet
     this.splits = new LinkedHashMap
     this.tree = new DirectedTree(root)
     val Tree<conifer.TreeNode> parseTree = parser.parse
-    setTreeFrom(parseTree) 
+    readParseTree(null, parseTree) 
+    for (locus : loci)
+      splits.put(locus, Split::initializeEmpty(tree, locus, cells))
+    updateAllSplits
   }
   
-  private def setTreeFrom(Tree<conifer.TreeNode> parseTree) {
+  private def void readParseTree(TreeNode parent, Tree<conifer.TreeNode> parseTree) {
     val parsedNode = parse(parseTree.label.toString)
+    if (parent !== null)
+      tree.addEdge(parent, parsedNode)
+    switch (parsedNode) {
+      Cell : cells.add(parsedNode)
+      Locus : splits.put(parsedNode, null)
+    }
+    for (child : parseTree.children)
+      readParseTree(parsedNode, child) 
   }
   
   def Set<Locus> getLoci() { splits.keySet }
@@ -97,39 +115,52 @@ import briefj.collections.Tree
   
   def String toNewick() {
     val result = new StringBuilder()
-    toNewick(tree.root, result, new ArrayList)
+    toNewick(tree.root, result)
     result.append(";")
     return result.toString
   }
   
-  public static val COLLAPSED_LOCI_SEP = "+"
-  private def void toNewick(TreeNode node, StringBuilder builder, List<String> loci) {
+  private def void toNewick(TreeNode node, StringBuilder builder) {
     val children = tree.children(node)
-    if (node != root)
-        loci.add(node.toString)
-    if (children.size == 1 && children.get(0) instanceof Locus) {
-      // collapse lists of loci
-      toNewick(children.get(0), builder, loci)
-    } else {
-      if (!children.empty) {
-        builder.append("(")
-        for (var int cIndex = 0; cIndex < children.size(); cIndex++) {
-          toNewick(children.get(cIndex), builder, new ArrayList)
-          if (cIndex !== children.size - 1)
-            builder.append(",")
-        }
-        builder.append(")")
+    if (!children.empty) {
+      builder.append("(")
+      for (var int cIndex = 0; cIndex < children.size(); cIndex++) {
+        toNewick(children.get(cIndex), builder)
+        if (cIndex !== children.size - 1)
+          builder.append(",")
       }
-      val label = loci.join(COLLAPSED_LOCI_SEP)
-      if (label.contains("(") || 
-          label.contains(")") || 
-          label.contains(",") || 
-          label.contains(":") ||
-          label.contains(";"))
-        throw new RuntimeException();
-      builder.append(label);
+      builder.append(")")
     }
+    val label = node.toString
+    if (label.contains("(") || 
+        label.contains(")") || 
+        label.contains(",") || 
+        label.contains(":") ||
+        label.contains(";"))
+      throw new RuntimeException();
+    if (node != root) 
+      builder.append(label) 
   }
   
   override String toString() { toNewick }
+  
+  override hashCode() {
+    return tree.hashCode
+  }
+  
+  override boolean equals(Object obj) {
+    if (this === obj)
+      return true
+    if (obj === null)
+      return false
+    if (getClass() !== obj.getClass())
+      return false
+    val other = obj as PerfectPhylo
+    if (this.tree === null) {
+      if (other.tree !== null)
+        return false
+    } else if (!this.tree.equals(other.tree))
+      return false
+    return true
+  }
 }
