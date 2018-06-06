@@ -5,6 +5,7 @@ import blang.inits.DesignatedConstructor
 import blang.inits.Input
 
 @Data class Cell extends TreeNode {
-  override toString() { "cell_" + id }
+  public static val PREFIX = "cell_"
+  override toString() { PREFIX + id }
   @DesignatedConstructor new(@Input String id) { super(id) }
 }

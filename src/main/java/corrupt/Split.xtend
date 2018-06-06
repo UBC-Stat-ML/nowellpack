@@ -36,12 +36,9 @@ import static corrupt.CorruptStaticUtils.*
    * I.e. no cell having the corresponding trait. 
    */
   def static Split initializeEmpty(DirectedTree<TreeNode> tree, Locus locus, Set<Cell> cells) {
-    if (tree.hasNode(locus))
-      throw new RuntimeException
     val Map<Cell, TipIndicator> tips = new LinkedHashMap
     for (cell : cells) 
       tips.put(cell, new TipIndicator(cell, locus))
-    tree.addEdge(root, locus)
     return new Split(tree, locus, tips) 
   }
 }

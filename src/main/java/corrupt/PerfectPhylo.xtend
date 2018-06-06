@@ -12,6 +12,11 @@ import org.jgrapht.UndirectedGraph
 import briefj.collections.UnorderedPair
 import java.util.ArrayList
 import java.util.List
+import conifer.io.newick.NewickParser
+import blang.inits.Input
+import blang.inits.DesignatedConstructor
+import java.util.LinkedHashSet
+import briefj.collections.Tree
 
 @Data class PerfectPhylo {
   // Warning: updates on the tree need to be mirrored to the splits
@@ -28,8 +33,24 @@ import java.util.List
     splits = new LinkedHashMap
     for (cell : cells)
       tree.addEdge(root, cell)
-    for (locus : loci) 
+    for (locus : loci) {
       splits.put(locus, Split::initializeEmpty(tree, locus, cells))
+      tree.addEdge(root, locus)
+    }
+  }
+  
+  @DesignatedConstructor
+  new(@Input String newickString) {
+    val parser = new NewickParser(newickString)
+    this.cells = new LinkedHashSet
+    this.splits = new LinkedHashMap
+    this.tree = new DirectedTree(root)
+    val Tree<conifer.TreeNode> parseTree = parser.parse
+    setTreeFrom(parseTree) 
+  }
+  
+  private def setTreeFrom(Tree<conifer.TreeNode> parseTree) {
+    val parsedNode = parse(parseTree.label.toString)
   }
   
   def Set<Locus> getLoci() { splits.keySet }
@@ -81,7 +102,8 @@ import java.util.List
     return result.toString
   }
   
-  def void toNewick(TreeNode node, StringBuilder builder, List<String> loci) {
+  public static val COLLAPSED_LOCI_SEP = "+"
+  private def void toNewick(TreeNode node, StringBuilder builder, List<String> loci) {
     val children = tree.children(node)
     if (node != root)
         loci.add(node.toString)
@@ -98,7 +120,7 @@ import java.util.List
         }
         builder.append(")")
       }
-      val label = loci.join("+")
+      val label = loci.join(COLLAPSED_LOCI_SEP)
       if (label.contains("(") || 
           label.contains(")") || 
           label.contains(",") || 
