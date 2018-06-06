@@ -3,9 +3,7 @@ Summary
 
 <!-- [![Build Status](https://travis-ci.org/alexandrebouchard/nowellpack.png?branch=master)](https://travis-ci.org/alexandrebouchard/nowellpack) -->
 
-nowellpack is ...
-
-nowellpack stands for ...
+nowellpack is a Blang library for cancer genomics
 
 
 Installation
