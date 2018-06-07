@@ -1,0 +1,26 @@
+package corrupt
+
+import static extension corrupt.CorruptExtensionUtils.*
+import static corrupt.CorruptStaticUtils.*
+
+model CachedLikelihood {
+  param GlobalDataSource data
+  param Plate<Cell> cells
+  param Plate<Locus> loci
+  
+  random PerfectPhylo phylo ?: new PerfectPhylo(cells.set, loci.set)
+  random Plated<Double> tipInclusionPrs
+  
+  laws {
+    phylo ~ Uniform
+    
+    for (Index<Cell> cell : cells.indices) {
+      for (Index<Locus> locus : loci.indices(cell)) {
+         | TipIndicator tipIndicator = phylo.tipIndicator(cell.key, locus.key),
+           double inclLogPr = log(tipInclusionPrs.get(cell, locus)),
+           double exclLogPr = log(1.0 - tipInclusionPrs.get(cell, locus))
+          ~ LogPotential(if (tipIndicator == 1) inclLogPr else exclLogPr)
+      }
+    }
+  }
+}

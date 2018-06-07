@@ -1,6 +1,10 @@
 package corrupt.post
 
 class CLMatrixUtils {
+  
+  
+  // probably not needed: can do that kind of stuff in R
+  
   def static double distance(CellLocusMatrix cl1, CellLocusMatrix cl2) {
     checkCompatible(cl1, cl2)
     var sum = 0.0
