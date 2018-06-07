@@ -19,8 +19,9 @@ import java.util.LinkedHashSet
 import briefj.collections.Tree
 import briefj.BriefIO
 import java.io.File
+import corrupt.post.CellLocusMatrix
 
-@Data class PerfectPhylo {
+@Data class PerfectPhylo implements CellLocusMatrix {
   // Warning: updates on the tree need to be mirrored to the splits
   val DirectedTree<TreeNode> tree 
   val Map<Locus, Split> splits
@@ -71,10 +72,14 @@ import java.io.File
       readParseTree(parsedNode, child) 
   }
   
-  def Set<Locus> getLoci() { splits.keySet }
+  override Set<Locus> getLoci() { splits.keySet }
   
   def TipIndicator tipIndicator(Cell cell, Locus locus) {
     return splits.get(locus).tipIndicators.get(cell)
+  }
+  
+  override double getTipAsDouble(Cell cell, Locus locus) {
+    return if (tipIndicator(cell,locus).included) 1.0 else 0.0
   }
   
   def void updateAllSplits() {

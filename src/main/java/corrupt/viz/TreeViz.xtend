@@ -21,6 +21,8 @@ class TreeViz<T> extends Viz {
   private val int nLeaves
   private var float depth = 0.0f
   
+  def int tipIndex(T node) { return tipIndices.get(node) }
+  
   new (T root, (T)=>List<T> tree) {
     this.root = root
     this.tree = tree
@@ -94,13 +96,13 @@ class TreeViz<T> extends Viz {
     Pair.of(depth, nLeaves as float)
   }
   
-  public static def void main(String [] args) {
-    val phylo = new PerfectPhylo(CorruptStaticUtils::syntheticCells(10), CorruptStaticUtils::syntheticLoci(400))
+  public static def void main(String [] args) { 
+    val phylo = new PerfectPhylo(CorruptStaticUtils::syntheticCells(1000), CorruptStaticUtils::syntheticLoci(10000))
     phylo.sampleUniform(new Random(1))
     println(phylo.tree)
     new TreeViz(phylo.tree) => [
       width = 200
-      show
+      output("bigtree.pdf")
     ]
   }
 }
