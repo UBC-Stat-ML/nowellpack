@@ -51,3 +51,41 @@ xtend {
   }
 }
 
+apply plugin:'application'
+
+configurations.archives.with {
+    artifacts.remove artifacts.find { it.archiveTask.is distZip }
+    artifacts.remove artifacts.find { it.archiveTask.is distTar }
+}  
+
+
+def createScript(project, mainClass, name) {
+  project.tasks.create(name: name, type: CreateStartScripts) {
+    outputDir       = new File(project.buildDir, 'scripts')
+    mainClassName   = mainClass
+    applicationName = name
+    classpath       = project.tasks[JavaPlugin.JAR_TASK_NAME].outputs.files + project.configurations.runtime
+  }
+  project.tasks[name].dependsOn(project.jar)
+
+  project.applicationDistribution.with {
+    into("bin") {
+      from(project.tasks[name])
+      fileMode = 0755
+    }
+  }
+}
+
+// The next two lines disable the tasks for the primary main which by default
+// generates a script with a name matching the project name. 
+// You can leave them enabled but if so you'll need to define mainClassName
+// And you'll be creating your application scripts two different ways which 
+// could lead to confusion
+startScripts.enabled = false
+run.enabled = false
+
+// Call this for each Main class you want to expose with an app script
+createScript(project, 'corrupt.Synthetic',              'corrupt-synthetic')
+createScript(project, 'corrupt.CachedLikelihood',       'corrupt-infer')
+createScript(project, 'corrupt.post.AverageCLMatrices', 'corrupt-average')
+
