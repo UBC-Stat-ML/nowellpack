@@ -56,6 +56,8 @@ dependencies {
 Usage
 -----
 
-### Quick start
+Commands available:
 
-...
+- ``corrupt-synthetic --help``: for generating data/benchmarking based on [this synthetic model](https://github.com/UBC-Stat-ML/nowellpack/blob/master/src/main/java/corrupt/Synthetic.bl)
+- ``corrupt-infer --help``: infer a tree [based on fixed leaf inclusion probabilities](https://github.com/UBC-Stat-ML/nowellpack/blob/master/src/main/java/corrupt/CachedLikelihood.bl)
+- ``corrupt-average --help``: average tip probabilities over sampled trees

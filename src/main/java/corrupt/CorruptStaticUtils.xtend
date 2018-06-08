@@ -20,8 +20,9 @@ class CorruptStaticUtils {
   }
   
   def static TreeNode parse(String description) {
-         if (description.startsWith(Locus::PREFIX)) return new Locus(description.replaceFirst(Locus::PREFIX, ""))
-    else if (description.startsWith(Cell::PREFIX )) return new Cell (description.replaceFirst(Cell::PREFIX,  ""))
+    // Note: taking care of removing the prefix is taken care of in constructors
+         if (description.startsWith(Locus::PREFIX)) return new Locus(description)
+    else if (description.startsWith(Cell::PREFIX )) return new Cell (description)
     else return root
   }
 }

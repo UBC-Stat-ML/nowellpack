@@ -6,8 +6,8 @@ model Uniform {
   random PerfectPhylo phylo
   
   laws {
-    logf(phylo) {
-      - logNPerfectPhylo(phylo.cells.size, phylo.loci.size)
+    logf(double logNorm = - logNPerfectPhylo(phylo.cells.size, phylo.loci.size)) {
+      logNorm
     }
   }
   

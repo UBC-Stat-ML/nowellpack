@@ -38,7 +38,7 @@ import static corrupt.CorruptStaticUtils.*
   def static Split initializeEmpty(DirectedTree<TreeNode> tree, Locus locus, Set<Cell> cells) {
     val Map<Cell, TipIndicator> tips = new LinkedHashMap
     for (cell : cells) 
-      tips.put(cell, new TipIndicator(cell, locus))
+      tips.put(cell, new TipIndicator(cell))
     return new Split(tree, locus, tips) 
   }
 }
