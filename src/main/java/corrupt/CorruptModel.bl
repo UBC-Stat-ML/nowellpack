@@ -1,0 +1,15 @@
+package corrupt
+
+import corrupt.post.ReadOnlyCLMatrix
+
+model CorruptModel {
+  param GlobalDataSource data
+  param ReadOnlyCLMatrix tipInclusionProbabilities
+  random CorruptPhylo phylo ?: new CorruptPhylo(tipInclusionProbabilities)
+  
+  laws {
+    phylo.phylo ~ Uniform
+    | phylo ~ LogPotential(phylo.logProbability)
+  }
+
+}

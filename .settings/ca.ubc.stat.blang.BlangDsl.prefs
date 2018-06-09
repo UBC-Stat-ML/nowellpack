@@ -1,0 +1,16 @@
+#Wed May 30 09:46:59 PDT 2018
+//outlet.DEFAULT_OUTPUT.sourceFolder.src/test/resources.directory=build/blang/test
+generateSuppressWarnings=true
+//outlet.DEFAULT_OUTPUT.sourceFolder.src/test/java.directory=build/blang/test
+BuilderConfiguration.is_project_specific=true
+targetJavaVersion=Java8
+//outlet.DEFAULT_OUTPUT.sourceFolder.src/main/resources.directory=build/blang/main
+useJavaCompilerCompliance=false
+outlet.DEFAULT_OUTPUT.installDslAsPrimarySource=false
+outlet.DEFAULT_OUTPUT.userOutputPerSourceFolder=true
+outlet.DEFAULT_OUTPUT.hideLocalSyntheticVariables=true
+eclipse.preferences.version=1
+includeDateInGenerated=false
+generateGeneratedAnnotation=false
+//outlet.DEFAULT_OUTPUT.sourceFolder.src/main/java.directory=build/blang/main
+ValidatorConfiguration.is_project_specific=true

@@ -18,17 +18,9 @@ class LinAlgebraChecks {
   
   @Test
   def void test() {
-    for (useData : #[false, true]) {
-      val list = 
-        if (useData)
-          enumerateSyntheticModels(nCells, nLoci) 
-        else
-          enumerateUniformModels(nCells, nLoci)
-      val equality = 
-        if (useData) 
-          [SampledModel m | (m.model as Synthetic).phylo.tree]
-        else
-          [SampledModel m | (m.model as Uniform).phylo.tree]
+    for (anneal : #[0.0, 0.4, 1.0]) {
+      val list = enumerateSyntheticModels(nCells, nLoci, anneal) 
+      val equality = [SampledModel m | (m.model as CorruptModel).phylo.phylo.tree] 
       val test = new DiscreteMCTest(list, equality, false)
       test.verbose = true
       test.checkInvariance

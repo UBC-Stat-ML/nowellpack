@@ -1,19 +1,45 @@
 package corrupt.post
 
+import bayonet.distributions.Random
+import corrupt.PerfectPhylo
+import blang.distributions.Normal
+
+import static blang.types.StaticUtils.*
+import bayonet.distributions.Multinomial
+import briefj.BriefIO
+import java.io.File
+
 class CLMatrixUtils {
   
-  
-  // probably not needed: can do that kind of stuff in R
-  
-  def static double distance(CellLocusMatrix cl1, CellLocusMatrix cl2) {
-    checkCompatible(cl1, cl2)
-    var sum = 0.0
-    for (cell : cl1.cells)
-      for (locus : cl1.loci)
-        sum += Math.abs(cl1.getTipAsDouble(cell, locus) - cl2.getTipAsDouble(cell, locus))
-    return sum / (cl1.cells.size * cl2.cells.size)
+  static def void toCSV(CellLocusMatrix matrix, File f) {
+    val out = BriefIO.output(f)
+    out.println("cells,loci,tipInclusionProbabilities")
+    for (cell : matrix.cells)
+      for (locus : matrix.loci)
+        out.println('''«cell»,«locus»,«matrix.getTipAsDouble(cell, locus)»''')
+    out.close
   }
-  def static void checkCompatible(CellLocusMatrix cl1, CellLocusMatrix cl2) {
+  
+  static def ReadOnlyCLMatrix syntheticInclusionPrs(Random rand, PerfectPhylo phylo, double stdDev) {
+    val syntheticInclusionPrs = new SimpleCLMatrix(phylo.cells, phylo.loci)
+    val inclNormal = Normal::distribution(fixedReal(0.0), fixedReal(stdDev * stdDev))
+    val exclNormal = Normal::distribution(fixedReal(1.0), fixedReal(stdDev * stdDev))
+    for (locus : phylo.loci) {
+      val tips = phylo.getTips(locus)
+      for (cell : phylo.cells) {
+        val dist = if (tips.get(cell)) inclNormal else exclNormal
+        val observation = dist.sample(rand)
+        val prs = newDoubleArrayOfSize(2)
+        prs.set(0, exclNormal.logDensity(observation))
+        prs.set(1, inclNormal.logDensity(observation))
+        Multinomial::expNormalize(prs)
+        syntheticInclusionPrs.setTip(cell, locus, prs.get(1)) 
+      }
+    }
+    return new ReadOnlyCLMatrix(syntheticInclusionPrs)
+  }
+  
+  static def void checkCompatible(CellLocusMatrix cl1, CellLocusMatrix cl2) {
     if (cl1.cells != cl2.cells || cl1.loci != cl2.loci)
       throw new RuntimeException
   }

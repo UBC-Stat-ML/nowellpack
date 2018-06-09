@@ -23,7 +23,11 @@ class SplitSampler {
    * Sample from the likelihood times a uniform prior. 
    * Modifies the phylogeny in place.
    */
-  def static SplitSampler sampleInPlace(DirectedTree<TreeNode> phylogeny, Locus locusToAdd, Map<Cell, SubtreeLikelihood> cellLikelihoods, Random rand) {
+  def static SplitSampler sampleInPlace(
+    DirectedTree<TreeNode> phylogeny, 
+    Locus locusToAdd, 
+    Map<Cell, SubtreeLikelihood> cellLikelihoods, Random rand
+  ) {
     val result = new SplitSampler(phylogeny, locusToAdd, cellLikelihoods)
     result.sample(rand)
     return result
@@ -34,8 +38,6 @@ class SplitSampler {
   val double rootExclLog
   val Indexer<TreeNode> rootLociIndexer = new Indexer
   val Locus locusToAdd
-  
-
   
   private new (DirectedTree<TreeNode> phylogeny, Locus locusToAdd, Map<Cell, SubtreeLikelihood> cellLikelihoods) {
     this.locusToAdd = locusToAdd

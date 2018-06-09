@@ -1,6 +1,8 @@
 package corrupt.post
 
 import corrupt.PerfectPhylo
+
+import static extension corrupt.post.CLMatrixUtils.toCSV
 import briefj.BriefIO
 import java.io.File
 import blang.inits.experiments.Experiment
@@ -25,18 +27,19 @@ class AverageCLMatrices extends Experiment {
    * Null if empty.
    */
   def static SimpleCLMatrix averageTipIndicators(Iterable<PerfectPhylo> phylos) {
-    var SimpleCLMatrix result = null
-    var count = 0
-    for (phylo : phylos) {
-      count++
-      if (result === null) 
-        result = new SimpleCLMatrix(phylo.cells, phylo.loci)
-      result += phylo
-    }
-    if (result === null)
-      return null
-    result /= count
-    return result
+    throw new RuntimeException
+//    var SimpleCLMatrix result = null
+//    var count = 0
+//    for (phylo : phylos) {
+//      count++
+//      if (result === null) 
+//        result = new SimpleCLMatrix(phylo.cells, phylo.loci)
+//      result += phylo
+//    }
+//    if (result === null)
+//      return null
+//    result /= count
+//    return result
   }
   
   def static SimpleCLMatrix averageTipIndicators(File csvFile) {

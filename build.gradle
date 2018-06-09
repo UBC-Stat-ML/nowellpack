@@ -11,7 +11,6 @@ repositories {
    }
 }
 
-
 dependencies {
   xtextLanguages "ca.ubc.stat.blang:ca.ubc.stat.blang:3.25.2"
   compile group: 'ca.ubc.stat', name: 'conifer', version: '2.0.4'
@@ -58,7 +57,6 @@ configurations.archives.with {
     artifacts.remove artifacts.find { it.archiveTask.is distTar }
 }  
 
-
 def createScript(project, mainClass, name) {
   project.tasks.create(name: name, type: CreateStartScripts) {
     outputDir       = new File(project.buildDir, 'scripts')
@@ -76,16 +74,8 @@ def createScript(project, mainClass, name) {
   }
 }
 
-// The next two lines disable the tasks for the primary main which by default
-// generates a script with a name matching the project name. 
-// You can leave them enabled but if so you'll need to define mainClassName
-// And you'll be creating your application scripts two different ways which 
-// could lead to confusion
 startScripts.enabled = false
 run.enabled = false
 
-// Call this for each Main class you want to expose with an app script
-createScript(project, 'corrupt.Synthetic',              'corrupt-synthetic')
-createScript(project, 'corrupt.CachedLikelihood',       'corrupt-infer')
-createScript(project, 'corrupt.post.AverageCLMatrices', 'corrupt-average')
-
+createScript(project, 'corrupt.CorruptModel', 'corrupt-infer')
+createScript(project, 'corrupt.CorruptModel', 'corrupt-generate')

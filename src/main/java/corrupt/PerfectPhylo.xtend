@@ -19,27 +19,42 @@ import java.util.LinkedHashSet
 import briefj.collections.Tree
 import briefj.BriefIO
 import java.io.File
-import corrupt.post.CellLocusMatrix
 
-@Data class PerfectPhylo implements CellLocusMatrix {
-  // Warning: updates on the tree need to be mirrored to the splits
+@Data class PerfectPhylo {
   val DirectedTree<TreeNode> tree 
-  val Map<Locus, Split> splits
+  val Set<Locus> loci
   val Set<Cell> cells
+  
+  def public Map<Cell,Boolean> getTips(Locus locus) { 
+      val result = new LinkedHashMap
+      _getTips(locus, result, tree.root, false)
+      return result
+    }
+  def private void _getTips(Locus locus, Map<Cell,Boolean> result, TreeNode node, boolean active) {
+    switch node {
+      Cell : {
+        if (!tree.isLeaf(node)) throw new RuntimeException
+        result.put(node, active)
+      }
+      default : {
+        val childrenActive = active || node == locus
+        for (child : tree.children(node)) 
+          _getTips(locus, result, child, childrenActive) 
+      }
+    }
+  }
   
   /**
    * Initialized with a star tree.
    */
   new(Set<Cell> cells, Set<Locus> loci) { 
     this.cells = cells
+    this.loci = loci
     tree = new DirectedTree(root)
-    splits = new LinkedHashMap
     for (cell : cells)
       tree.addEdge(root, cell)
-    for (locus : loci) {
-      splits.put(locus, Split::initializeEmpty(tree, locus, cells))
+    for (locus : loci) 
       tree.addEdge(root, locus)
-    }
   }
   
   @DesignatedConstructor
@@ -51,13 +66,10 @@ import corrupt.post.CellLocusMatrix
         newickString
     )
     this.cells = new LinkedHashSet
-    this.splits = new LinkedHashMap
+    this.loci = new LinkedHashSet
     this.tree = new DirectedTree(root)
     val Tree<conifer.TreeNode> parseTree = parser.parse
     readParseTree(null, parseTree) 
-    for (locus : loci)
-      splits.put(locus, Split::initializeEmpty(tree, locus, cells))
-    updateAllSplits
   }
   
   private def void readParseTree(TreeNode parent, Tree<conifer.TreeNode> parseTree) {
@@ -66,25 +78,10 @@ import corrupt.post.CellLocusMatrix
       tree.addEdge(parent, parsedNode)
     switch (parsedNode) {
       Cell : cells.add(parsedNode)
-      Locus : splits.put(parsedNode, null)
+      Locus : loci.add(parsedNode)
     }
     for (child : parseTree.children)
       readParseTree(parsedNode, child) 
-  }
-  
-  override Set<Locus> getLoci() { splits.keySet }
-  
-  def TipIndicator tipIndicator(Cell cell, Locus locus) {
-    return splits.get(locus).tipIndicators.get(cell)
-  }
-  
-  override double getTipAsDouble(Cell cell, Locus locus) {
-    return if (tipIndicator(cell,locus).included) 1.0 else 0.0
-  }
-  
-  def void updateAllSplits() {
-    for (split : splits.values)
-      split.updateTips
   }
   
   def void sampleUniform(Random rand) {
@@ -98,7 +95,6 @@ import corrupt.post.CellLocusMatrix
     addSampledLociTopology(lociTopology, loci.size, -1, orderedNodes)
     for (cell : cells)
       tree.addEdge(rand.uniformElement(orderedNodes), cell)
-    updateAllSplits
   }
   
   def private void addSampledLociTopology(
@@ -148,24 +144,4 @@ import corrupt.post.CellLocusMatrix
   }
   
   override String toString() { toNewick }
-  
-  override hashCode() {
-    return tree.hashCode
-  }
-  
-  override boolean equals(Object obj) {
-    if (this === obj)
-      return true
-    if (obj === null)
-      return false
-    if (getClass() !== obj.getClass())
-      return false
-    val other = obj as PerfectPhylo
-    if (this.tree === null) {
-      if (other.tree !== null)
-        return false
-    } else if (!this.tree.equals(other.tree))
-      return false
-    return true
-  }
 }

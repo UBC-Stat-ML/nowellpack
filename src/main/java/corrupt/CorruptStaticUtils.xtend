@@ -1,8 +1,6 @@
 package corrupt
 
 import java.util.Set
-import java.util.List
-import java.util.Collections
 
 class CorruptStaticUtils {
   public static val TreeNode root = new TreeNode("ROOT")

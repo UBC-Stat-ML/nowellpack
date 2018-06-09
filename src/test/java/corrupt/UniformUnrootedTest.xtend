@@ -14,6 +14,10 @@ import static corrupt.CorruptStaticUtils.*
 class UniformUnrootedTest {
   @Test
   def void test() {
+    
+    val result = new PerfectPhylo(syntheticCells(1000), syntheticLoci(5000))
+    result.sampleUniform(new Random(1))
+    println(result)
 //    val nCells = 1
 //    val nLoci = 2
 //    val exhaustive = new ExhaustiveDebugRandom

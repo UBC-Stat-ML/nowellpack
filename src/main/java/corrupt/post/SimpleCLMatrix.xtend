@@ -23,7 +23,9 @@ import briefj.BriefIO
   }
   
   override getTipAsDouble(Cell cell, Locus locus)       { matrix.get(cellsIdx.o2i(cell), lociIdx.o2i(locus)) }
-  def void setTip(Cell cell, Locus locus, double value) { matrix.set(cellsIdx.o2i(cell), lociIdx.o2i(locus), value) }
+  def void setTip(Cell cell, Locus locus, double value) { 
+    matrix.set(cellsIdx.o2i(cell), lociIdx.o2i(locus), value)
+  }
   
   override getCells() { cellsIdx.objects }
   override getLoci()  { lociIdx.objects}
@@ -39,14 +41,5 @@ import briefj.BriefIO
     for (cell : cells) 
       for (locus : loci) 
         setTip(cell, locus, getTipAsDouble(cell, locus) / divisor)
-  }
-   
-  def void toCSV(File f) {
-    val out = BriefIO.output(f)
-    out.println("cells,loci,value")
-    for (cell : cells)
-      for (locus : loci)
-        out.println('''«cell»,«locus»,«getTipAsDouble(cell, locus)»''')
-    out.close
   }
 }
