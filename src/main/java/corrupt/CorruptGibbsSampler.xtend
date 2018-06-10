@@ -12,9 +12,8 @@ import blang.mcmc.internals.SamplerBuilderContext
 class CorruptGibbsSampler implements Sampler {
   @SampledVariable public CorruptPhylo phylo
   @ConnectedFactor public LogScaleFactor numericFactor 
-//  var RealVar _annealParameter
-var RealVar _annealParam = null 
-
+  var RealVar _annealParam = null 
+  
   private def double annealParameter() {
     if (_annealParam === null) return 1.0
     return _annealParam.doubleValue

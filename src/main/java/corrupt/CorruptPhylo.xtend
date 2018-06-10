@@ -13,6 +13,8 @@ class CorruptPhylo {
   val PerfectPhylo reconstruction 
   val CellLocusMatrix tipInclPrs
   
+  // TODO: cache the tip's logs if they are fixed
+  
   new (CellLocusMatrix tipInclPrs) {
     this.tipInclPrs = tipInclPrs
     this.reconstruction = new PerfectPhylo(tipInclPrs.cells, tipInclPrs.loci)
@@ -50,12 +52,16 @@ class CorruptPhylo {
     SplitSampler::sampleInPlace(reconstruction.tree, locus, cellInclusionLogProbabilities(annealingParameter, locus), rand)
   }
   
+  static val LOG_EPSILON = -1e6 // we rely on division to cancel things, so keep non-zero
+  static val LOG_ONE_MINUS_EPSILON = Math.log1p(Math.exp(LOG_EPSILON))
   def Map<Cell,SubtreeLikelihood> cellInclusionLogProbabilities(double annealingParameter, Locus locus) {
     val result = new LinkedHashMap
     for (cell : cells) {
       val inclPr = tipInclPrs.getTipAsDouble(cell, locus)
-      val logP = annealingParameter * Math.log(inclPr)
-      val logQ = annealingParameter * Math.log(1.0 - inclPr)
+      var logP = annealingParameter * Math.log(inclPr)
+      var logQ = annealingParameter * Math.log1p(- inclPr)
+           if (logP < LOG_EPSILON) { logP = LOG_EPSILON; logQ = LOG_ONE_MINUS_EPSILON }
+      else if (logQ < LOG_EPSILON) { logQ = LOG_EPSILON; logP = LOG_ONE_MINUS_EPSILON }
       result.put(cell, SubtreeLikelihood::tip(logP, logQ))
     }
     return result
