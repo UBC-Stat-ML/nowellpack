@@ -78,4 +78,4 @@ startScripts.enabled = false
 run.enabled = false
 
 createScript(project, 'corrupt.CorruptModel', 'corrupt-infer')
-createScript(project, 'corrupt.CorruptModel', 'corrupt-generate')
+createScript(project, 'corrupt.GenerateData', 'corrupt-generate')
