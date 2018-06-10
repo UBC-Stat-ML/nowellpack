@@ -1,6 +1,5 @@
 package corrupt
 
-import briefj.Indexer
 import corrupt.post.CellLocusMatrix
 import java.util.Map
 import java.util.LinkedHashMap

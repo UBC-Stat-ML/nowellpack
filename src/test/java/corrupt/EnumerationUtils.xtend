@@ -32,7 +32,6 @@ class EnumerationUtils {
     val tipInclPrs = CLMatrixUtils::syntheticInclusionPrs(rand, phylo, 0.5) 
     println(tipInclPrs)
     return new CorruptModel.Builder()
-      .setData(GlobalDataSource.empty)
       .setTipInclusionProbabilities(tipInclPrs)
       .build 
   }

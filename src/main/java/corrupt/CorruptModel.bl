@@ -3,7 +3,6 @@ package corrupt
 import corrupt.post.ReadOnlyCLMatrix
 
 model CorruptModel {
-  param GlobalDataSource data
   param ReadOnlyCLMatrix tipInclusionProbabilities
   random CorruptPhylo phylo ?: new CorruptPhylo(tipInclusionProbabilities)
   
