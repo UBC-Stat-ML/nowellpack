@@ -12,7 +12,6 @@ import static bayonet.distributions.Multinomial.expNormalize
 import static bayonet.math.NumericalUtils.logAdd
 import java.util.ArrayList
 import static extension corrupt.CorruptExtensionUtils.*
-import static corrupt.CorruptStaticUtils.*
 import org.eclipse.xtend.lib.annotations.Accessors
 
 class SplitSampler {

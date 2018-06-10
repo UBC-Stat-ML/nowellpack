@@ -20,7 +20,7 @@ class LinAlgebraChecks {
   def void test() {
     for (anneal : #[0.0, 0.4, 1.0]) {
       val list = enumerateSyntheticModels(nCells, nLoci, anneal) 
-      val equality = [SampledModel m | (m.model as CorruptModel).phylo.phylo.tree] 
+      val equality = [SampledModel m | (m.model as CorruptModel).phylo.getReconstruction.tree] 
       val test = new DiscreteMCTest(list, equality, false)
       test.verbose = true
       test.checkInvariance

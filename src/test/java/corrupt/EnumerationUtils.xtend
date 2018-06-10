@@ -48,7 +48,7 @@ class EnumerationUtils {
       // freeze observation
       var copy = sModel.duplicate
       val observations = new Observations
-      sampleNonUniform(exhaustive, (copy.model as CorruptModel).phylo.phylo)  
+      sampleNonUniform(exhaustive, (copy.model as CorruptModel).phylo.getReconstruction)  
       val graphAnalysis = new GraphAnalysis(copy.model, observations)
       copy = new SampledModel(graphAnalysis, SamplerBuilder.build(graphAnalysis), null)
       result.add(copy)

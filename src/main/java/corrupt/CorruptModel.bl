@@ -7,7 +7,7 @@ model CorruptModel {
   random CorruptPhylo phylo ?: new CorruptPhylo(tipInclusionProbabilities)
   
   laws {
-    phylo.phylo ~ Uniform
+    phylo.getReconstruction ~ Uniform
     | phylo ~ LogPotential(phylo.logProbability)
   }
 
