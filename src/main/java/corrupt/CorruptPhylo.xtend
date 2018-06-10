@@ -6,6 +6,8 @@ import java.util.LinkedHashMap
 import bayonet.distributions.Random
 import blang.mcmc.Samplers
 import org.eclipse.xtend.lib.annotations.Accessors
+import java.util.ArrayList
+import java.util.Collections
 
 @Samplers(CorruptGibbsSampler)
 class CorruptPhylo {
@@ -42,7 +44,9 @@ class CorruptPhylo {
   }
 
   def void gibbSample(Random rand, double annealingParameter) {
-    for (locus : loci) 
+    val shuffled = new ArrayList(loci)
+    Collections::shuffle(shuffled, rand) 
+    for (locus : shuffled) 
       _gibbSample(rand, annealingParameter, locus)
   }
   
