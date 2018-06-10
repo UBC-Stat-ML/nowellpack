@@ -47,7 +47,7 @@ class CLMatrixUtils {
   
   static def SimpleCLMatrix fromPhylo(PerfectPhylo phylo) {
     val result = new SimpleCLMatrix(phylo.cells, phylo.loci)
-    result += phylo
+    result += phylo 
     return result
   }
   

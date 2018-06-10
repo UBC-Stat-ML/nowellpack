@@ -10,6 +10,11 @@ import java.util.Collection
 import java.io.File
 import briefj.BriefIO
 import corrupt.PerfectPhylo
+import java.util.LinkedHashSet
+import java.util.ArrayList
+import java.util.Collections
+import java.util.Comparator
+import java.util.List
 
 @Data class SimpleCLMatrix implements CellLocusMatrix {
   
@@ -18,9 +23,16 @@ import corrupt.PerfectPhylo
   val Matrix matrix
   
   new(Collection<Cell> cells, Collection<Locus> loci) {
-    this.cellsIdx = new Indexer(cells)
-    this.lociIdx = new Indexer(loci)
+    this.cellsIdx = new Indexer(sanitize(cells))
+    this.lociIdx = new Indexer(sanitize(loci))
     this.matrix = MatrixOperations::dense(cellsIdx.size, lociIdx.size)
+  }
+  
+  private static def  <T> List<T> sanitize(Collection<T> items) {
+    val asSet = new LinkedHashSet(items)
+    val asList = new ArrayList(asSet)
+    Collections::sort(asList, Comparator.comparing[it.toString])
+    return asList  
   }
   
   override getTipAsDouble(Cell cell, Locus locus)       { matrix.get(cellsIdx.o2i(cell), lociIdx.o2i(locus)) }

@@ -26,7 +26,7 @@ class AverageCLMatrices extends Experiment {
     if (referenceTree.present)
       parsedTreeIndicators = CLMatrixUtils::fromPhylo(PerfectPhylo::parseNewick(referenceTree.get)) 
     averageTipIndicators(BriefIO.readLines(csvFile).indexCSV.map[new PerfectPhylo(it.get(field))])
-    result.toCSV(results.getFileInResultFolder(OUTPUT_NAME))
+    result.toCSV(results.getFileInResultFolder(OUTPUT_NAME)) 
   }
   
   def static void main(String [] args) {
@@ -54,9 +54,9 @@ class AverageCLMatrices extends Experiment {
       result /= count
   }
   
-  private def double distance(SimpleCLMatrix refTree, SimpleCLMatrix matrix, double count) {
-    val diff = refTree.matrix - (matrix.matrix/count)
-    return diff.nonZeroEntries().map[double value | Math.abs(value)].sum() / diff.nEntries
+  private def double distance(SimpleCLMatrix refTree, SimpleCLMatrix sum, double count) {
+    val diff = refTree.matrix - (sum.matrix/count)
+    return diff.nonZeroEntries().map[Math.abs(it)].sum() / diff.nEntries
   }
   
 
