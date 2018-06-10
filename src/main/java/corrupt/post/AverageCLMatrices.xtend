@@ -43,20 +43,19 @@ class AverageCLMatrices extends Experiment {
     var distanceOutput = if (referenceTree === null) null else results.getAutoClosedBufferedWriter("distances.csv")
     var count = 0
     for (phylo : phylos) {
-      
+      count++
       if (result === null) 
         result = new SimpleCLMatrix(phylo.cells, phylo.loci)
       result += phylo
       if (parsedTreeIndicators !== null)
-        distanceOutput.append(distance(parsedTreeIndicators, result) + "\n")
-      count++
+        distanceOutput.append(distance(parsedTreeIndicators, result, count) + "\n")
     }
     if (result !== null)
       result /= count
   }
   
-  def double distance(SimpleCLMatrix refTree, SimpleCLMatrix matrix) {
-    val diff = refTree.matrix - matrix.matrix
+  private def double distance(SimpleCLMatrix refTree, SimpleCLMatrix matrix, double count) {
+    val diff = refTree.matrix - (matrix.matrix/count)
     return diff.nonZeroEntries().map[double value | Math.abs(value)].sum() / diff.nEntries
   }
   
