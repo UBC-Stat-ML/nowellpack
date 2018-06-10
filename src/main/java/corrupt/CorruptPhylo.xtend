@@ -16,6 +16,7 @@ class CorruptPhylo {
   val CellLocusMatrix tipInclPrs
   
   // TODO: cache the tip's logs if they are fixed
+  // TODO: cache the likelihood based on tipInclPrs' hashcode?
   
   new (CellLocusMatrix tipInclPrs) {
     this.tipInclPrs = tipInclPrs
