@@ -77,5 +77,6 @@ def createScript(project, mainClass, name) {
 startScripts.enabled = false
 run.enabled = false
 
-createScript(project, 'corrupt.CorruptModel', 'corrupt-infer')
-createScript(project, 'corrupt.GenerateData', 'corrupt-generate')
+createScript(project, 'corrupt.CorruptModel',           'corrupt-infer')
+createScript(project, 'corrupt.GenerateData',           'corrupt-generate')
+createScript(project, 'corrupt.post.AverageCLMatrices', 'corrupt-average')

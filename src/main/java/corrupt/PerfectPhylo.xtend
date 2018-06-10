@@ -57,6 +57,10 @@ import java.io.File
       tree.addEdge(root, locus)
   }
   
+  def static PerfectPhylo parseNewick(File f) {
+    return new PerfectPhylo(BriefIO.fileToString(f)) 
+  }
+  
   @DesignatedConstructor
   new(@Input(formatDescription = "Newick string (or 'file ' followed by file from which to load such string)") String newickString) {
     val parser = new NewickParser(

@@ -45,6 +45,12 @@ class CLMatrixUtils {
     return result
   }
   
+  static def SimpleCLMatrix fromPhylo(PerfectPhylo phylo) {
+    val result = new SimpleCLMatrix(phylo.cells, phylo.loci)
+    result += phylo
+    return result
+  }
+  
   static def ReadOnlyCLMatrix syntheticInclusionPrs(Random rand, PerfectPhylo phylo, double stdDev) {
     val syntheticInclusionPrs = new SimpleCLMatrix(phylo.cells, phylo.loci)
     val inclNormal = Normal::distribution(fixedReal(0.0), fixedReal(stdDev * stdDev))

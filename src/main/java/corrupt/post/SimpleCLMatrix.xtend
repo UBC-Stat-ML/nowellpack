@@ -9,6 +9,7 @@ import xlinear.MatrixOperations
 import java.util.Collection
 import java.io.File
 import briefj.BriefIO
+import corrupt.PerfectPhylo
 
 @Data class SimpleCLMatrix implements CellLocusMatrix {
   
@@ -34,7 +35,19 @@ import briefj.BriefIO
     CLMatrixUtils::checkCompatible(this, another)
     for (cell : cells) 
       for (locus : loci) 
-        setTip(cell, locus, getTipAsDouble(cell, locus) + another.getTipAsDouble(cell, locus))
+        increment(cell, locus, another.getTipAsDouble(cell, locus))
+  }
+  
+  def void +=(PerfectPhylo phylo) {
+    for (locus : loci) {
+      val tips = phylo.getTips(locus)
+      for (entry : tips.entrySet) 
+        increment(entry.key, locus, if (entry.value) 1.0 else 0.0)
+    }
+  }
+  
+  def void increment(Cell cell, Locus locus, double increment) {
+    setTip(cell, locus, getTipAsDouble(cell, locus) + increment)
   }
   
   def void /=(double divisor) {
