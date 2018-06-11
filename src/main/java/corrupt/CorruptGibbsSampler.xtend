@@ -12,11 +12,12 @@ import blang.mcmc.internals.SamplerBuilderContext
 class CorruptGibbsSampler implements Sampler {
   @SampledVariable public CorruptPhylo phylo
   @ConnectedFactor public LogScaleFactor numericFactor 
-  var RealVar _annealParam = null 
   
   private def double annealParameter() {
-    if (_annealParam === null) return 1.0
-    return _annealParam.doubleValue
+    val cast = numericFactor as ExponentiatedFactor
+    val annealParam = cast.annealingParameter
+    if (annealParam === null) return 1.0
+    return annealParam.doubleValue
   }
   
   override execute(Random rand) {
@@ -24,8 +25,7 @@ class CorruptGibbsSampler implements Sampler {
   }
   
   override setup(SamplerBuilderContext context) {
-    val cast = numericFactor as ExponentiatedFactor
-    _annealParam = cast.annealingParameter
+    
     return true
   }
 }

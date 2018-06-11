@@ -31,7 +31,7 @@ class CorruptPhylo {
       for (entry : tips.entrySet) {
         val included = entry.value
         val pr = tipInclPrs.getTipAsDouble(entry.key, locus)
-        sum += if (included) Math.log(pr) else Math.log(1.0 - pr)
+        sum += if (included) Math.log(pr) else Math.log1p(- pr)
       }
     }
     return sum
@@ -62,12 +62,16 @@ class CorruptPhylo {
   def Map<Cell,SubtreeLikelihood> cellInclusionLogProbabilities(double annealingParameter, Locus locus) {
     val result = new LinkedHashMap
     for (cell : cells) {
-      val inclPr = tipInclPrs.getTipAsDouble(cell, locus)
-      var logP = annealingParameter * Math.log(inclPr)
-      var logQ = annealingParameter * Math.log1p(- inclPr)
-           if (logP < LOG_EPSILON) { logP = LOG_EPSILON; logQ = LOG_ONE_MINUS_EPSILON }
-      else if (logQ < LOG_EPSILON) { logQ = LOG_EPSILON; logP = LOG_ONE_MINUS_EPSILON }
-      result.put(cell, SubtreeLikelihood::tip(logP, logQ))
+      if (annealingParameter == 0.0) {
+        result.put(cell, SubtreeLikelihood::missingTip) 
+      } else {
+        val inclPr = tipInclPrs.getTipAsDouble(cell, locus)
+        var logP = annealingParameter * Math.log(inclPr)
+        var logQ = annealingParameter * Math.log1p(- inclPr)
+             if (logP < LOG_EPSILON) { logP = LOG_EPSILON; logQ = LOG_ONE_MINUS_EPSILON }
+        else if (logQ < LOG_EPSILON) { logQ = LOG_EPSILON; logP = LOG_ONE_MINUS_EPSILON }
+        result.put(cell, SubtreeLikelihood::tip(logP, logQ))
+      }
     }
     return result
   }

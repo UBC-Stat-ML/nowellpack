@@ -39,7 +39,9 @@ class EnumerationUtils {
   def static List<SampledModel> enumerateSyntheticModels(int nCells, int nLoci, double annealParam) {
     val rand = new Random(1)
     val model = syntheticModel(rand, nCells, nLoci)
-    var sModel = new SampledModel(model)
+    val analysis = new GraphAnalysis(model)
+    val samplers = SamplerBuilder::build(analysis)
+    var sModel = new SampledModel(analysis, samplers, true, true, null)
     sModel.exponent = annealParam 
     
     val result = new ArrayList
@@ -50,7 +52,8 @@ class EnumerationUtils {
       val observations = new Observations
       sampleNonUniform(exhaustive, (copy.model as CorruptModel).phylo.getReconstruction)  
       val graphAnalysis = new GraphAnalysis(copy.model, observations)
-      copy = new SampledModel(graphAnalysis, SamplerBuilder.build(graphAnalysis), null)
+      copy = new SampledModel(graphAnalysis, SamplerBuilder.build(graphAnalysis), true, true, null)
+      copy.exponent = annealParam 
       result.add(copy)
     }
     return result 
