@@ -33,6 +33,16 @@ class GenerateData extends Experiment {
     // generate tips
     val data = CLMatrixUtils::syntheticInclusionPrs(dataRand, phylo, stdDev)
     data.toCSV(results.getFileInResultFolder("tipInclusionProbabilities.csv"))
+    
+    // print probabilities
+    val corruptPhylo = new CorruptPhylo(phylo, data)
+    val likelihood = corruptPhylo.logProbability
+    val prior = - CorruptStaticUtils::logNPerfectPhylo(nCells, nLoci)
+    results.getTabularWriter("prs") => [
+      write("type" -> "likelihood", "value" -> likelihood)
+      write("type" -> "prior", "value" -> prior)
+      write("type" -> "joint", "value" -> prior + likelihood)
+    ]
   }
   
   static def void main(String [] args) {

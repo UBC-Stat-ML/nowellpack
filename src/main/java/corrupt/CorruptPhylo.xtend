@@ -18,11 +18,19 @@ class CorruptPhylo {
   // TODO: cache the tip's logs if they are fixed
   // TODO: cache the likelihood based on tipInclPrs' hashcode?
   
+  // Initialize with star tree
   new (CellLocusMatrix tipInclPrs) {
-    this.tipInclPrs = tipInclPrs
-    this.reconstruction = new PerfectPhylo(tipInclPrs.cells, tipInclPrs.loci)
+    this(new PerfectPhylo(tipInclPrs.cells, tipInclPrs.loci), tipInclPrs)
   }
-
+  
+  new (PerfectPhylo phylo, CellLocusMatrix tipInclPrs) {
+    if (phylo.cells != tipInclPrs.cells || 
+        phylo.loci != tipInclPrs.loci)
+      throw new RuntimeException
+    this.tipInclPrs = tipInclPrs
+    this.reconstruction = phylo
+  }
+  
   // un-annealed
   def logProbability() {
     var sum = 0.0
