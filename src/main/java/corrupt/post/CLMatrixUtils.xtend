@@ -70,8 +70,8 @@ class CLMatrixUtils {
     return new ReadOnlyCLMatrix(syntheticInclusionPrs)
   }
   
-  static def void checkCompatible(CellLocusMatrix cl1, CellLocusMatrix cl2) {
-    if (cl1.cells != cl2.cells || cl1.loci != cl2.loci)
+  static def void checkCompatible(SimpleCLMatrix cl1, SimpleCLMatrix cl2) {
+    if (cl1.cellsIdx != cl2.cellsIdx || cl1.lociIdx != cl2.lociIdx)
       throw new RuntimeException
   }
 }

@@ -7,8 +7,6 @@ import briefj.Indexer
 import xlinear.Matrix
 import xlinear.MatrixOperations
 import java.util.Collection
-import java.io.File
-import briefj.BriefIO
 import corrupt.PerfectPhylo
 import java.util.LinkedHashSet
 import java.util.ArrayList
@@ -43,7 +41,7 @@ import java.util.List
   override getCells() { cellsIdx.objects }
   override getLoci()  { lociIdx.objects}
   
-  def void +=(CellLocusMatrix another) {
+  def void +=(SimpleCLMatrix another) {
     CLMatrixUtils::checkCompatible(this, another)
     for (cell : cells) 
       for (locus : loci) 
