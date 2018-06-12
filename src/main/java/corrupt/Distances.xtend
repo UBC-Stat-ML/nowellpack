@@ -16,7 +16,7 @@ class Distances extends Experiment {
     println("distance = " + CLMatrixUtils::distance(mtx1.matrix, mtx2.matrix)) 
   }
   
-  static def main(String [] args) {
+  public static def void main(String [] args) {
     Experiment.start(args)
   }
 }
