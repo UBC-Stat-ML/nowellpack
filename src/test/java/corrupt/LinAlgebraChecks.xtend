@@ -18,6 +18,7 @@ class LinAlgebraChecks {
   
   @Test
   def void test() {
+    CorruptGibbsSampler::useTest = true
     for (anneal : #[0.0, 0.42, 1.0]) {
       val list = enumerateSyntheticModels(nCells, nLoci, anneal) 
       val equality = [SampledModel m | (m.model as CorruptModel).phylo.getReconstruction.tree] 

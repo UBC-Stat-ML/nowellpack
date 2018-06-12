@@ -17,14 +17,11 @@ class CorruptPhylo {
   val PerfectPhylo reconstruction 
   val CellLocusMatrix tipInclPrs
   
-  // TODO: cache the tip's logs if they are fixed
-  // TODO: cache the likelihood based on tipInclPrs' hashcode?
-  
   // Initialize with star tree
   new (CellLocusMatrix tipInclPrs) {
     this(new PerfectPhylo(tipInclPrs.cells, tipInclPrs.loci), tipInclPrs)
     if (!fixedTips)
-      throw new RuntimeException("Caching might not work. Restore version at commit f0e609b37fb42ed160866f8197c43bbbc0d1cc2f which does one pass at the time?")
+      throw new RuntimeException("Caching might not work.")
   }
   
   new (PerfectPhylo phylo, CellLocusMatrix tipInclPrs) {
@@ -47,7 +44,7 @@ class CorruptPhylo {
       resetCache
   }
   
-  private def void resetCache() {
+  def void resetCache() {
     _cache = 0.0
     for (locus : loci) 
       _cache += logProbability(locus)
@@ -88,6 +85,12 @@ class CorruptPhylo {
       _shuffled = shuffledLoci(rand)
     _gibbSample(rand, annealingParameter, _shuffled.get(index))
     _index++
+  }
+  
+  def void gibbsTest(Random rand, double annealingParameters) {    
+    resetCache
+    for (locus : loci)
+      _gibbSample(rand, annealingParameters, locus)
   }
   
   // private as doing only one locus retriggers full likelihood computation

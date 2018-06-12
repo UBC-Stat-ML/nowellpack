@@ -51,6 +51,7 @@ class EnumerationUtils {
       var copy = sModel.duplicate
       val observations = new Observations
       sampleNonUniform(exhaustive, (copy.model as CorruptModel).phylo.getReconstruction)  
+      (copy.model as CorruptModel).phylo.resetCache
       val graphAnalysis = new GraphAnalysis(copy.model, observations)
       copy = new SampledModel(graphAnalysis, SamplerBuilder.build(graphAnalysis), true, true, null)
       copy.exponent = annealParam 

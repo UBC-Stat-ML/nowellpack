@@ -21,10 +21,15 @@ class CorruptGibbsSampler implements Sampler {
   }
   
   override execute(Random rand) {
-    phylo.nextGibbs(rand, annealParameter)
+    if (useTest)
+      phylo.gibbsTest(rand, annealParameter)
+    else
+      phylo.nextGibbs(rand, annealParameter)
   }
   
   override setup(SamplerBuilderContext context) {
     return true
   }
+  
+  public static var useTest = false // only for testing
 }
