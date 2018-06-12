@@ -3,7 +3,7 @@ package corrupt
 import static corrupt.CorruptStaticUtils.*
 
 model Uniform {
-  random PerfectPhylo phylo
+  random CorruptPhylo phylo
   
   laws {
     logf(double logNorm = - logNPerfectPhylo(phylo.cells.size, phylo.loci.size)) {
@@ -12,6 +12,6 @@ model Uniform {
   }
   
   generate (rand) {
-    phylo.sampleUniform(rand.generator) 
+    phylo.priorSample(rand.generator) 
   }
 }
