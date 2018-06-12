@@ -58,7 +58,9 @@ class AverageCLMatrices extends Experiment {
   }
   
   private def double distance(SimpleCLMatrix refTree, SimpleCLMatrix sum, double count) {
-    val diff = refTree.matrix - (sum.matrix/count)
-    return diff.nonZeroEntries().map[Math.abs(it)].sum() / diff.nEntries
+    CLMatrixUtils::checkCompatible(refTree, sum)
+    return CLMatrixUtils::distance(refTree.matrix, sum.matrix/count) 
   }
+  
+  
 }

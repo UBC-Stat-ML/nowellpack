@@ -12,6 +12,7 @@ import java.util.ArrayList
 import corrupt.Locus
 import corrupt.Cell
 import blang.inits.providers.CoreProviders
+import xlinear.Matrix
 
 class CLMatrixUtils {
   
@@ -29,6 +30,11 @@ class CLMatrixUtils {
       for (locus : matrix.loci)
         out.println('''«cell»,«locus»,«matrix.getTipAsDouble(cell, locus)»«IF reference !== null»,«reference.getTipAsDouble(cell, locus)»«ENDIF»''')
     out.close
+  }
+  
+  static def double distance(Matrix mtx1, Matrix mtx2) {
+    val diff = mtx1 - mtx2
+    return diff.nonZeroEntries().map[Math.abs(it)].sum() / diff.nEntries
   }
   
   static def SimpleCLMatrix fromCSV(File f) {

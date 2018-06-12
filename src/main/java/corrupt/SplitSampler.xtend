@@ -32,6 +32,22 @@ class SplitSampler {
     return result
   }
   
+  def static double maxLogConditional(
+    DirectedTree<TreeNode> phylogeny, 
+    Locus locusToAdd, 
+    Map<Cell, SubtreeLikelihood> cellLikelihoods
+  ) {
+    new SplitSampler(phylogeny, locusToAdd, cellLikelihoods).maxLogConditional.value
+  }
+  
+  def static void maximize(
+    DirectedTree<TreeNode> phylogeny, 
+    Locus locusToAdd, 
+    Map<Cell, SubtreeLikelihood> cellLikelihoods
+  ) {
+    new SplitSampler(phylogeny, locusToAdd, cellLikelihoods).maximize
+  }
+  
   val DirectedTree<TreeNode> phylogeny 
   val Map<TreeNode, SubtreeLikelihood> likelihoods = new LinkedHashMap
   val double rootExclLog
@@ -48,14 +64,53 @@ class SplitSampler {
     rootExclLog = computeLikelihood(phylogeny.root).exclusionLog
   }
   
+  /**
+   * Build the conditional probability for each possible attachment. 
+   * Return the maximum and the index of the corresponding attachment.
+   */
+  private def Pair<Integer,Double> maxLogConditional() {
+    val double [] logPrs = newDoubleArrayOfSize(rootLociIndexer.size)
+    for (parentIndex : 0 ..< rootLociIndexer.size) {
+      val node = rootLociIndexer.i2o(parentIndex)
+      var attachPr = logAttachPr(node)
+      val children = phylogeny.children(node)
+      for (child : children) {
+        val recursions = likelihoods.get(child)
+        var inclPr = inclusionPr(recursions)
+        inclPr = Math.max(inclPr, 1.0 - inclPr)
+        attachPr += Math.log(inclPr)
+      }
+      logPrs.set(parentIndex, attachPr)
+    }
+    var double max = Double.NEGATIVE_INFINITY
+    var int argmax = -1
+    for (parentIndex : 0 ..< rootLociIndexer.size)
+      if (logPrs.get(parentIndex) > max) {
+        max = logPrs.get(parentIndex)
+        argmax = parentIndex
+      }
+    return argmax -> max
+  }
+  
+  private def void maximize() {
+    val pair = maxLogConditional
+    val pickedParent = rootLociIndexer.i2o(pair.key) 
+    val children = phylogeny.children(pickedParent)
+    val childrenToMove = new ArrayList
+    for (child : children) {
+      val recursions = likelihoods.get(child)
+      if (inclusionPr(recursions) > 0.5) 
+        childrenToMove.add(child)
+    }
+    phylogeny.addEdge(pickedParent, locusToAdd, childrenToMove)
+  }
+  
   private def void sample(Random random) {
     // parent    
     val double [] prs = newDoubleArrayOfSize(rootLociIndexer.size)
     for (parentIndex : 0 ..< rootLociIndexer.size) {
       val node = rootLociIndexer.i2o(parentIndex)
-      val recursions = likelihoods.get(node)
-      val likelihood = rootExclLog + recursions.logProductPQ - recursions.exclusionLog
-      prs.set(parentIndex, likelihood)
+      prs.set(parentIndex, logAttachPr(node))
     }
     logNormalization = expNormalize(prs)
     val sampledParent = rootLociIndexer.i2o(random.nextCategorical(prs)) 
@@ -69,6 +124,12 @@ class SplitSampler {
         childrenToMove.add(child)
     }
     phylogeny.addEdge(sampledParent, locusToAdd, childrenToMove)
+  }
+  
+  def private double logAttachPr(TreeNode node) {
+    
+    val recursions = likelihoods.get(node)
+    return rootExclLog + recursions.logProductPQ - recursions.exclusionLog
   }
   
   def private double inclusionPr(SubtreeLikelihood recursion) {

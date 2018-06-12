@@ -80,3 +80,5 @@ run.enabled = false
 createScript(project, 'corrupt.CorruptModel',           'corrupt-infer')
 createScript(project, 'corrupt.GenerateData',           'corrupt-generate')
 createScript(project, 'corrupt.post.AverageCLMatrices', 'corrupt-average')
+createScript(project, 'corrupt.Greedy',                 'corrupt-greedy')
+createScript(project, 'corrupt.Distances',              'corrupt-distance')

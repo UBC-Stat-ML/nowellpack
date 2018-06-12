@@ -18,7 +18,7 @@ import java.util.List
   
   val Indexer<Cell> cellsIdx
   val Indexer<Locus> lociIdx
-  val Matrix matrix
+  val Matrix matrix 
   
   new(Collection<Cell> cells, Collection<Locus> loci) {
     this.cellsIdx = new Indexer(sanitize(cells))
