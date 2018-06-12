@@ -44,8 +44,11 @@ class AverageCLMatrices extends Experiment {
     var count = 0
     for (phylo : phylos) {
       count++
-      if (result === null) 
+      if (result === null) {
         result = new SimpleCLMatrix(phylo.cells, phylo.loci)
+        if (parsedTreeIndicators !== null)
+        distanceOutput.append(distance(parsedTreeIndicators, result, count) + "\n")
+      }
       result += phylo
       if (parsedTreeIndicators !== null)
         distanceOutput.append(distance(parsedTreeIndicators, result, count) + "\n")
