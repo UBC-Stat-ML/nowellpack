@@ -23,7 +23,7 @@ import java.io.File
 @Data class PerfectPhylo {
   val DirectedTree<TreeNode> tree 
   val Set<Locus> loci
-  val Set<Cell> cells
+  val Set<Cell> cells 
   
   def public Map<Cell,Boolean> getTips(Locus locus) { 
       val result = new LinkedHashMap
