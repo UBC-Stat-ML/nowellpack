@@ -19,6 +19,8 @@ class Greedy extends Experiment {
   
   override run() {
     val CorruptPhylo phylo = new CorruptPhylo(tipInclusionProbabilities)
+    for (locus : tipInclusionProbabilities.loci)
+      phylo.reconstruction.tree.collapseEdge(locus)
     val List<QueuedLocus> queue = sortQueue(null, phylo)
     var iteration = 0
     while (!queue.empty) {
