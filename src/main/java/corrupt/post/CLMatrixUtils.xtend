@@ -20,11 +20,14 @@ class CLMatrixUtils {
   public static val String TIP_INCL_PRS = "tipInclusionProbabilities"
   
   static def void toCSV(CellLocusMatrix matrix, File f) {
+    toCSV(matrix, f, null)
+  }
+  static def void toCSV(CellLocusMatrix matrix, File f, CellLocusMatrix reference) {
     val out = BriefIO.output(f)
-    out.println('''«CELLS»,«LOCI»,«TIP_INCL_PRS»''')
+    out.println('''«CELLS»,«LOCI»,«TIP_INCL_PRS»«IF reference !== null»,reference«ENDIF»''')
     for (cell : matrix.cells)
       for (locus : matrix.loci)
-        out.println('''«cell»,«locus»,«matrix.getTipAsDouble(cell, locus)»''')
+        out.println('''«cell»,«locus»,«matrix.getTipAsDouble(cell, locus)»«IF reference !== null»,«reference.getTipAsDouble(cell, locus)»«ENDIF»''')
     out.close
   }
   
