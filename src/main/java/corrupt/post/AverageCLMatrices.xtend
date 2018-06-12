@@ -42,16 +42,22 @@ class AverageCLMatrices extends Experiment {
   def void averageTipIndicators(Iterable<PerfectPhylo> phylos) {
     var distanceOutput = if (referenceTree === null) null else results.getAutoClosedBufferedWriter("distances.csv")
     var count = 0
+    var finalDistance = Double.NaN
     for (phylo : phylos) {
       count++
       if (result === null) {
         result = new SimpleCLMatrix(phylo.cells, phylo.loci)
         if (parsedTreeIndicators !== null)
-        distanceOutput.append(distance(parsedTreeIndicators, result, count) + "\n")
+          distanceOutput.append(distance(parsedTreeIndicators, result, count) + "\n")
       }
       result += phylo
-      if (parsedTreeIndicators !== null)
-        distanceOutput.append(distance(parsedTreeIndicators, result, count) + "\n")
+      if (parsedTreeIndicators !== null) {
+        finalDistance = distance(parsedTreeIndicators, result, count)
+        distanceOutput.append(finalDistance + "\n")
+      }
+    }
+    if (!Double.isNaN(finalDistance)) {
+      println("distance = " + finalDistance)
     }
     if (result !== null)
       result /= count
