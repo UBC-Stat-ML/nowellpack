@@ -32,7 +32,7 @@ class GenerateData extends Experiment {
   
     // generate tips
     val data = CLMatrixUtils::syntheticInclusionPrs(dataRand, phylo, stdDev)
-    data.toCSV(results.getFileInResultFolder("tipInclusionProbabilities.csv"))
+    data.toCSV(results.getFileInResultFolder("tipInclusionProbabilities.csv"), CLMatrixUtils::fromPhylo(phylo)) 
     
     // print probabilities
     val corruptPhylo = new CorruptPhylo(phylo, data)
