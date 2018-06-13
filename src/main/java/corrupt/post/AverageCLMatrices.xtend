@@ -40,7 +40,11 @@ class AverageCLMatrices extends Experiment {
    * Null if empty.
    */
   def void averageTipIndicators(Iterable<PerfectPhylo> phylos) {
-    var distanceOutput = if (referenceTree === null) null else results.getAutoClosedBufferedWriter("distances.csv")
+    var distanceOutput = 
+      if (referenceTree === null) 
+        null 
+      else 
+        results.getAutoClosedBufferedWriter("distances.csv") => [ println("distance") ]
     var count = 0
     var finalDistance = Double.NaN
     for (phylo : phylos) {
