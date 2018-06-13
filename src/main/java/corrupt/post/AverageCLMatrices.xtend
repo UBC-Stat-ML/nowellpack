@@ -44,7 +44,9 @@ class AverageCLMatrices extends Experiment {
       if (referenceTree === null) 
         null 
       else 
-        results.getAutoClosedBufferedWriter("distances.csv") => [ println("scan,distance") ]
+        results.getAutoClosedBufferedWriter("distances.csv")
+    if (parsedTreeIndicators !== null)
+      distanceOutput.append("scan,distance\n")
     var count = 0
     var finalDistance = Double.NaN
     for (phylo : phylos) {
@@ -57,7 +59,7 @@ class AverageCLMatrices extends Experiment {
       result += phylo
       if (parsedTreeIndicators !== null) {
         finalDistance = distance(parsedTreeIndicators, result, count)
-        distanceOutput.append(finalDistance + "\n")
+        distanceOutput.append("" + count + "," + finalDistance + "\n")
       }
     }
     if (!Double.isNaN(finalDistance)) {
