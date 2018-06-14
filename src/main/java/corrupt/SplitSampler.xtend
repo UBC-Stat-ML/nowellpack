@@ -27,17 +27,18 @@ class SplitSampler {
     Locus locusToAdd, 
     Map<Cell, SubtreeLikelihood> cellLikelihoods, Random rand
   ) {
-    val result = new SplitSampler(phylogeny, locusToAdd, cellLikelihoods)
-    result.sample(rand)
+    val result = new SplitSampler(phylogeny, cellLikelihoods)
+    result.sample(rand, locusToAdd)
+    if (result.rootLociIndexer.containsObject(locusToAdd))
+      throw new RuntimeException
     return result
   }
   
   def static double maxLogConditional(
     DirectedTree<TreeNode> phylogeny, 
-    Locus locusToAdd, 
     Map<Cell, SubtreeLikelihood> cellLikelihoods
   ) {
-    new SplitSampler(phylogeny, locusToAdd, cellLikelihoods).maxLogConditional.value
+    new SplitSampler(phylogeny, cellLikelihoods).maxLogConditional().value
   }
   
   def static void maximize(
@@ -45,21 +46,20 @@ class SplitSampler {
     Locus locusToAdd, 
     Map<Cell, SubtreeLikelihood> cellLikelihoods
   ) {
-    new SplitSampler(phylogeny, locusToAdd, cellLikelihoods).maximize
+    val sampler = new SplitSampler(phylogeny, cellLikelihoods)
+    if (sampler.rootLociIndexer.containsObject(locusToAdd))
+      throw new RuntimeException
+    sampler.maximize(locusToAdd)
   }
   
   val DirectedTree<TreeNode> phylogeny 
   val Map<TreeNode, SubtreeLikelihood> likelihoods = new LinkedHashMap
   val double rootExclLog
   val Indexer<TreeNode> rootLociIndexer = new Indexer
-  val Locus locusToAdd
   
-  private new (DirectedTree<TreeNode> phylogeny, Locus locusToAdd, Map<Cell, SubtreeLikelihood> cellLikelihoods) {
-    this.locusToAdd = locusToAdd
+  private new (DirectedTree<TreeNode> phylogeny, Map<Cell, SubtreeLikelihood> cellLikelihoods) {
     this.phylogeny = phylogeny
     rootLociIndexer.addAllToIndex(phylogeny.lociAndRoot) 
-    if (rootLociIndexer.containsObject(locusToAdd))
-      throw new RuntimeException
     likelihoods.putAll(cellLikelihoods) // (1)
     rootExclLog = computeLikelihood(phylogeny.root).exclusionLog
   }
@@ -92,7 +92,7 @@ class SplitSampler {
     return argmax -> max
   }
   
-  private def void maximize() {
+  private def void maximize(Locus locusToAdd) {
     val pair = maxLogConditional
     val pickedParent = rootLociIndexer.i2o(pair.key) 
     val children = phylogeny.children(pickedParent)
@@ -105,7 +105,7 @@ class SplitSampler {
     phylogeny.addEdge(pickedParent, locusToAdd, childrenToMove)
   }
   
-  private def void sample(Random random) {
+  private def void sample(Random random, Locus locusToAdd) {
     // parent    
     val double [] prs = newDoubleArrayOfSize(rootLociIndexer.size)
     for (parentIndex : 0 ..< rootLociIndexer.size) {

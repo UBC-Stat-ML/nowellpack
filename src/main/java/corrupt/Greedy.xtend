@@ -55,7 +55,7 @@ class Greedy extends Experiment {
     new (Locus l) { this.locus = l }
     var double priority = Double.NaN
     def recomputePriority(CorruptPhylo phylo) {
-      priority = SplitSampler::maxLogConditional(phylo.reconstruction.tree, locus, phylo.cellInclusionLogProbabilities(1.0, locus)) 
+      priority = SplitSampler::maxLogConditional(phylo.reconstruction.tree, phylo.cellInclusionLogProbabilities(1.0, locus)) 
     }
   }
   
