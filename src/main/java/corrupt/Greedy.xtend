@@ -20,7 +20,7 @@ class Greedy extends Experiment {
   
   override run() {
     val CorruptPhylo phylo = new CorruptPhylo(tipInclusionProbabilities)
-    val output = results.getAutoClosedBufferedWriter("trees.newick")
+    val output = results.getAutoClosedBufferedWriter("trees.csv")
     output.append("iteration,value\n")
     for (locus : tipInclusionProbabilities.loci)
       phylo.reconstruction.tree.collapseEdge(locus)
@@ -41,7 +41,7 @@ class Greedy extends Experiment {
   private def write(CorruptPhylo phylo, List<QueuedLocus> loci, BufferedWriter writer, int iteration) {
     for (locus : loci)
       phylo.reconstruction.tree.addEdge(CorruptStaticUtils::root, locus.locus)
-    writer.append("" + iteration + "," + phylo + "\n")
+    writer.append("" + iteration + ",\"" + phylo + "\"\n")
     for (locus : loci)
       phylo.reconstruction.tree.collapseEdge(locus.locus)
   }
