@@ -32,6 +32,11 @@ class CLMatrixUtils {
     out.close
   }
   
+  static def double distance(SimpleCLMatrix mtx1, SimpleCLMatrix mtx2) {
+    checkCompatible(mtx1, mtx2)
+    return distance(mtx1.matrix, mtx2.matrix)
+  }
+  
   static def double distance(Matrix mtx1, Matrix mtx2) {
     val diff = mtx1 - mtx2
     return diff.nonZeroEntries().map[Math.abs(it)].sum() / diff.nEntries

@@ -17,17 +17,16 @@ class Distances extends Experiment {
     val refPhylo = PerfectPhylo::parseNewick(reference)
     val refMtx = CLMatrixUtils::fromPhylo(refPhylo)
     val guessMtx = CLMatrixUtils::fromPhylo(PerfectPhylo::parseNewick(guess))
-    println("distance = " + CLMatrixUtils::distance(refMtx.matrix, guessMtx.matrix)) 
+    println("distance = " + CLMatrixUtils::distance(refMtx, guessMtx)) 
     println("allZeroBaseline = " + CLMatrixUtils::distance(refMtx.matrix, MatrixOperations::dense(refMtx.matrix.nRows, refMtx.matrix.nCols)))
     
     val summaryStats = (0..10).toList.stream.collect(Collectors.summarizingDouble[
       val randomPhylo = new PerfectPhylo(refPhylo.cells, refPhylo.loci)  
       randomPhylo.sampleUniform(new Random(1))
-      CLMatrixUtils::distance(refMtx.matrix, CLMatrixUtils::fromPhylo(randomPhylo).matrix)
+      CLMatrixUtils::distance(refMtx, CLMatrixUtils::fromPhylo(randomPhylo))
     ])
     println("randomBaseline = " + summaryStats.average)
   }
-  
   
   public static def void main(String [] args) {
     Experiment.start(args)

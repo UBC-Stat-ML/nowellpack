@@ -8,7 +8,8 @@ import java.util.List
 import java.util.ArrayList
 import java.util.Collections
 import java.util.Comparator
-import briefj.BriefIO
+import corrupt.Greedy.QueuedLocus
+import java.io.BufferedWriter
 
 class Greedy extends Experiment {
   
@@ -19,11 +20,14 @@ class Greedy extends Experiment {
   
   override run() {
     val CorruptPhylo phylo = new CorruptPhylo(tipInclusionProbabilities)
+    val output = results.getAutoClosedBufferedWriter("trees.newick")
+    output.append("iteration,value\n")
     for (locus : tipInclusionProbabilities.loci)
       phylo.reconstruction.tree.collapseEdge(locus)
     val List<QueuedLocus> queue = sortQueue(null, phylo)
     var iteration = 0
     while (!queue.empty) {
+      write(phylo, queue, output, iteration)
       println("Processing locus " + (iteration+1) + "/" + tipInclusionProbabilities.loci.size)
       val popped = queue.pop
       SplitSampler::maximize(phylo.reconstruction.tree, popped,  phylo.cellInclusionLogProbabilities(1.0, popped))
@@ -31,8 +35,15 @@ class Greedy extends Experiment {
       if (iteration % reshufflePeriod == 0)
         sortQueue(queue, phylo)
     }
-    val outputFile = results.getFileInResultFolder("tree.newick")
-    BriefIO::write(outputFile, phylo.toString)
+    write(phylo, queue, output, iteration)
+  }
+  
+  private def write(CorruptPhylo phylo, List<QueuedLocus> loci, BufferedWriter writer, int iteration) {
+    for (locus : loci)
+      phylo.reconstruction.tree.addEdge(CorruptStaticUtils::root, locus.locus)
+    writer.append("" + iteration + "," + phylo + "\n")
+    for (locus : loci)
+      phylo.reconstruction.tree.collapseEdge(locus.locus)
   }
   
   private def sortQueue(List<QueuedLocus> _old, CorruptPhylo phylo) {
