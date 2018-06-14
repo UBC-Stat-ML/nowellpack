@@ -10,6 +10,8 @@ import java.util.Collections
 import java.util.Comparator
 import corrupt.Greedy.QueuedLocus
 import java.io.BufferedWriter
+import bayonet.distributions.Random
+import java.util.Optional
 
 class Greedy extends Experiment {
   
@@ -17,6 +19,8 @@ class Greedy extends Experiment {
   
   @Arg   @DefaultValue("10")
   int reshufflePeriod = 10
+  
+  @Arg Optional<Random> randomizedOrder = Optional.empty
   
   override run() {
     val CorruptPhylo phylo = new CorruptPhylo(tipInclusionProbabilities)
@@ -47,13 +51,22 @@ class Greedy extends Experiment {
   }
   
   private def sortQueue(List<QueuedLocus> _old, CorruptPhylo phylo) {
-    println("Sorting queue")
+    val useRandomOrder = randomizedOrder.present
+    if (useRandomOrder && _old !== null)
+      return _old
     val List<QueuedLocus> result = if (_old === null) {
       new ArrayList(phylo.loci.map[new QueuedLocus(it)].toList)
     } else _old
-    for (locus : result)
-      locus.recomputePriority(phylo)
-    Collections::sort(result, Comparator::comparing[QueuedLocus ql | ql.priority]) 
+    
+    if (useRandomOrder) {
+      println("Shuffling order")
+      Collections::shuffle(result, randomizedOrder.get)
+    } else {
+      println("Sorting queue")
+      for (locus : result)
+        locus.recomputePriority(phylo)
+      Collections::sort(result, Comparator::comparing[QueuedLocus ql | ql.priority])
+    } 
     return result
   }
   
