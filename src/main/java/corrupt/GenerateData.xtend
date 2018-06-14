@@ -46,6 +46,6 @@ class GenerateData extends Experiment {
   }
   
   static def void main(String [] args) {
-    Experiment.start(args)
+    Experiment.startAutoExit(args)
   }
 }

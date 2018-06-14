@@ -30,7 +30,7 @@ class AverageCLMatrices extends Experiment {
   }
   
   def static void main(String [] args) {
-    Experiment.start(args)
+    Experiment.startAutoExit(args)
   }
   
   var SimpleCLMatrix parsedTreeIndicators = null
