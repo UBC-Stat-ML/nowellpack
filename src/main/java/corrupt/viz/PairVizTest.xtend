@@ -11,8 +11,8 @@ import java.util.Random
   val Matrix m2
   
   override protected draw() {
-    addChild(new MatrixViz(m1) => [width = 1.0f], 0.0f, 0.0f)
-    addChild(new MatrixViz(m2) => [width = 1.0f], 1.0f, 1.0f)
+    addChild(new MatrixViz(m1) => [declareWidth(1.0f)], 0.0f, 0.0f)
+    addChild(new MatrixViz(m2) => [declareWidth(1.0f)], 1.0f, 1.0f)
   }
   
   override protected size() {

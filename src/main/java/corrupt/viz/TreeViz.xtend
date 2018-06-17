@@ -17,7 +17,7 @@ class TreeViz<T> extends Viz {
   
   // Imagine root is at time zero, what is the age of the other nodes?
   private val Map<T,Float> times = new LinkedHashMap
-  private val Map<T,Integer> tipIndices = new LinkedHashMap
+  public val Map<T,Integer> tipIndices = new LinkedHashMap
   private val int nLeaves
   private var float depth = 0.0f
   
@@ -97,12 +97,12 @@ class TreeViz<T> extends Viz {
   }
   
   public static def void main(String [] args) { 
-    val phylo = new PerfectPhylo(CorruptStaticUtils::syntheticCells(1000), CorruptStaticUtils::syntheticLoci(10000))
+    val phylo = new PerfectPhylo(CorruptStaticUtils::syntheticCells(10), CorruptStaticUtils::syntheticLoci(10))
     phylo.sampleUniform(new Random(1))
     println(phylo.tree)
     new TreeViz(phylo.tree) => [
-      width = 200
-      output("bigtree.pdf")
+      declareWidth(10) 
+      show
     ]
   }
 }

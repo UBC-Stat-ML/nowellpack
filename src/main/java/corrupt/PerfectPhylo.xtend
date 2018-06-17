@@ -19,6 +19,7 @@ import java.util.LinkedHashSet
 import briefj.collections.Tree
 import briefj.BriefIO
 import java.io.File
+import java.util.Collections
 
 @Data class PerfectPhylo {
   val DirectedTree<TreeNode> tree 
@@ -55,6 +56,12 @@ import java.io.File
       tree.addEdge(root, cell)
     for (locus : loci) 
       tree.addEdge(root, locus)
+  }
+  
+  def static PerfectPhylo generateUniform(int nCells, int nLoci, Random rand) {
+    val result = new PerfectPhylo(CorruptStaticUtils::syntheticCells(nCells), CorruptStaticUtils::syntheticLoci(nLoci))
+    result.sampleUniform(rand)
+    return result
   }
   
   def static PerfectPhylo parseNewick(File f) {
@@ -146,6 +153,46 @@ import java.io.File
     if (node != root) 
       builder.append(label) 
   }
+  
+  def DirectedTree<Set<TreeNode>> collapsedTree() {
+    val collapsed = collapsedTree(tree.root)
+    val result = new DirectedTree(collapsed.label)
+    copy(collapsed, result)
+    return result
+  }
+  
+  private static def void copy(Tree<Set<TreeNode>> src, DirectedTree<Set<TreeNode>> dest) {
+    for (child : src.children) {
+      dest.addEdge(src.label, child.label)
+      copy(child, dest)
+    }
+  }
+  
+  private def Tree<Set<TreeNode>> collapsedTree(TreeNode node) {
+    val recursions = new ArrayList<Tree<Set<TreeNode>>>
+    for (child : tree.children(node)) {
+      val current = collapsedTree(child)
+      if (current !== null)
+        recursions.add(current)
+    }
+    val nodeSet = new LinkedHashSet(Collections.singleton(node))
+    if (recursions.size === 0) {
+      if (node instanceof Cell)
+        return new Tree(nodeSet)
+      else
+        return null
+    } else if (recursions.size === 1) {
+      val child = recursions.get(0)
+      if (child === null)
+        return null
+      child.label.add(node) 
+      return child
+    } else {
+      return new Tree(nodeSet, recursions)
+    }
+  }
+  
+  
   
   override String toString() { toNewick }
 }

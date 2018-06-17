@@ -12,6 +12,15 @@ import org.eclipse.xtend.lib.annotations.Delegate
   @Delegate
   val CellLocusMatrix enclosed
   
+  private new(CellLocusMatrix enclosed) {
+    this.enclosed = enclosed
+  }
+  
+  def static ReadOnlyCLMatrix readOnly(CellLocusMatrix m) {
+    if (m instanceof ReadOnlyCLMatrix) return m
+    else return new ReadOnlyCLMatrix(m)
+  }
+  
   @DesignatedConstructor
   public static def ReadOnlyCLMatrix create(
       @Input() String path

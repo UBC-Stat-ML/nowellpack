@@ -32,6 +32,10 @@ class CLMatrixUtils {
     out.close
   }
   
+  static def double distance(PerfectPhylo phylo1, PerfectPhylo phylo2) {
+    return distance(fromPhylo(phylo1), fromPhylo(phylo2))
+  }
+  
   static def double distance(SimpleCLMatrix mtx1, SimpleCLMatrix mtx2) {
     checkCompatible(mtx1, mtx2)
     return distance(mtx1.matrix, mtx2.matrix)
@@ -81,7 +85,7 @@ class CLMatrixUtils {
         syntheticInclusionPrs.setTip(cell, locus, prs.get(1)) 
       }
     }
-    return new ReadOnlyCLMatrix(syntheticInclusionPrs)
+    return ReadOnlyCLMatrix.readOnly(syntheticInclusionPrs)
   }
   
   static def void checkCompatible(SimpleCLMatrix cl1, SimpleCLMatrix cl2) {

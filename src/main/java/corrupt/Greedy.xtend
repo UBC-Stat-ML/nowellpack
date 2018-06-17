@@ -12,26 +12,31 @@ import corrupt.Greedy.QueuedLocus
 import java.io.BufferedWriter
 import bayonet.distributions.Random
 import java.util.Optional
+import briefj.BriefIO
 
 class Greedy extends Experiment {
   
-  @Arg ReadOnlyCLMatrix tipInclusionProbabilities
+  @Arg public ReadOnlyCLMatrix tipInclusionProbabilities
   
-  @Arg   @DefaultValue("10")
-  int reshufflePeriod = 10
+  @Arg   @DefaultValue("1")
+  public int reshufflePeriod = 1
   
-  @Arg Optional<Random> randomizedOrder = Optional.empty
+  @Arg public Optional<Random> randomizedOrder = Optional.empty
   
-  override run() {
+  @Arg   @DefaultValue("")
+  public boolean output = false
+  
+  var BufferedWriter writer = null
+  
+  def CorruptPhylo infer() {
     val CorruptPhylo phylo = new CorruptPhylo(tipInclusionProbabilities)
-    val output = results.getAutoClosedBufferedWriter("trees.csv")
-    output.append("iteration,value\n")
+    outputLine("iteration,value\n")
     for (locus : tipInclusionProbabilities.loci)
       phylo.reconstruction.tree.collapseEdge(locus)
     val List<QueuedLocus> queue = sortQueue(null, phylo)
     var iteration = 0
     while (!queue.empty) {
-      write(phylo, queue, output, iteration)
+      writePhylo(phylo, queue, iteration)
       println("Processing locus " + (iteration+1) + "/" + tipInclusionProbabilities.loci.size)
       val popped = queue.pop
       SplitSampler::maximize(phylo.reconstruction.tree, popped,  phylo.cellInclusionLogProbabilities(1.0, popped))
@@ -39,13 +44,29 @@ class Greedy extends Experiment {
       if (iteration % reshufflePeriod == 0)
         sortQueue(queue, phylo)
     }
-    write(phylo, queue, output, iteration)
+    writePhylo(phylo, queue, iteration) 
+    if (output)
+      BriefIO::write(results.getFileInResultFolder("tree.newick"), phylo.toString)
+    return phylo
   }
   
-  private def write(CorruptPhylo phylo, List<QueuedLocus> loci, BufferedWriter writer, int iteration) {
+  private def outputLine(String s) {
+    if (!output) return;
+    if (writer === null) 
+      writer = results.getAutoClosedBufferedWriter("trees.csv")
+    writer.append(s + "\n")
+  }
+  
+  override run() {
+    infer 
+  }
+  
+  private def void writePhylo(CorruptPhylo phylo, List<QueuedLocus> loci, int iteration) {
+    if (!output) 
+      return;
     for (locus : loci)
-      phylo.reconstruction.tree.addEdge(CorruptStaticUtils::root, locus.locus)
-    writer.append("" + iteration + ",\"" + phylo + "\"\n")
+      phylo.reconstruction.tree.addEdge(CorruptStaticUtils::root, locus.locus) 
+    outputLine("" + iteration + ",\"" + phylo + "\"")
     for (locus : loci)
       phylo.reconstruction.tree.collapseEdge(locus.locus)
   }
