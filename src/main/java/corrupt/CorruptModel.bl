@@ -1,9 +1,9 @@
 package corrupt
 
-import corrupt.post.ReadOnlyCLMatrix
+import corrupt.post.CellLocusMatrix
 
 model CorruptModel {
-  param ReadOnlyCLMatrix tipInclusionProbabilities
+  param CellLocusMatrix tipInclusionProbabilities
   random CorruptPhylo phylo ?: new CorruptPhylo(tipInclusionProbabilities)
   
   laws {

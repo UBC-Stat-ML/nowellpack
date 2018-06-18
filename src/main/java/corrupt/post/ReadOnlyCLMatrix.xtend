@@ -1,16 +1,13 @@
 package corrupt.post
 
-import blang.inits.DesignatedConstructor
-import blang.inits.Input
 import com.rits.cloning.Immutable
-import java.io.File
 import org.eclipse.xtend.lib.annotations.Data
-import org.eclipse.xtend.lib.annotations.Delegate
+import corrupt.Cell
+import corrupt.Locus
 
 @Immutable
 @Data class ReadOnlyCLMatrix implements CellLocusMatrix {
-  @Delegate
-  val CellLocusMatrix enclosed
+  val CellLocusMatrix enclosed 
   
   private new(CellLocusMatrix enclosed) {
     this.enclosed = enclosed
@@ -21,11 +18,7 @@ import org.eclipse.xtend.lib.annotations.Delegate
     else return new ReadOnlyCLMatrix(m)
   }
   
-  @DesignatedConstructor
-  public static def ReadOnlyCLMatrix create(
-      @Input() String path
-  ) { 
-    println("Loading tip inclusion probabilities")
-    return new ReadOnlyCLMatrix(CLMatrixUtils::fromCSV(new File(path)))    
-  } 
+  override getTipAsDouble(Cell cell, Locus locus) { enclosed.getTipAsDouble(cell, locus) }
+  override getCells() { enclosed.cells }
+  override getLoci() { enclosed.loci}
 }
