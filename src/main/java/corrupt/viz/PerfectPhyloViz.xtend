@@ -1,28 +1,39 @@
 package corrupt.viz
 
-import corrupt.PerfectPhylo
-import corrupt.post.CellLocusMatrix
-import xlinear.MatrixOperations
-
-import corrupt.CorruptStaticUtils
-import bayonet.distributions.Random
-import corrupt.post.CLMatrixUtils
-import corrupt.TreeNode
-import java.util.Set
+import blang.inits.ConstructorArg
+import blang.inits.DesignatedConstructor
 import corrupt.Cell
-import java.util.List
+import corrupt.PerfectPhylo
+import corrupt.TreeNode
+import corrupt.post.CellLocusMatrix
 import corrupt.viz.MatrixViz.CellFiller
+import java.util.List
+import java.util.Set
+import xlinear.MatrixOperations
+import blang.inits.experiments.Experiment
+import corrupt.post.CLMatrixUtils
 
 class PerfectPhyloViz extends Viz {
   val TreeViz<Set<TreeNode>> treeViz
   val MatrixViz matrixViz
   
-  new (PerfectPhylo phylo, List<CellLocusMatrix> matrices) {
-    if (matrices.size === 0 || matrices.size > 4)
+  @DesignatedConstructor
+  new (@ConstructorArg("phylo") PerfectPhylo phylo, @ConstructorArg("matrices") List<CellLocusMatrix> matrices, @ConstructorArg("size") PublicSize size) {
+    super(size)
+    
+    if (matrices.size > 4)
       throw new RuntimeException
-    val int groupSize = matrices.size + 1 // keep one to space out the groups
+    
+    // add the indicators automatically
+    val indicators = CLMatrixUtils::fromPhylo(phylo)
+    matrices.add(0, indicators)
+    
+    // setup tree  
     val collapsedTree = phylo.collapsedTree 
-    this.treeViz = new TreeViz(collapsedTree) => [ declareHeight(1.0) ]
+    this.treeViz = new TreeViz(collapsedTree, fixHeight(1))
+     
+    // overlay matrices 
+    val int groupSize = matrices.size + 1 // keep one to space out the groups
     val CellLocusMatrix matrix = matrices.get(0) 
     val converted = MatrixOperations::dense(matrix.cells.size, matrix.loci.size * groupSize) 
     var int colIndex = 0
@@ -39,32 +50,28 @@ class PerfectPhyloViz extends Viz {
     }
     val CellFiller filler = [r, c, v, result | 
       val modulo = c % groupSize
-      if (modulo === 0 || modulo === groupSize - 1)
+      if (modulo < 2 || modulo === groupSize - 1)
         MatrixViz::greyScale.colour(0, 0, v, result)
       else 
-        MatrixViz::colours(modulo - 1).colour(0, 0, v, result)
+        MatrixViz::colours(modulo - 2).colour(0, 0, v, result)
     ]
-    this.matrixViz = new MatrixViz(converted, filler) => [ declareHeight(1.0) ]
+    this.matrixViz = new MatrixViz(converted, filler, fixHeight(1)) 
   }
   
   override protected draw() {
     addChild(treeViz, 0, 0)
-    addChild(matrixViz, treeViz.inferWidth, 0.0f)
+    addChild(matrixViz, treeViz.publicWidth, 0.0f)
   }
   
-  override protected size() {
-    return (treeViz.inferWidth + matrixViz.inferWidth) -> (treeViz.inferHeight)
+  override protected privateSize() {
+    return new PrivateSize(treeViz.publicWidth + matrixViz.publicWidth, treeViz.publicHeight)
   }
   
   public static def void main(String [] args) { 
-    val rand = new Random(1)
-    val phylo = new PerfectPhylo(CorruptStaticUtils::syntheticCells(100), CorruptStaticUtils::syntheticLoci(100))
-    phylo.sampleUniform(new Random(1))
-    val indicators = CLMatrixUtils::fromPhylo(phylo)
-    val data = CLMatrixUtils::syntheticInclusionPrs(rand, phylo, 0.4)
-    new PerfectPhyloViz(phylo, #[indicators, data]) => [
-      declareHeight(800) 
-      show
-    ]
+    val code = Experiment.start(args) 
+    if (code !== 0)
+      System.exit(code)
+    else
+      {} // Do not exit; drawing thread probably still working
   }
 }

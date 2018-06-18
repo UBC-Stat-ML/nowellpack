@@ -5,10 +5,18 @@ import org.eclipse.xtend.lib.annotations.Data
 import bayonet.distributions.Random
 import xlinear.MatrixOperations
 import processing.core.PApplet
+import corrupt.viz.PublicSize
+import corrupt.viz.Viz.PrivateSize
 
 @Data class MatrixViz extends Viz  {
   val Matrix m
   val CellFiller filler
+  
+  new (Matrix m, CellFiller filler, PublicSize size) {
+    super(size)
+    this.m = m
+    this.filler = filler
+  }
   
   @FunctionalInterface
   static interface CellFiller {
@@ -16,8 +24,8 @@ import processing.core.PApplet
   }
   
   // Assumes matrix entries between zero and one
-  def static MatrixViz greyScale(Matrix m) {
-    return new MatrixViz(m, greyScale)
+  def static MatrixViz greyScale(Matrix m, PublicSize size) {
+    return new MatrixViz(m, greyScale, size)
   }
   
   public static val CellFiller greyScale = [__, ___, v, result | result.fill(((1.0 - v) * 255.0) as int)]
@@ -47,15 +55,12 @@ import processing.core.PApplet
     popStyle
   }
   
-  override size() { Pair.of(m.nCols as float,m.nRows as float) }
+  override privateSize() { new PrivateSize(m.nCols as float,m.nRows as float) }
   
   public static def void main(String [] args) {
     val mtx = MatrixOperations::dense(20,30) 
     val random = new Random(1)
     mtx.editInPlace[r, c, v| random.nextDouble]
-    new MatrixViz(mtx, greyScale) => [
-      declareWidth(1000)
-      show
-    ]
+    new MatrixViz(mtx, greyScale, fixWidth(500)).show
   }
 }

@@ -9,6 +9,7 @@ import corrupt.DirectedTree
 import corrupt.CorruptStaticUtils
 import corrupt.PerfectPhylo
 import bayonet.distributions.Random
+import corrupt.viz.PublicSize
 
 class TreeViz<T> extends Viz {
   val T root
@@ -23,15 +24,16 @@ class TreeViz<T> extends Viz {
   
   def int tipIndex(T node) { return tipIndices.get(node) }
   
-  new (T root, (T)=>List<T> tree) {
+  new (T root, (T)=>List<T> tree, PublicSize size) {
+    super(size)
     this.root = root
     this.tree = tree
     computeTimes(root, 0.0f)
     nLeaves = tipIndices(root, 0)
   }
   
-  new (DirectedTree<T> t) {
-    this(t.root, [t.children(it)]) 
+  new (DirectedTree<T> t, PublicSize size) {
+    this(t.root, [t.children(it)], size) 
   }
   
   private def void computeTimes(T node, float time) {
@@ -67,7 +69,7 @@ class TreeViz<T> extends Viz {
   }
   
   private def float draw(T node) {
-    strokeWeight(0.01f)
+    strokeWeight(0.05f)
     if (children(node).size == 0) 
       return tipIndices.get(node) 
     val yAxes = new ArrayList
@@ -85,24 +87,21 @@ class TreeViz<T> extends Viz {
   
   // the actual branch lengths
   private def void hLine(float y, float start, float length) {
-    line(start, y, start + length, y)
+    line(start, y + 0.5f, start + length, y + 0.5f)
   }
   
   private def void vLine(float x, float start, float length) {
-    line(x, start, x, start + length)
+    line(x, start + 0.5f, x, start + length + 0.5f)
   }
   
-  override size() {
-    Pair.of(depth, nLeaves as float)
+  override privateSize() {
+    new PrivateSize(depth, nLeaves as float)
   }
   
   public static def void main(String [] args) { 
     val phylo = new PerfectPhylo(CorruptStaticUtils::syntheticCells(10), CorruptStaticUtils::syntheticLoci(10))
     phylo.sampleUniform(new Random(1))
     println(phylo.tree)
-    new TreeViz(phylo.tree) => [
-      declareWidth(10) 
-      show
-    ]
+    new TreeViz(phylo.tree, fixWidth(200)).show
   }
 }

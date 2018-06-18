@@ -3,7 +3,7 @@ package corrupt
 import corrupt.post.CellLocusMatrix
 
 model CorruptModel {
-  param CellLocusMatrix tipInclusionProbabilities
+  param CellLocusMatrix tipInclusionProbabilities // NB: much slower if not read-only
   random CorruptPhylo phylo ?: new CorruptPhylo(tipInclusionProbabilities)
   
   laws {

@@ -2,64 +2,66 @@ package corrupt.viz
 
 import processing.core.PApplet
 import java.io.File
+import org.eclipse.xtend.lib.annotations.Data
+import blang.inits.experiments.Experiment
 
-abstract class Viz  {
+abstract class Viz extends Experiment {
+  
+  /**
+   * PrivateSize is used internally by a visualization as its 
+   * internal coordinate system. The object specifies both its 
+   * height and width based on input data to visualize and specifics 
+   * of the visualization.. 
+   */
+  protected def PrivateSize privateSize()
+  
+  /**
+   * When a viz is used by someone else (either by a main application 
+   * that will print the viz to screen/pdf, or by another viz as a child element), 
+   * either a height or width needs to be specified, but not both since the ratio 
+   * is already determined by the PrivateSize.
+   * 
+   * Use the static methods fixWidth() and fixHeight() to cleanly create instances 
+   * of PublicSize
+   */
+  val PublicSize publicSize
+  
+  new (PublicSize publicSize) {
+    this.publicSize = publicSize
+  }
+  
+  @Data public static class PrivateSize {
+    val float width
+    val float height
+    new (Number width, Number height) {
+      this.width = width.floatValue
+      this.height = height.floatValue
+    }
+  }
+  
+  public static def fixHeight(Number height) {
+    return new PublicSize(true, height.floatValue)
+  }
+  
+  public static def fixWidth(Number width) {
+    return new PublicSize(false, width.floatValue)
+  }
   
   protected def void draw()
-  
-  /**
-   * Internal coordinate system.
-   * width x height
-   */
-  protected def Pair<? extends Number,? extends Number> size()
-  
   protected extension var PApplet applet
   
-  var float _declaredWidth = -1
-  var float _declaredHeight = -1
-  var boolean dimSet = false
-  
-  /**
-   * Width we would like this viz to have, either in pixel as final result, 
-   * or when included into another viz. 
-   */
-  def void declareWidth(Number value) {
-    checkNotDeclared
-    _declaredWidth = value.floatValue
-    _declaredHeight = size.height  * _declaredWidth / size.width
-  }
-  /**
-   * Height we would like this viz to have, either in pixel as final result, 
-   * or when included into another viz. 
-   */
-  def void declareHeight(Number value) {
-    checkNotDeclared
-    _declaredHeight = value.floatValue
-    _declaredWidth = size.width  * _declaredHeight / size.height
-  }
-  /**
-   * When height is set, width is computed automatically from this 
-   * Viz internal aspect ratio. Return that inferred width. 
-   */
-  def float inferWidth() {
-    if (!dimSet)
-      throw new RuntimeException
-    return _declaredWidth
-  }
-  /**
-   * When width is set, height is computed automatically from this 
-   * Viz internal aspect ratio. Return that inferred height. 
-   */
-  def float inferHeight() {
-    if (!dimSet)
-      throw new RuntimeException
-    return _declaredHeight
+  def float publicWidth() {
+    if (publicSize.isHeight) 
+      privateSize.width * publicSize.value / privateSize.height
+    else 
+      publicSize.value
   }
   
-  private def checkNotDeclared() {
-    if (dimSet)
-      throw new RuntimeException("Can only set one of height, width, the other will be set dynamically")
-    dimSet = true
+  def float publicHeight() {
+    if (publicSize.isHeight)
+      publicSize.value
+    else 
+      privateSize.height * publicSize.value / privateSize.width
   }
   
   // Use those to avoid confusion in feature calls
@@ -83,18 +85,17 @@ abstract class Viz  {
   private def void execute(File output) {
     if (running)
       throw new RuntimeException("Cannot run twice.")
-    if (!dimSet)
-      throw new RuntimeException("Need to set dimension")
     running = true
     val toFile = output !== null
     applet = new PApplet {
       override settings() {
         if (toFile)
-          size(_declaredWidth as int, _declaredHeight as int, PDF, output.absolutePath)
+          size(publicWidth as int, publicHeight as int, PDF, output.absolutePath)
         else
-          size(_declaredWidth as int, _declaredHeight as int)
+          size(publicWidth as int, publicHeight as int)
       }
       override draw() {
+        background(255)
         scale(scaleRatio, scaleRatio)
         drawViz()
         if (toFile)
@@ -107,9 +108,9 @@ abstract class Viz  {
     }
     PApplet.runSketch(#[this.class.simpleName.toString], applet) 
   }
+  override run() {
+    output(results.getFileInResultFolder("output.pdf")) 
+  }
   
-  private def float scaleRatio() { _declaredWidth / size.width }
-  
-  public static def float width(Pair<? extends Number,? extends Number> p) { return p.key.floatValue }
-  public static def float height(Pair<? extends Number,? extends Number> p) { return p.value.floatValue }
+  private def float scaleRatio() { publicWidth / privateSize.width }
 }

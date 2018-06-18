@@ -72,7 +72,7 @@ import java.util.Collections
   new(@Input(formatDescription = "Newick string (or 'file ' followed by file from which to load such string)") String newickString) {
     val parser = new NewickParser(
       if (newickString.startsWith("file "))
-        BriefIO::fileToString(new File(newickString.replaceFirst("files\\s+", "")))  
+        BriefIO::fileToString(new File(newickString.replaceFirst("file\\s+", "")))  
       else 
         newickString
     )
