@@ -2,7 +2,6 @@ package corrupt
 
 import blang.inits.experiments.Experiment
 import blang.inits.Arg
-import corrupt.post.ReadOnlyCLMatrix
 import blang.inits.DefaultValue
 import java.util.List
 import java.util.ArrayList
@@ -13,10 +12,11 @@ import java.io.BufferedWriter
 import bayonet.distributions.Random
 import java.util.Optional
 import briefj.BriefIO
+import corrupt.post.CellLocusMatrix
 
 class Greedy extends Experiment {
   
-  @Arg public ReadOnlyCLMatrix tipInclusionProbabilities
+  @Arg public CellLocusMatrix tipInclusionProbabilities
   
   @Arg   @DefaultValue("1")
   public int reshufflePeriod = 1
