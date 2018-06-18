@@ -23,8 +23,8 @@ class Greedy extends Experiment {
   
   @Arg public Optional<Random> randomizedOrder = Optional.empty
   
-  @Arg   @DefaultValue("")
-  public boolean output = false
+  @Arg     @DefaultValue("true") // Different defaults when ran from cmd line 
+  public boolean output = false  // vs called programmatically
   
   var BufferedWriter writer = null
   
