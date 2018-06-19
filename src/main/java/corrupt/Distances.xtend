@@ -15,9 +15,6 @@ class Distances extends Experiment {
     val guessPhylo = PerfectPhylo::parseNewick(guess)
     results.getTabularWriter("distances") => [
       write("metric" -> "distance",  "value" -> distance(refPhylo, guessPhylo))
-      write("metric" -> "precision", "value" -> precision(refPhylo, guessPhylo))
-      write("metric" -> "recall",    "value" -> recall(refPhylo, guessPhylo))
-      write("metric" -> "f1",        "value" -> f1(refPhylo, guessPhylo))
     ]
   }
   
