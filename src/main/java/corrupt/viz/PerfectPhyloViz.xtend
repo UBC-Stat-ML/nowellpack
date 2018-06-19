@@ -12,13 +12,35 @@ import java.util.Set
 import xlinear.MatrixOperations
 import blang.inits.experiments.Experiment
 import corrupt.post.CLMatrixUtils
+import java.util.Optional
 
 class PerfectPhyloViz extends Viz {
   val TreeViz<Set<TreeNode>> treeViz
   val MatrixViz matrixViz
   
+  new (
+    PerfectPhylo phylo, 
+    List<CellLocusMatrix> matrices, 
+    PublicSize size) {
+    this(phylo, matrices, size, Optional.empty)
+  }
+  
+  new (
+    PerfectPhylo phylo, 
+    List<CellLocusMatrix> matrices, 
+    PublicSize size,
+    PerfectPhylo refPhylo
+    ) {
+    this(phylo, matrices, size, Optional.of(refPhylo))
+  }
+  
   @DesignatedConstructor
-  new (@ConstructorArg("phylo") PerfectPhylo phylo, @ConstructorArg("matrices") List<CellLocusMatrix> matrices, @ConstructorArg("size") PublicSize size) {
+  new (
+    @ConstructorArg("phylo") PerfectPhylo phylo, 
+    @ConstructorArg("matrices") List<CellLocusMatrix> matrices, 
+    @ConstructorArg("size") PublicSize size,
+    @ConstructorArg("ref") Optional<PerfectPhylo> refPhylo
+  ) {
     super(size)
     
     if (matrices.size > 4)
@@ -27,6 +49,13 @@ class PerfectPhyloViz extends Viz {
     // add the indicators automatically
     val indicators = CLMatrixUtils::fromPhylo(phylo)
     matrices.add(0, indicators)
+    
+    val nBlackWhiteNeeded =  // always one for reconstructed clades
+      if (refPhylo.present) {
+        val refIndics = CLMatrixUtils::fromPhylo(refPhylo.get)
+        matrices.add(1, refIndics)
+        2
+      } else 1
     
     // setup tree  
     val collapsedTree = phylo.collapsedTree 
@@ -48,12 +77,13 @@ class PerfectPhyloViz extends Viz {
       }
       colIndex++
     }
+    val nGreyScale = 1 + nBlackWhiteNeeded
     val CellFiller filler = [r, c, v, result | 
       val modulo = c % groupSize
-      if (modulo < 2 || modulo === groupSize - 1)
+      if (modulo < nGreyScale || modulo === groupSize - 1)
         MatrixViz::greyScale.colour(0, 0, v, result)
       else 
-        MatrixViz::colours(modulo - 2).colour(0, 0, v, result)
+        MatrixViz::colours(modulo - nGreyScale).colour(0, 0, v, result)
     ]
     this.matrixViz = new MatrixViz(converted, filler, fixHeight(1)) 
   }
