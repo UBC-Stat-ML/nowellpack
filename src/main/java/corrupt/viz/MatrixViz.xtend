@@ -2,7 +2,6 @@ package corrupt.viz
 
 import xlinear.Matrix
 import org.eclipse.xtend.lib.annotations.Data
-import bayonet.distributions.Random
 import xlinear.MatrixOperations
 import processing.core.PApplet
 import corrupt.viz.PublicSize
@@ -31,15 +30,13 @@ import corrupt.viz.Viz.PrivateSize
   public static val CellFiller greyScale = [__, ___, v, result | result.fill(((1.0 - v) * 255.0) as int)]
   
   // Assumes matrix entries between zero and one
-  static def CellFiller colours(int index) {
-    return [__, ___, v , result |  
-      if (index < 0 || index > 2)
-        throw new RuntimeException
-      val varying = ((1.0 - v) * 255.0) as float
-      val r = if (index === 0) 0f else varying
-      val g = if (index === 1) 0f else varying
-      val b = if (index === 2) 0f else varying
-      result.fill(r, g, b)  
+  static def CellFiller colours(int index, int paletteSize) {
+    val float norm = paletteSize
+    if (index < 0 || index >= paletteSize)
+      throw new RuntimeException
+    return [__, ___, v , result | 
+      result.colorMode(PApplet::HSB, paletteSize) 
+      result.fill(index as float, v as float * norm, norm)  
     ]
   }
   
@@ -58,9 +55,10 @@ import corrupt.viz.Viz.PrivateSize
   override privateSize() { new PrivateSize(m.nCols as float,m.nRows as float) }
   
   public static def void main(String [] args) {
-    val mtx = MatrixOperations::dense(20,30) 
-    val random = new Random(1)
-    mtx.editInPlace[r, c, v| random.nextDouble]
-    new MatrixViz(mtx, greyScale, fixWidth(500)).show
+    val mtx = MatrixOperations::dense(1,10) 
+    //val random = new Random(1)
+    mtx.editInPlace[r, c, v| (r + c) / 10.0]
+    for (i : 0 ..< 10)
+      new MatrixViz(mtx, colours(i, 10), fixWidth(500)).output("" + i + ".pdf")   
   }
 }

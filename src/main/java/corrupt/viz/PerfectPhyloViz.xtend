@@ -13,6 +13,7 @@ import xlinear.MatrixOperations
 import blang.inits.experiments.Experiment
 import corrupt.post.CLMatrixUtils
 import java.util.Optional
+import java.util.ArrayList
 
 class PerfectPhyloViz extends Viz {
   val TreeViz<Set<TreeNode>> treeViz
@@ -22,7 +23,7 @@ class PerfectPhyloViz extends Viz {
     PerfectPhylo phylo, 
     List<CellLocusMatrix> matrices, 
     PublicSize size) {
-    this(phylo, matrices, size, Optional.empty)
+    this(phylo, matrices, size, Optional.empty, Optional.empty)
   }
   
   new (
@@ -31,7 +32,7 @@ class PerfectPhyloViz extends Viz {
     PublicSize size,
     PerfectPhylo refPhylo
     ) {
-    this(phylo, matrices, size, Optional.of(refPhylo))
+    this(phylo, matrices, size, Optional.of(refPhylo), Optional.empty)
   }
   
   @DesignatedConstructor
@@ -39,30 +40,29 @@ class PerfectPhyloViz extends Viz {
     @ConstructorArg("phylo") PerfectPhylo phylo, 
     @ConstructorArg("matrices") List<CellLocusMatrix> matrices, 
     @ConstructorArg("size") PublicSize size,
-    @ConstructorArg("ref") Optional<PerfectPhylo> refPhylo
+    @ConstructorArg("ref") Optional<PerfectPhylo> refPhylo,
+    @ConstructorArg(value = "colourCodes", description = coloursDescriptions) Optional<List<Integer>> codes
   ) {
     super(size)
     
-    if (matrices.size > 4)
-      throw new RuntimeException
-    
-    // add the indicators automatically
+    // add the indicators for the displayed tree + one optional reference tree
     val indicators = CLMatrixUtils::fromPhylo(phylo)
     matrices.add(0, indicators)
     
-    val nBlackWhiteNeeded =  // always one for reconstructed clades
-      if (refPhylo.present) {
-        val refIndics = CLMatrixUtils::fromPhylo(refPhylo.get)
-        matrices.add(1, refIndics)
-        2
-      } else 1
+    if (refPhylo.present) {
+      val refIndics = CLMatrixUtils::fromPhylo(refPhylo.get)
+      matrices.add(1, refIndics)
+    }
+    
+    // prepare colour schemes for matrices
+    val schemes = schemes(matrices, codes)
     
     // setup tree  
     val collapsedTree = phylo.collapsedTree 
     this.treeViz = new TreeViz(collapsedTree, fixHeight(1))
      
     // overlay matrices 
-    val int groupSize = matrices.size + 1 // keep one to space out the groups
+    val int groupSize = schemes.size
     val CellLocusMatrix matrix = matrices.get(0) 
     val converted = MatrixOperations::dense(matrix.cells.size, matrix.loci.size * groupSize) 
     var int colIndex = 0
@@ -77,16 +77,33 @@ class PerfectPhyloViz extends Viz {
       }
       colIndex++
     }
-    val nGreyScale = 1 + nBlackWhiteNeeded
-    val CellFiller filler = [r, c, v, result | 
-      val modulo = c % groupSize
-      if (modulo < nGreyScale || modulo === groupSize - 1)
-        MatrixViz::greyScale.colour(0, 0, v, result)
-      else 
-        MatrixViz::colours(modulo - nGreyScale).colour(0, 0, v, result)
-    ]
+    val CellFiller filler = [r, c, v, result | schemes.get(c % schemes.size).colour(0, 0, v, result) ]
     this.matrixViz = new MatrixViz(converted, filler, fixHeight(1)) 
   }
+  
+  private static def List<CellFiller> schemes(List<CellLocusMatrix> matrices, Optional<List<Integer>> _specifiedOrder) {
+    val result = new ArrayList
+    if (_specifiedOrder.present) {
+      val specifiedOrder = _specifiedOrder.get
+      if (specifiedOrder.size !== matrices.size) 
+        throw new RuntimeException("The provided colour schemes should be of length " + matrices.size)
+      for (i : specifiedOrder)  
+        result.add(colourCodes.get(i))
+    } else {
+      for (i : 0..<matrices.size)
+        result.add(colourCodes.get(i % colourCodes.size))
+    }
+    result.add(MatrixViz::greyScale) // hack for the white divisor between groups
+    return result
+  }
+  
+  static val coloursDescriptions = "list of integers where 0 is greyScale and 1--10 are colour palettes"
+  public static val List<CellFiller> colourCodes = new ArrayList => [
+    add(MatrixViz::greyScale)
+    val nColours = 10
+    for (i : 0 ..< nColours)
+      add(MatrixViz::colours(i, nColours))
+  ]
   
   override protected draw() {
     addChild(treeViz, 0, 0)

@@ -4,6 +4,7 @@ import processing.core.PApplet
 import java.io.File
 import org.eclipse.xtend.lib.annotations.Data
 import blang.inits.experiments.Experiment
+import blang.inits.Arg
 
 abstract class Viz extends Experiment {
   
@@ -108,8 +109,13 @@ abstract class Viz extends Experiment {
     }
     PApplet.runSketch(#[this.class.simpleName.toString], applet) 
   }
+  
+  @Arg boolean show = false
   override run() {
-    output(results.getFileInResultFolder("output.pdf")) 
+    if (show)
+      show()
+    else
+      output(results.getFileInResultFolder("output.pdf")) 
   }
   
   private def float scaleRatio() { publicWidth / privateSize.width }
