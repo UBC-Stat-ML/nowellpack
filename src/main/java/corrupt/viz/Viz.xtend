@@ -5,6 +5,7 @@ import java.io.File
 import org.eclipse.xtend.lib.annotations.Data
 import blang.inits.experiments.Experiment
 import blang.inits.Arg
+import blang.inits.DefaultValue
 
 abstract class Viz extends Experiment {
   
@@ -110,9 +111,10 @@ abstract class Viz extends Experiment {
     PApplet.runSketch(#[this.class.simpleName.toString], applet) 
   }
   
-  @Arg boolean show = false
+  @Arg        @DefaultValue("false")
+  public boolean showImage = false
   override run() {
-    if (show)
+    if (showImage) 
       show()
     else
       output(results.getFileInResultFolder("output.pdf")) 

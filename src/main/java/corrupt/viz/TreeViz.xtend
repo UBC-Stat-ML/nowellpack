@@ -102,6 +102,6 @@ class TreeViz<T> extends Viz {
     val phylo = new PerfectPhylo(CorruptStaticUtils::syntheticCells(10), CorruptStaticUtils::syntheticLoci(10))
     phylo.sampleUniform(new Random(1))
     println(phylo.tree)
-    new TreeViz(phylo.tree, fixWidth(200)).show
+    new TreeViz(phylo.tree, fixWidth(200)).show()
   }
 }
