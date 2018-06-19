@@ -3,10 +3,7 @@ package corrupt
 import blang.inits.experiments.Experiment
 import blang.inits.Arg
 import java.io.File
-import corrupt.post.CLMatrixUtils
-import xlinear.MatrixOperations
-import bayonet.distributions.Random
-import java.util.stream.Collectors
+import static corrupt.post.CLMatrixUtils.*
 
 class Distances extends Experiment {
   
@@ -14,18 +11,14 @@ class Distances extends Experiment {
   @Arg File guess
   
   override run() {
-    val refPhylo = PerfectPhylo::parseNewick(reference)
-    val refMtx = CLMatrixUtils::fromPhylo(refPhylo)
-    val guessMtx = CLMatrixUtils::fromPhylo(PerfectPhylo::parseNewick(guess))
-    println("distance = " + CLMatrixUtils::distance(refMtx, guessMtx)) 
-    println("allZeroBaseline = " + CLMatrixUtils::distance(refMtx.matrix, MatrixOperations::dense(refMtx.matrix.nRows, refMtx.matrix.nCols)))
-    
-    val summaryStats = (0..10).toList.stream.collect(Collectors.summarizingDouble[
-      val randomPhylo = new PerfectPhylo(refPhylo.cells, refPhylo.loci)  
-      randomPhylo.sampleUniform(new Random(1))
-      CLMatrixUtils::distance(refMtx, CLMatrixUtils::fromPhylo(randomPhylo))
-    ])
-    println("randomBaseline = " + summaryStats.average)
+    val refPhylo   = PerfectPhylo::parseNewick(reference)
+    val guessPhylo = PerfectPhylo::parseNewick(guess)
+    results.getTabularWriter("distances") => [
+      write("metric" -> "distance",  "value" -> distance(refPhylo, guessPhylo))
+      write("metric" -> "precision", "value" -> precision(refPhylo, guessPhylo))
+      write("metric" -> "recall",    "value" -> recall(refPhylo, guessPhylo))
+      write("metric" -> "f1",        "value" -> f1(refPhylo, guessPhylo))
+    ]
   }
   
   public static def void main(String [] args) {

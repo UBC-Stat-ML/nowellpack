@@ -13,6 +13,7 @@ import corrupt.Locus
 import corrupt.Cell
 import blang.inits.providers.CoreProviders
 import xlinear.Matrix
+import static extension xlinear.MatrixExtensions.*
 
 class CLMatrixUtils {
   
@@ -42,8 +43,26 @@ class CLMatrixUtils {
   }
   
   static def double distance(Matrix mtx1, Matrix mtx2) {
+    return delta(mtx1, mtx2) / mtx1.nEntries
+  }
+  
+  static def double precision(PerfectPhylo ref, PerfectPhylo guess) { _precisionRecall(ref, guess, true) }
+  static def double recall   (PerfectPhylo ref, PerfectPhylo guess) { _precisionRecall(ref, guess, false) }
+  static def double f1(PerfectPhylo ref, PerfectPhylo guess) {
+    val p = precision(ref, guess)
+    val r = recall(ref, guess)
+    return 2.0 * p * r / (p + r)
+  }
+  private static def double _precisionRecall(PerfectPhylo ref, PerfectPhylo guess, boolean prec) {
+    val rm = fromPhylo(ref)
+    val gm = fromPhylo(guess)
+    checkCompatible(rm, gm)
+    return delta(rm.matrix, gm.matrix) / (if (prec) gm.matrix.sum else rm.matrix.sum)
+  }
+  
+  static def double delta(Matrix mtx1, Matrix mtx2) {
     val diff = mtx1 - mtx2
-    return diff.nonZeroEntries().map[Math.abs(it)].sum() / diff.nEntries
+    return diff.nonZeroEntries().map[Math.abs(it)].sum()
   }
   
   static def SimpleCLMatrix fromCSV(File f) {
