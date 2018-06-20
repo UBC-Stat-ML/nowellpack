@@ -6,7 +6,21 @@ Summary
 ``nowellpack`` is a Blang library for cancer genomics. The main current features focus on Bayesian phylogenetic tree inference from single cell data. We make the approximation that change points in the copy number profiles are *perfect phylogeny markers*. However those markers are observed in a noisy fashion hence the name we give to this model: **corrupt phylogenies**. 
 
 
-Installation
+Find me a tree&mdash;quick!!!
+--------
+
+Run an end-to-end pipeline (sampling, summarizing posterior, viz) with:
+
+```
+git clone https://github.com/UBC-Stat-ML/corrupt-nextflow.git
+cd corrupt-nextflow
+./nextflow run corrupt-infer-pipeline.nf -resume --tipInclusionProbabilities demo-data.csv
+```
+
+Provided you have Oracle Java 8 in your ``PATH`` variable this will create a directory called ``deliverables/corrupt-infer-pipeline`` containing an inferred tree. Change ``demo-data.csv`` into the data you are interested in (more below). 
+
+
+Installation for more flexible usage
 ------------
 
 You will need a unix environment with Oracle Java 8.
@@ -16,13 +30,8 @@ You will need a unix environment with Oracle Java 8.
 - Add the directory ``build/install/nowellpack/bin`` to your ``$PATH`` variable.
 
 
-Usage
+User guide
 -----
-
-### In anger
-
-XXXX - nextflow scripts
-
 
 ### Input format 
 
@@ -39,15 +48,19 @@ myfirstcell,somelocus,0.6
 ...
 ``` 
 
-containing unique string identifier for the cell and locus followed by an estimated probability that the given cell XXX has the marker specified by locus YYY.
+containing unique string identifier for the cell and locus followed by an estimated probability, here `0.6` that the given cell `myfirstcell` has the marker specified by locus `somelocus`.
 
-From this file several phylogenetic inference methods are available. For example, if the file described above is ``data``, use 
+From this file several phylogenetic inference methods are available. For example, to setup runs based on parallel tempering, you can look at the options with 
 
 ```
-corrupt-infer --model.tipInclusionProbabilities data.csv
+corrupt-infer --model.tipInclusionProbabilities data.csv --engine PT --help
 ```
 
-to perform Bayesian phylogenetic inference via an adaptive annealing sequential change of measure algorithm. Many alternatives are described later on, with various trade-offs between running time and accuracy.
+For instead going a an adaptive annealing sequential change of measure route, use:
+
+```
+corrupt-infer --model.tipInclusionProbabilities data.csv --engine SCM --help
+```
 
 ### Output format for posterior distributions
 
