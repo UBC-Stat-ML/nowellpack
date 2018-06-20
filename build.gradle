@@ -39,9 +39,6 @@ repositories {
   maven {
     url "https://www.stat.ubc.ca/~bouchard/maven/"
   }
-  maven {
-    url "http://www.biojava.org/download/maven/"
-  }
 }
 
 xtend {
