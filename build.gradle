@@ -81,3 +81,40 @@ createScript(project, 'corrupt.Greedy',                 'corrupt-greedy')
 createScript(project, 'corrupt.Distances',              'corrupt-distance')
 createScript(project, 'corrupt.post.ScoreTrees',        'corrupt-batch-distances')
 createScript(project, 'corrupt.viz.PerfectPhyloViz',    'corrupt-viz')
+
+uploadArchives {
+  repositories {
+    mavenDeployer {
+      repository(url: "file:///${System.properties['user.home']}/artifacts/")
+      snapshotRepository(url: "file:///${System.properties['user.home']}/artifacts/")
+      pom.version = "1.0.0" /* blang-standalone-compiler-directive - do not edit : EXTRACT_VERSION */
+      pom.artifactId = "nowellpack"
+      pom.groupId = "ca.ubc.stat"
+    }
+  }
+}
+
+jar {
+    from { fileTree(dir: 'src/main/java', includes: [ '**/*.bl' ]) }
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+  classifier = 'sources'
+  from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+  classifier = 'javadoc'
+  from 'build/docs/javadoc'
+}
+
+artifacts {
+  archives jar
+  archives sourcesJar
+  archives javadocJar
+}
+
+configurations.archives.with {
+    artifacts.remove artifacts.find { it.archiveTask.is distZip }
+    artifacts.remove artifacts.find { it.archiveTask.is distTar }
+}
