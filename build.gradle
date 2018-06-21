@@ -3,6 +3,7 @@ plugins {
   id 'org.xtext.builder' version '1.0.21'
   id 'java'
   id 'eclipse'
+  id 'maven'
 }
 
 repositories {
