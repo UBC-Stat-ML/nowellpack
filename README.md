@@ -17,10 +17,19 @@ cd corrupt-nextflow
 ./nextflow run corrupt-infer-pipeline.nf -resume --tipInclusionProbabilities demo-data.csv
 ```
 
-Provided you have Oracle Java 8 in your ``PATH`` variable this will create a directory called ``deliverables/corrupt-infer-pipeline`` containing an inferred tree. Change ``demo-data.csv`` into the data you are interested in (more below). 
+Provided you have Oracle Java 8 in your ``PATH`` variable this will create a directory called ``deliverables/corrupt-infer-pipeline`` containing an inferred tree. Change ``demo-data.csv`` into the data you are interested in (more below). For the example tree, you will get this (left, consensus tree based on cell-locus 0-1 loss; right binary matrix where x axis indexes loci, y axis, cells; the black-and-white columns are indicators that in the consensus tree the x-axis cell has the y-axis locus' trait, the paired greyscale are uncertainties obtained from the posterior for the same quantities): 
+
+![https://www.stat.ubc.ca/~bouchard/pub/output.png](https://www.stat.ubc.ca/~bouchard/pub/output.png)
+
+Here is a more interesting example from a 1000 cell by 50 locus synthetic datas, showing the same information (rotated) with also a third column in red showing the indicators for the tree used to generated the dataset. 
+
+![https://www.stat.ubc.ca/~bouchard/pub/output-eg-large.png](https://www.stat.ubc.ca/~bouchard/pub/output-eg-large.png)
+
+Computing a tree of that scale takes less than one hour. If more loci are available, we recommend using fewer, but more reliable ones. See [synthetic benchmarking workflow](https://github.com/UBC-Stat-ML/corrupt-nextflow/blob/master/synthetic-benchmark.nf) for details on how the above example was computed.
 
 
-Installation for more flexible usage
+
+Installation for more advanced usage
 ------------
 
 You will need a unix environment with Oracle Java 8.
@@ -117,4 +126,4 @@ corrupt-infer --model.tipInclusionProbabilities data.csv --stripped true --engin
 
 Here ``--stripped true`` gets rid of the random initialization and annealing. To enable several parallel tempering annealed chains, use ``--engine.nChains``. 
 
-Use ``--help`` and see Blang's documentation for more information on the many configurations available. 
+Use ``--help`` and see [Blang's documentation](https://www.stat.ubc.ca/~bouchard/blang/) for more information on the many configurations available. 
