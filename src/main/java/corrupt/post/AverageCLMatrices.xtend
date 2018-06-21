@@ -16,7 +16,7 @@ class AverageCLMatrices extends Experiment {
   public File csvFile
   
   @Arg
-  public Optional<File> referenceTree
+  public Optional<File> referenceTree = Optional.empty
   
   @Arg 
   @DefaultValue("value")
