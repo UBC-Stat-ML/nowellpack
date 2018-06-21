@@ -82,7 +82,7 @@ uploadArchives {
     mavenDeployer {
       repository(url: "file:///${System.properties['user.home']}/artifacts/")
       snapshotRepository(url: "file:///${System.properties['user.home']}/artifacts/")
-      pom.version = "1.0.3" 
+      pom.version = "1.0.4" 
       pom.artifactId = "nowellpack"
       pom.groupId = "ca.ubc.stat"
     }

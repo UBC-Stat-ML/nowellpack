@@ -16,12 +16,14 @@ import corrupt.post.CellLocusMatrix
 
 class Greedy extends Experiment {
   
-  @Arg public CellLocusMatrix tipInclusionProbabilities
+  @Arg 
+  public CellLocusMatrix tipInclusionProbabilities
   
   @Arg   @DefaultValue("1")
   public int reshufflePeriod = 1
   
-  @Arg public Optional<Random> randomizedOrder = Optional.empty
+  @Arg 
+  public Optional<Random> randomizedOrder = Optional.empty
   
   @Arg     @DefaultValue("true") // Different defaults when ran from cmd line 
   public boolean output = false  // vs called programmatically

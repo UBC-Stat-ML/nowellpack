@@ -12,14 +12,15 @@ import blang.inits.DefaultValue
 
 class AverageCLMatrices extends Experiment {
   
-  @Arg File csvFile
+  @Arg 
+  public File csvFile
   
   @Arg
-  Optional<File> referenceTree
+  public Optional<File> referenceTree
   
   @Arg 
   @DefaultValue("value")
-  String field ="value"
+  public String field ="value"
   
   public static val OUTPUT_NAME = "average.csv"
   override run() {
@@ -73,6 +74,4 @@ class AverageCLMatrices extends Experiment {
     CLMatrixUtils::checkCompatible(refTree, sum)
     return CLMatrixUtils::distance(refTree.matrix, sum.matrix/count) 
   }
-  
-  
 }
