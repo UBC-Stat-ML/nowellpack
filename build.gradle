@@ -6,12 +6,6 @@ plugins {
   id 'maven'
 }
 
-repositories {
-   flatDir {
-       dirs 'libs' // Mavencentral version of itext was broken
-   }
-}
-
 dependencies {
   xtextLanguages "ca.ubc.stat.blang:ca.ubc.stat.blang:3.25.2"
   compile group: 'ca.ubc.stat', name: 'conifer', version: '2.0.4'
@@ -20,7 +14,7 @@ dependencies {
   compile group: 'ca.ubc.stat', name: 'conifer', version: '2.0.4'
   compile group: 'org.processing', name: 'core', version: '3.3.7'
   compile group: 'org.processing', name: 'pdf', version: '3.3.7'
-  runtime name: 'itext-2.1.7' // Mavencentral version was broken
+  runtime group: 'com.itext', name: 'itext', version: '2.1.7'
 }
 
 xtext {
@@ -88,7 +82,7 @@ uploadArchives {
     mavenDeployer {
       repository(url: "file:///${System.properties['user.home']}/artifacts/")
       snapshotRepository(url: "file:///${System.properties['user.home']}/artifacts/")
-      pom.version = "1.0.2" /* blang-standalone-compiler-directive - do not edit : EXTRACT_VERSION */
+      pom.version = "1.0.3" 
       pom.artifactId = "nowellpack"
       pom.groupId = "ca.ubc.stat"
     }
