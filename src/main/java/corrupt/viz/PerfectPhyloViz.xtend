@@ -38,7 +38,7 @@ class PerfectPhyloViz extends Viz {
   @DesignatedConstructor
   new (
     @ConstructorArg("phylo") PerfectPhylo phylo, 
-    @ConstructorArg("matrices") List<CellLocusMatrix> matrices, 
+    @ConstructorArg("matrices") List<CellLocusMatrix> _matrices, 
     @ConstructorArg("size") PublicSize size,
     @ConstructorArg("ref") Optional<PerfectPhylo> refPhylo,
     @ConstructorArg(value = "colourCodes", description = coloursDescriptions) Optional<List<Integer>> codes
@@ -47,6 +47,7 @@ class PerfectPhyloViz extends Viz {
     
     // add the indicators for the displayed tree + one optional reference tree
     val indicators = CLMatrixUtils::fromPhylo(phylo)
+    val  matrices = new ArrayList(_matrices)
     matrices.add(0, indicators)
     
     if (refPhylo.present) {
