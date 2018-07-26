@@ -38,6 +38,14 @@ import java.util.List
     matrix.set(cellsIdx.o2i(cell), lociIdx.o2i(locus), value)
   }
   
+  def Matrix slice(Cell cell) {
+    matrix.row(cellsIdx.o2i(cell))
+  }
+  
+  def Matrix slice(Locus locus) {
+    matrix.col(lociIdx.o2i(locus))
+  }
+  
   override getCells() { cellsIdx.objects }
   override getLoci()  { lociIdx.objects}
   
