@@ -6,7 +6,7 @@ import corrupt.Cell
 import corrupt.PerfectPhylo
 import corrupt.TreeNode
 import corrupt.post.CellLocusMatrix
-import corrupt.viz.MatrixViz.CellFiller
+import viz.components.MatrixViz.CellFiller
 import java.util.List
 import java.util.Set
 import xlinear.MatrixOperations
@@ -14,6 +14,10 @@ import blang.inits.experiments.Experiment
 import corrupt.post.CLMatrixUtils
 import java.util.Optional
 import java.util.ArrayList
+import viz.core.PublicSize
+import viz.core.Viz
+import viz.components.TreeViz
+import viz.components.MatrixViz
 
 class PerfectPhyloViz extends Viz {
   val TreeViz<Set<TreeNode>> treeViz
@@ -59,8 +63,8 @@ class PerfectPhyloViz extends Viz {
     val schemes = schemes(matrices, codes)
     
     // setup tree  
-    val collapsedTree = phylo.collapsedTree 
-    this.treeViz = new TreeViz(collapsedTree, fixHeight(1))
+    val collapsedTree = phylo.collapsedTree  
+    this.treeViz = new TreeViz(collapsedTree.root, [collapsedTree.children(it)], fixHeight(1))  
      
     // overlay matrices 
     val int groupSize = schemes.size
