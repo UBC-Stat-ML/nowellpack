@@ -21,6 +21,7 @@ import viz.components.MatrixViz
 import corrupt.GenomeMap
 import java.util.Collection
 import corrupt.Locus
+import processing.core.PApplet
 
 class PerfectPhyloViz extends Viz {
   val TreeViz<Set<TreeNode>> treeViz
@@ -122,19 +123,25 @@ class PerfectPhyloViz extends Viz {
     addChild(matrixViz, treeViz.publicWidth, 0.0f)
     
     // loci and chromosome markers
-    strokeWeight(0.005f)
+    strokeWeight(0.001f)
     for (var int i = 0; i < loci.size; i++)
       markGroup(i, i+1, 0.0f)
-      
+     
+    pushStyle
+    colorMode(PApplet::HSB, 25f) 
     if (GenomeMap::genomeMapFormatted(loci)) {
       val GenomeMap map = new GenomeMap(loci)
       var i = 0
+      var c = 0
       for (chr : map.orderedChromosomes) {
         val nLoci = map.orderedLoci(chr).size
+        stroke(c, 25.0f, 25.0f)
         markGroup(i, i+nLoci, 0.5f)
         i += nLoci
+        c++
       }
     }
+    popStyle
   }
   
   /**
