@@ -33,7 +33,7 @@ class StraightenJitter extends Experiment {
     val Map<String,TreeSet<Locus>> lociMap = lociMap(data.loci) // chr -> map
     
     // viz initial matrix
-    viz(data.matrix, "original.pdf") 
+    viz(data.matrix.copy, "original.pdf") 
     
     // order loci by prevalence
     val List<Locus> orderedLoci = orderLoci(data)
@@ -55,7 +55,7 @@ class StraightenJitter extends Experiment {
             consumed.add(neighbor)
           }
       }
-    viz(data.matrix, "final.pdf") 
+    viz(data.matrix.copy, "final.pdf") 
     CLMatrixUtils::toCSV(data, results.getFileInResultFolder("output.csv")) 
   }
   
