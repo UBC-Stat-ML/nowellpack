@@ -2,14 +2,14 @@ package corrupt.post
 
 import corrupt.Cell
 import corrupt.Locus
-import java.util.Set
 import blang.inits.DesignatedConstructor
 import blang.inits.Input
 import java.io.File
+import java.util.Set
 
 interface CellLocusMatrix {
   def double getTipAsDouble(Cell cell, Locus locus) 
-  def Set<Cell> getCells()
+  def Set<Cell> getCells() // assume stable iterator order
   def Set<Locus> getLoci()
   
   @DesignatedConstructor

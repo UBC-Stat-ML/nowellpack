@@ -18,10 +18,15 @@ import viz.core.PublicSize
 import viz.core.Viz
 import viz.components.TreeViz
 import viz.components.MatrixViz
+import corrupt.GenomeMap
+import java.util.Collection
+import corrupt.Locus
 
 class PerfectPhyloViz extends Viz {
   val TreeViz<Set<TreeNode>> treeViz
   val MatrixViz matrixViz
+  val int nMatrices
+  val Collection<Locus> loci
   
   new (
     PerfectPhylo phylo, 
@@ -67,11 +72,13 @@ class PerfectPhyloViz extends Viz {
     this.treeViz = new TreeViz(collapsedTree.root, [collapsedTree.children(it)], fixHeight(1))  
      
     // overlay matrices 
-    val int groupSize = schemes.size
+    nMatrices = matrices.size
+    val int groupSize = nMatrices + 1
     val CellLocusMatrix matrix = matrices.get(0) 
+    loci = matrix.loci 
     val converted = MatrixOperations::dense(matrix.cells.size, matrix.loci.size * groupSize) 
     var int colIndex = 0
-    for (locus : matrix.loci) {
+    for (locus : loci) {
       for (entry : treeViz.tipIndices.entrySet) {
         val cells = entry.key.filter[it instanceof Cell]
         if (cells.size != 1) 
@@ -113,10 +120,37 @@ class PerfectPhyloViz extends Viz {
   override protected draw() {
     addChild(treeViz, 0, 0)
     addChild(matrixViz, treeViz.publicWidth, 0.0f)
+    
+    // loci and chromosome markers
+    strokeWeight(0.005f)
+    for (var int i = 0; i < loci.size; i++)
+      markGroup(i, i+1, 0.0f)
+      
+    if (GenomeMap::genomeMapFormatted(loci)) {
+      val GenomeMap map = new GenomeMap(loci)
+      var i = 0
+      for (chr : map.orderedChromosomes) {
+        val nLoci = map.orderedLoci(chr).size
+        markGroup(i, i+nLoci, 0.5f)
+        i += nLoci
+      }
+    }
   }
   
+  /**
+   * Height between 0 and 1 relative to bottom
+   */
+  private def markGroup(int firstIncl, int lastExcl, float height) {
+    val colWidth = matrixViz.publicWidth / matrixViz.m.nCols
+    val y = treeViz.publicHeight + height * chrMarkerHeight
+    val x1 = treeViz.publicWidth + firstIncl * colWidth * (nMatrices + 1)
+    val x2 = treeViz.publicWidth + lastExcl * colWidth * (nMatrices + 1) - colWidth
+    line(x1, y, x2, y)
+  }
+  static val chrMarkerHeight = 0.1f /* add 10% at bottom for chromosome markers */
+  
   override protected privateSize() {
-    return new PrivateSize(treeViz.publicWidth + matrixViz.publicWidth, treeViz.publicHeight)
+    return new PrivateSize(treeViz.publicWidth + matrixViz.publicWidth, treeViz.publicHeight + chrMarkerHeight) 
   }
   
   public static def void main(String [] args) { 
