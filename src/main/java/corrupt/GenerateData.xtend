@@ -12,8 +12,8 @@ import corrupt.post.CLMatrixUtils
 import static extension corrupt.post.CLMatrixUtils.toCSV
 
 class GenerateData extends Experiment {
-  @Arg int nCells
-  @Arg int nLoci
+  @Arg public int nCells
+  @Arg public int nLoci
   
   @Arg              @DefaultValue("1")
   val Random treeRand = new Random(1)
@@ -21,18 +21,34 @@ class GenerateData extends Experiment {
   val Random dataRand = new Random(1)
   
   @Arg(description = "Controls how hard the problem is; lower value are easier to infer")
-       @DefaultValue("0.3")
-  double stdDev = 0.3
+          @DefaultValue("0.3")
+  public double stdDev = 0.3
+  
+  @Arg           @DefaultValue("false")
+  public boolean useFPFNRates = false
+  
+  @Arg    @DefaultValue("0.01")
+  public double fpRate = 0.01
+  
+  @Arg    @DefaultValue("0.05")
+  public double fnRate = 0.05
+  
+  public static val TREE_FILE = "phylo.newick"
+  public static val DATA_FILE = "tipInclusionProbabilities.csv"
   
   override run() {
     // generate and write phylogen
     val phylo = new PerfectPhylo(syntheticCells(nCells), syntheticLoci(nLoci))
     phylo.sampleUniform(treeRand)
-    BriefIO::write(results.getFileInResultFolder("phylo.newick"), phylo.toNewick)
+    BriefIO::write(results.getFileInResultFolder(TREE_FILE), phylo.toNewick)
   
     // generate tips
-    val data = CLMatrixUtils::syntheticInclusionPrs(dataRand, phylo, stdDev)
-    data.toCSV(results.getFileInResultFolder("tipInclusionProbabilities.csv"), CLMatrixUtils::fromPhylo(phylo)) 
+    val data = 
+      if (useFPFNRates)
+        CLMatrixUtils::syntheticInclusionPrs(dataRand, phylo, fpRate, fnRate)
+      else
+        CLMatrixUtils::syntheticInclusionPrs(dataRand, phylo, stdDev)
+    data.toCSV(results.getFileInResultFolder(DATA_FILE), CLMatrixUtils::fromPhylo(phylo)) 
     
     // print probabilities
     val corruptPhylo = new CorruptPhylo(phylo, data)

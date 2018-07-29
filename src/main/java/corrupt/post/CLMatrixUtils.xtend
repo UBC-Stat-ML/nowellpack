@@ -13,7 +13,7 @@ import corrupt.Locus
 import corrupt.Cell
 import blang.inits.providers.CoreProviders
 import xlinear.Matrix
-import static extension xlinear.MatrixExtensions.*
+import blang.distributions.Generators
 
 class CLMatrixUtils {
   
@@ -88,6 +88,25 @@ class CLMatrixUtils {
         prs.set(1, inclNormal.logDensity(observation))
         Multinomial::expNormalize(prs)
         syntheticInclusionPrs.setTip(cell, locus, prs.get(1)) 
+      }
+    }
+    return ReadOnlyCLMatrix.readOnly(syntheticInclusionPrs)
+  }
+  
+  static def ReadOnlyCLMatrix syntheticInclusionPrs(Random rand, PerfectPhylo phylo, double fpRate, double fnRate) {
+    val syntheticInclusionPrs = new SimpleCLMatrix(phylo.cells, phylo.loci)
+    for (locus : phylo.loci) {
+      val tips = phylo.getTips(locus)
+      for (cell : phylo.cells) {
+        var indic = tips.get(cell)
+        if (indic) {
+          if (Generators::bernoulli(rand, fnRate))
+            indic = false
+        } else {
+          if (Generators::bernoulli(rand, fpRate))
+            indic = true
+        }
+        syntheticInclusionPrs.setTip(cell, locus, if (indic) 1.0 else 0.0) 
       }
     }
     return ReadOnlyCLMatrix.readOnly(syntheticInclusionPrs)
