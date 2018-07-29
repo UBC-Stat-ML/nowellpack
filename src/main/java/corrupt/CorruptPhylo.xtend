@@ -10,6 +10,7 @@ import java.util.ArrayList
 import java.util.Collections
 import corrupt.post.ReadOnlyCLMatrix
 import java.util.List
+import briefj.BriefLog
 
 @Samplers(CorruptGibbsSampler)
 class CorruptPhylo {
@@ -21,7 +22,7 @@ class CorruptPhylo {
   new (CellLocusMatrix tipInclPrs) {
     this(new PerfectPhylo(tipInclPrs.cells, tipInclPrs.loci), tipInclPrs)
     if (!fixedTips)
-      throw new RuntimeException("Caching might not work.")
+      BriefLog::warnOnce("If parameters are being re-estimated, might have to make changes in CorruptPhylo's caching architecture") 
   }
   
   new (PerfectPhylo phylo, CellLocusMatrix tipInclPrs) {
