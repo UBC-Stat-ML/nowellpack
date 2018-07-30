@@ -19,8 +19,11 @@ class Greedy extends Experiment {
   @Arg 
   public CellLocusMatrix tipInclusionProbabilities
   
-  @Arg   @DefaultValue("1")
-  public int reshufflePeriod = 1
+  @Arg          @DefaultValue("20")
+  public int reshufflePeriod = 20
+  
+  @Arg         @DefaultValue("20")
+  public int thinningPeriod = 20
   
   @Arg 
   public Optional<Random> randomizedOrder = Optional.empty
@@ -32,31 +35,24 @@ class Greedy extends Experiment {
   
   def CorruptPhylo infer() {
     val CorruptPhylo phylo = new CorruptPhylo(tipInclusionProbabilities)
-    outputLine("iteration,value\n")
     for (locus : tipInclusionProbabilities.loci)
       phylo.reconstruction.tree.collapseEdge(locus)
     val List<QueuedLocus> queue = sortQueue(null, phylo)
     var iteration = 0
     while (!queue.empty) {
-      writePhylo(phylo, queue, iteration)
+      if (iteration % thinningPeriod === 0)
+        writePhylo(phylo, queue, iteration)
       println("Processing locus " + (iteration+1) + "/" + tipInclusionProbabilities.loci.size)
       val popped = queue.pop
       SplitSampler::maximize(phylo.reconstruction.tree, popped,  phylo.cellInclusionLogProbabilities(1.0, popped))
       iteration++ // do before line below, already sorted at beginning
-      if (iteration % reshufflePeriod == 0)
+      if (iteration % reshufflePeriod === 0)
         sortQueue(queue, phylo)
     }
     writePhylo(phylo, queue, iteration) 
     if (output)
       BriefIO::write(results.getFileInResultFolder("tree.newick"), phylo.toString)
     return phylo
-  }
-  
-  private def outputLine(String s) {
-    if (!output) return;
-    if (writer === null) 
-      writer = results.getAutoClosedBufferedWriter("trees.csv")
-    writer.append(s + "\n")
   }
   
   override run() {
@@ -68,7 +64,11 @@ class Greedy extends Experiment {
       return;
     for (locus : loci)
       phylo.reconstruction.tree.addEdge(CorruptStaticUtils::root, locus.locus) 
-    outputLine("" + iteration + ",\"" + phylo + "\"")
+    
+    results.getTabularWriter("trees") => [
+      write("iteration" -> iteration, "value" -> phylo)
+    ]
+    
     for (locus : loci)
       phylo.reconstruction.tree.collapseEdge(locus.locus)
   }
