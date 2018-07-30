@@ -22,6 +22,7 @@ import corrupt.GenomeMap
 import java.util.Collection
 import corrupt.Locus
 import processing.core.PApplet
+import corrupt.post.ReadOnlyCLMatrix
 
 class PerfectPhyloViz extends Viz {
   val TreeViz<Set<TreeNode>> treeViz
@@ -31,14 +32,14 @@ class PerfectPhyloViz extends Viz {
   
   new (
     PerfectPhylo phylo, 
-    List<CellLocusMatrix> matrices, 
+    List<ReadOnlyCLMatrix> matrices, 
     PublicSize size) {
     this(phylo, matrices, size, Optional.empty, Optional.empty)
   }
   
   new (
     PerfectPhylo phylo, 
-    List<CellLocusMatrix> matrices, 
+    List<ReadOnlyCLMatrix> matrices, 
     PublicSize size,
     PerfectPhylo refPhylo
     ) {
@@ -48,7 +49,7 @@ class PerfectPhyloViz extends Viz {
   @DesignatedConstructor
   new (
     @ConstructorArg("phylo") PerfectPhylo phylo, 
-    @ConstructorArg("matrices") List<CellLocusMatrix> _matrices, 
+    @ConstructorArg("matrices") List<ReadOnlyCLMatrix> _matrices, 
     @ConstructorArg("size") PublicSize size,
     @ConstructorArg("ref") Optional<PerfectPhylo> refPhylo,
     @ConstructorArg(value = "colourCodes", description = coloursDescriptions) Optional<List<Integer>> codes
@@ -57,7 +58,7 @@ class PerfectPhyloViz extends Viz {
     
     // add the indicators for the displayed tree + one optional reference tree
     val indicators = CLMatrixUtils::fromPhylo(phylo)
-    val  matrices = new ArrayList(_matrices)
+    val ArrayList<CellLocusMatrix> matrices = new ArrayList(_matrices)
     matrices.add(0, indicators)
     
     if (refPhylo.present) {
