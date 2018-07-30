@@ -8,7 +8,6 @@ import java.util.ArrayList
 import java.util.Collections
 import java.util.Comparator
 import corrupt.Greedy.QueuedLocus
-import java.io.BufferedWriter
 import bayonet.distributions.Random
 import java.util.Optional
 import briefj.BriefIO
@@ -30,8 +29,6 @@ class Greedy extends Experiment {
   
   @Arg     @DefaultValue("true") // Different defaults when ran from cmd line 
   public boolean output = false  // vs called programmatically
-  
-  var BufferedWriter writer = null
   
   def CorruptPhylo infer() {
     val CorruptPhylo phylo = new CorruptPhylo(tipInclusionProbabilities)
