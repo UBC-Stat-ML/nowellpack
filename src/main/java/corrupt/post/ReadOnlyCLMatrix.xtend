@@ -21,7 +21,7 @@ import java.io.File
     else return new ReadOnlyCLMatrix(m)
   }
   
-  override getTipAsDouble(Cell cell, Locus locus) { enclosed.getTipAsDouble(cell, locus) }
+  override get(Cell cell, Locus locus) { enclosed.get(cell, locus) }
   override getCells() { enclosed.cells }
   override getLoci() { enclosed.loci}
   

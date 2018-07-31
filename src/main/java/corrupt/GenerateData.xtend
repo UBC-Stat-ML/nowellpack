@@ -45,7 +45,7 @@ class GenerateData extends Experiment {
     // generate tips
     val data = 
       if (useFPFNRates)
-        CLMatrixUtils::syntheticInclusionPrs(dataRand, phylo, fpRate, fnRate)
+        CLMatrixUtils::syntheticPerturbedBinaryMatrix(dataRand, phylo, fpRate, fnRate)
       else
         CLMatrixUtils::syntheticInclusionPrs(dataRand, phylo, stdDev)
     data.toCSV(results.getFileInResultFolder(DATA_FILE), CLMatrixUtils::fromPhylo(phylo)) 

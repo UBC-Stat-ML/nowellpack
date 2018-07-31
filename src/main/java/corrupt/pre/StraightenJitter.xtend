@@ -42,10 +42,10 @@ class StraightenJitter extends Experiment {
         for (neighbor : neighbors) 
           if (!consumed.contains(neighbor)) {
             for (cell : data.cells) {
-              val neighborValue = data.getTipAsDouble(cell, neighbor)
-              data.setTip(cell, neighbor, 0.0)
+              val neighborValue = data.get(cell, neighbor)
+              data.set(cell, neighbor, 0.0)
               if (neighborValue === 1.0) {
-                data.setTip(cell, locus, 1.0) // perform logical or
+                data.set(cell, locus, 1.0) // perform logical or
               }
             }
             consumed.add(neighbor)

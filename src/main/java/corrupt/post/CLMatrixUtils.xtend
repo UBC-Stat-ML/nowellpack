@@ -29,7 +29,7 @@ class CLMatrixUtils {
     out.println('''«CELLS»,«LOCI»,«TIP_INCL_PRS»«IF reference !== null»,reference«ENDIF»''')
     for (cell : matrix.cells)
       for (locus : matrix.loci)
-        out.println('''«cell»,«locus»,«matrix.getTipAsDouble(cell, locus)»«IF reference !== null»,«reference.getTipAsDouble(cell, locus)»«ENDIF»''')
+        out.println('''«cell»,«locus»,«matrix.get(cell, locus)»«IF reference !== null»,«reference.get(cell, locus)»«ENDIF»''')
     out.close
   }
   
@@ -64,7 +64,7 @@ class CLMatrixUtils {
     }
     val result = new SimpleCLMatrix(cells, loci)
     for (var int i = 0; i < cells.size; i++) 
-      result.setTip(cells.get(i), loci.get(i), values.get(i))
+      result.set(cells.get(i), loci.get(i), values.get(i))
     return result
   }
   
@@ -87,13 +87,13 @@ class CLMatrixUtils {
         prs.set(0, exclNormal.logDensity(observation))
         prs.set(1, inclNormal.logDensity(observation))
         Multinomial::expNormalize(prs)
-        syntheticInclusionPrs.setTip(cell, locus, prs.get(1)) 
+        syntheticInclusionPrs.set(cell, locus, prs.get(1)) 
       }
     }
     return ReadOnlyCLMatrix.readOnly(syntheticInclusionPrs)
   }
   
-  static def ReadOnlyCLMatrix syntheticInclusionPrs(Random rand, PerfectPhylo phylo, double fpRate, double fnRate) {
+  static def ReadOnlyCLMatrix syntheticPerturbedBinaryMatrix(Random rand, PerfectPhylo phylo, double fpRate, double fnRate) {
     val syntheticInclusionPrs = new SimpleCLMatrix(phylo.cells, phylo.loci)
     for (locus : phylo.loci) {
       val tips = phylo.getTips(locus)
@@ -106,7 +106,7 @@ class CLMatrixUtils {
           if (Generators::bernoulli(rand, fpRate))
             indic = true
         }
-        syntheticInclusionPrs.setTip(cell, locus, if (indic) 1.0 else 0.0) 
+        syntheticInclusionPrs.set(cell, locus, if (indic) 1.0 else 0.0) 
       }
     }
     return ReadOnlyCLMatrix.readOnly(syntheticInclusionPrs)

@@ -29,31 +29,8 @@ class NoiseEstimator extends Experiment {
   static def void estimate(PerfectPhylo phylo, CellLocusMatrix binaryMatrix, NoiseStatistics statistics) {
     if (phylo.cells != binaryMatrix.cells || phylo.loci != binaryMatrix.loci)
       throw new RuntimeException
-    for (locus : phylo.loci) {
-      val tips = phylo.getTips(locus)
-      for (entry : tips.entrySet) {
-        val truth = entry.value
-        val noisy = 
-          switch (binaryMatrix.getTipAsDouble(entry.key, locus)) {
-            case 1.0 : true
-            case 0.0 : false
-            default  : throw new RuntimeException
-          }
-        if (truth && !noisy) statistics.FN++
-        if (!truth && noisy) statistics.FP++
-        if (truth) statistics.positiveInstances++
-        else       statistics.negativeInstances++
-      }
-    }
-  }
-  
-  public static class NoiseStatistics {
-    public var positiveInstances = 0.0 // # positive instance (latent variable with value 1)
-    public var negativeInstances = 0.0 // # negative
-    public var FP = 0.0
-    public var FN = 0.0
-    def fpRate() { FP / negativeInstances }
-    def fnRate() { FN / positiveInstances }
+    for (locus : phylo.loci) 
+      statistics.add(locus, phylo.getTips(locus), binaryMatrix)
   }
   
   def static void main(String [] args) {

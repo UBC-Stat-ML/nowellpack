@@ -22,8 +22,8 @@ import corrupt.GenomeMap
     this.matrix = MatrixOperations::dense(cellsIdx.size, lociIdx.size)
   }
   
-  override getTipAsDouble(Cell cell, Locus locus)       { matrix.get(cellsIdx.o2i(cell), lociIdx.o2i(locus)) }
-  def void setTip(Cell cell, Locus locus, double value) { 
+  override get(Cell cell, Locus locus)       { matrix.get(cellsIdx.o2i(cell), lociIdx.o2i(locus)) }
+  def void set(Cell cell, Locus locus, double value) { 
     matrix.set(cellsIdx.o2i(cell), lociIdx.o2i(locus), value)
   }
   
@@ -42,7 +42,7 @@ import corrupt.GenomeMap
     CLMatrixUtils::checkCompatible(this, another)
     for (cell : cells) 
       for (locus : loci) 
-        increment(cell, locus, another.getTipAsDouble(cell, locus))
+        increment(cell, locus, another.get(cell, locus))
   }
   
   def void +=(PerfectPhylo phylo) {
@@ -54,12 +54,12 @@ import corrupt.GenomeMap
   }
   
   def void increment(Cell cell, Locus locus, double increment) {
-    setTip(cell, locus, getTipAsDouble(cell, locus) + increment)
+    set(cell, locus, get(cell, locus) + increment)
   }
   
   def void /=(double divisor) {
     for (cell : cells) 
       for (locus : loci) 
-        setTip(cell, locus, getTipAsDouble(cell, locus) / divisor)
+        set(cell, locus, get(cell, locus) / divisor)
   }
 }

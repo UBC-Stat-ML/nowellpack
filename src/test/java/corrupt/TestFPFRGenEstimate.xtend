@@ -7,7 +7,7 @@ import blang.inits.experiments.ExperimentResults
 import corrupt.post.NoiseEstimator
 import java.io.File
 import corrupt.post.CLMatrixUtils
-import corrupt.post.NoiseEstimator.NoiseStatistics
+import corrupt.post.NoiseStatistics
 import org.junit.Assert
 
 class TestFPFRGenEstimate {

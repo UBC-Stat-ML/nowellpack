@@ -36,7 +36,7 @@ class Filter extends Experiment {
     val result = new SimpleCLMatrix(data.cells, goodLoci)
     for (locus : goodLoci) 
       for (cell : data.cells) 
-        result.setTip(cell, locus, data.getTipAsDouble(cell, locus))
+        result.set(cell, locus, data.get(cell, locus))
     CLMatrixUtils::toCSV(result, results.getFileInResultFolder("filtered.csv")) 
   }
   

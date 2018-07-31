@@ -61,7 +61,7 @@ class TreeGrowthViz extends Experiment {
           found = true
       if (found) 
         for (cell : m.cells)
-          result.setTip(cell, locus, m.getTipAsDouble(cell, locus))
+          result.set(cell, locus, m.get(cell, locus))
     }
     return result
   }
@@ -70,7 +70,7 @@ class TreeGrowthViz extends Experiment {
     val result = new SimpleCLMatrix(current.cells, current.loci) 
     for (locus : current.loci)
       for (cell : current.cells)
-        result.setTip(cell, locus, Math.abs(current.getTipAsDouble(cell, locus) - prev.getTipAsDouble(cell, locus)))
+        result.set(cell, locus, Math.abs(current.get(cell, locus) - prev.get(cell, locus)))
     return result
   }
   

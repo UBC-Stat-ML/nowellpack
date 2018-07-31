@@ -87,7 +87,7 @@ class PerfectPhyloViz extends Viz {
           throw new RuntimeException
         val cell = cells.iterator.next as Cell 
         for (i : 0 ..< matrices.size)
-          converted.set(entry.value, groupSize * colIndex + i, matrices.get(i).getTipAsDouble(cell, locus))
+          converted.set(entry.value, groupSize * colIndex + i, matrices.get(i).get(cell, locus))
       }
       colIndex++
     }
