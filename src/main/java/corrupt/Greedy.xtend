@@ -12,6 +12,7 @@ import bayonet.distributions.Random
 import java.util.Optional
 import briefj.BriefIO
 import corrupt.post.CellLocusMatrix
+import blang.inits.experiments.tabwriters.TabularWriter
 
 class Greedy extends Experiment {
   
@@ -37,16 +38,18 @@ class Greedy extends Experiment {
     val List<QueuedLocus> queue = sortQueue(null, phylo)
     var iteration = 0
     while (!queue.empty) {
-      if (iteration % thinningPeriod === 0)
-        writePhylo(phylo, queue, iteration)
-      println("Processing locus " + (iteration+1) + "/" + tipInclusionProbabilities.loci.size)
       val popped = queue.pop
-      SplitSampler::maximize(phylo.reconstruction.tree, popped,  phylo.cellInclusionLogProbabilities(1.0, popped))
+      val logPr = SplitSampler::maximize(phylo.reconstruction.tree, popped,  phylo.cellInclusionLogProbabilities(1.0, popped))
+      
+      println("Processing locus " + (iteration+1) + "/" + tipInclusionProbabilities.loci.size + " logPr=" + logPr)
+      if (iteration % thinningPeriod === 0 || queue.empty)
+        writePhylo(phylo, queue, iteration, logPr, popped)      
+      
       iteration++ // do before line below, already sorted at beginning
       if (iteration % reshufflePeriod === 0)
         sortQueue(queue, phylo)
     }
-    writePhylo(phylo, queue, iteration) 
+     
     if (output)
       BriefIO::write(results.getFileInResultFolder("tree.newick"), phylo.toString)
     return phylo
@@ -56,15 +59,20 @@ class Greedy extends Experiment {
     infer 
   }
   
-  private def void writePhylo(CorruptPhylo phylo, List<QueuedLocus> loci, int iteration) {
+  TabularWriter treesWriter = null
+  private def void writePhylo(CorruptPhylo phylo, List<QueuedLocus> loci, int iteration, double logPr, Locus poppedLocus) {
     if (!output) 
       return;
+    if (treesWriter === null) 
+      treesWriter = results.getTabularWriter("trees")
     for (locus : loci)
       phylo.reconstruction.tree.addEdge(CorruptStaticUtils::root, locus.locus) 
     
-    results.getTabularWriter("trees") => [
-      write("iteration" -> iteration, "value" -> phylo)
-    ]
+    treesWriter.write(
+      "iteration" -> iteration,
+      "locus" -> poppedLocus,
+      "logPr" -> logPr, 
+      "value" -> phylo)
     
     for (locus : loci)
       phylo.reconstruction.tree.collapseEdge(locus.locus)

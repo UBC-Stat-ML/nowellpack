@@ -41,7 +41,10 @@ class SplitSampler {
     new SplitSampler(phylogeny, cellLikelihoods).maxLogConditional().value
   }
   
-  def static void maximize(
+  /**
+   * Return log probability of the argmax
+   */
+  def static double maximize(
     DirectedTree<TreeNode> phylogeny, 
     Locus locusToAdd, 
     Map<Cell, SubtreeLikelihood> cellLikelihoods
@@ -49,7 +52,7 @@ class SplitSampler {
     val sampler = new SplitSampler(phylogeny, cellLikelihoods)
     if (sampler.rootLociIndexer.containsObject(locusToAdd))
       throw new RuntimeException
-    sampler.maximize(locusToAdd)
+    return sampler.maximize(locusToAdd)
   }
   
   val DirectedTree<TreeNode> phylogeny 
@@ -92,7 +95,10 @@ class SplitSampler {
     return argmax -> max
   }
   
-  private def void maximize(Locus locusToAdd) {
+  /**
+   * Return log probability of the argmax
+   */
+  private def double maximize(Locus locusToAdd) {
     val pair = maxLogConditional
     val pickedParent = rootLociIndexer.i2o(pair.key) 
     val children = phylogeny.children(pickedParent)
@@ -103,6 +109,7 @@ class SplitSampler {
         childrenToMove.add(child)
     }
     phylogeny.addEdge(pickedParent, locusToAdd, childrenToMove)
+    return pair.value
   }
   
   private def void sample(Random random, Locus locusToAdd) {
