@@ -1,0 +1,20 @@
+package corrupt
+
+import corrupt.post.NoisyBinaryCLMatrix
+import corrupt.post.ReadOnlyCLMatrix
+
+model GlobalErrorModel {
+  random RealVar fpr ?: { val result = latentReal; result.set(0.1); return result }
+  random RealVar fnr ?: { val result = latentReal; result.set(0.1); return result }
+  param ReadOnlyCLMatrix binaryMatrix
+  param NoisyBinaryCLMatrix tipInclusionProbabilities ?: new NoisyBinaryCLMatrix(binaryMatrix, fpr, fnr)
+  random CorruptPhylo phylo ?: new CorruptPhylo(tipInclusionProbabilities)
+  
+  laws {
+    fpr ~ ContinuousUniform(0.0, 0.2) 
+    fnr ~ ContinuousUniform(0.0, 0.2)
+    phylo ~ Uniform
+    | phylo, fpr, fnr ~ LogPotential(phylo.logProbability)
+  }
+
+}

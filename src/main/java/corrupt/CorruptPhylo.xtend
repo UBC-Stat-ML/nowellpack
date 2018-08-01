@@ -14,15 +14,19 @@ import bayonet.math.NumericalUtils
 import briefj.BriefLog
 import corrupt.post.NoiseStatistics
 import corrupt.post.NoisyBinaryCLMatrix
+import blang.runtime.internals.objectgraph.SkipDependency
 
 @Samplers(CorruptGibbsSampler)
 class CorruptPhylo {
   @Accessors(PUBLIC_GETTER)
+  @SkipDependency(isMutable = true) // declared in the conditioning of LogPot; otherwise wrong behaviour
   val PerfectPhylo reconstruction 
   
+  @SkipDependency(isMutable = true)
   val CellLocusMatrix tipInclPrs
   
   @Accessors(PUBLIC_GETTER)
+  @SkipDependency(isMutable = true)
   val Cache cache
   
   // Initialize with star tree

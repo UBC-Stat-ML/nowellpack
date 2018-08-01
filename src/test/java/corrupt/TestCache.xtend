@@ -24,7 +24,7 @@ class TestCache {
     val phylo = PerfectPhylo::generateUniform(nCells, nLoci, rand)
     val matrix = ReadOnlyCLMatrix::readOnly(CLMatrixUtils::syntheticInclusionPrs(rand, phylo, 0.5))   
     // create inference machinery
-    val modelBuilder = new CorruptModel.Builder().setTipInclusionProbabilities(matrix)
+    val modelBuilder = new FixedMatrixModel.Builder().setTipInclusionProbabilities(matrix)
     val runner = new Runner(modelBuilder)
     runner.results = new ExperimentResults(folder.newFolder) 
     runner.engine = new SCM => [
@@ -44,7 +44,7 @@ class TestCache {
     val binaryMatrix = ReadOnlyCLMatrix::readOnly(CLMatrixUtils::syntheticPerturbedBinaryMatrix(rand, phylo, 0.2, 0.3)) 
     val noisy = new NoisyBinaryCLMatrix(binaryMatrix, 0.1, 0.05) 
     // create inference machinery
-    val modelBuilder = new CorruptModel.Builder().setTipInclusionProbabilities(noisy)
+    val modelBuilder = new FixedMatrixModel.Builder().setTipInclusionProbabilities(noisy)
     val runner = new Runner(modelBuilder)
     runner.results = new ExperimentResults(folder.newFolder) 
     runner.engine = new SCM => [

@@ -2,7 +2,6 @@ package corrupt
 
 import bayonet.distributions.Random
 import blang.core.LogScaleFactor
-import blang.core.RealVar
 import blang.mcmc.ConnectedFactor
 import blang.mcmc.SampledVariable
 import blang.mcmc.Sampler

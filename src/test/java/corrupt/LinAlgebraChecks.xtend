@@ -21,7 +21,7 @@ class LinAlgebraChecks {
     CorruptGibbsSampler::useTest = true
     for (anneal : #[0.0, 0.42, 1.0]) {
       val list = enumerateSyntheticModels(nCells, nLoci, anneal) 
-      val equality = [SampledModel m | (m.model as CorruptModel).phylo.getReconstruction.tree] 
+      val equality = [SampledModel m | (m.model as FixedMatrixModel).phylo.getReconstruction.tree] 
       val test = new DiscreteMCTest(list, equality, false)
       test.verbose = true
       test.checkInvariance

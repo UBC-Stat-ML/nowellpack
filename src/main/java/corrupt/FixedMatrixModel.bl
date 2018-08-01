@@ -2,7 +2,7 @@ package corrupt
 
 import corrupt.post.CellLocusMatrix
 
-model CorruptModel {
+model FixedMatrixModel {
   param CellLocusMatrix tipInclusionProbabilities 
   random CorruptPhylo phylo ?: new CorruptPhylo(tipInclusionProbabilities)
   
