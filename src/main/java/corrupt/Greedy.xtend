@@ -41,7 +41,8 @@ class Greedy extends Experiment {
       val popped = queue.pop
       val logPr = SplitSampler::maximize(phylo.reconstruction.tree, popped,  phylo.cellInclusionLogProbabilities(1.0, popped))
       
-      println("Processing locus " + (iteration+1) + "/" + tipInclusionProbabilities.loci.size + " logPr=" + logPr)
+      if (output)
+        println("Processing locus " + (iteration+1) + "/" + tipInclusionProbabilities.loci.size + " logPr=" + logPr)
       if (iteration % thinningPeriod === 0 || queue.empty)
         writePhylo(phylo, queue, iteration, logPr, popped)      
       
@@ -87,10 +88,12 @@ class Greedy extends Experiment {
     } else _old
     
     if (useRandomOrder) {
-      println("Shuffling order")
+      if (output)
+        println("Shuffling order")
       Collections::shuffle(result, randomizedOrder.get)
     } else {
-      println("Sorting queue")
+      if (output)
+        println("Sorting queue")
       for (locus : result)
         locus.recomputePriority(phylo)
       Collections::sort(result, Comparator::comparing[QueuedLocus ql | ql.priority])

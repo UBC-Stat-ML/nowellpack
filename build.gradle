@@ -80,6 +80,7 @@ createScript(project, 'corrupt.pre.StraightenJitter',   'corrupt-straighten')
 createScript(project, 'corrupt.pre.Tidify',             'corrupt-tidify')
 createScript(project, 'corrupt.post.NoiseEstimator',    'corrupt-noise-estimate')
 createScript(project, 'corrupt.pre.Filter',             'corrupt-filter')
+createScript(project, 'corrupt.post.RankLoci',          'corrupt-rank-loci')
 
 uploadArchives {
   repositories {
