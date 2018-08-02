@@ -9,7 +9,7 @@ plugins {
 dependencies {
   xtextLanguages "ca.ubc.stat.blang:ca.ubc.stat.blang:3.25.2"
   compile group: 'ca.ubc.stat', name: 'conifer', version: '2.0.4'
-  compile group: 'ca.ubc.stat', name: 'blangSDK', version: '1.14.0'
+  compile group: 'ca.ubc.stat', name: 'blangSDK', version: '1.15.2'
   compile group: 'ca.ubc.stat', name: 'bayonet', version: '4.1.0'
   compile group: 'ca.ubc.stat', name: 'conifer', version: '2.0.4'
   compile group: 'ca.ubc.stat', name: 'pxviz', version: '1.1.0'
@@ -68,7 +68,7 @@ startScripts.enabled = false
 run.enabled = false
 
 createScript(project, 'corrupt.FixedMatrixModel',       'corrupt-infer')
-createScript(project, 'corrupt.GlobalErrorModel',       'corrupt-infer-global-error')
+createScript(project, 'corrupt.NoisyBinaryModel',       'corrupt-infer-with-noisy-params')
 createScript(project, 'corrupt.GenerateData',           'corrupt-generate')
 createScript(project, 'corrupt.post.AverageCLMatrices', 'corrupt-average')
 createScript(project, 'corrupt.Greedy',                 'corrupt-greedy')

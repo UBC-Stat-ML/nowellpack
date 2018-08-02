@@ -12,14 +12,14 @@ import blang.mcmc.internals.SamplerBuilderOptions
 import java.io.File
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics
 import briefj.BriefIO
-import blang.types.StaticUtils
 import blang.engines.internals.factories.PT
 import java.util.Optional
 import corrupt.CorruptGibbsSampler
-import corrupt.GlobalErrorModel
 import corrupt.PerfectPhylo
 import corrupt.CorruptPhylo
 import org.junit.Assert
+import xlinear.MatrixOperations
+import corrupt.NoisyBinaryModel
 
 class ParamEstimation {
   @Rule
@@ -34,13 +34,13 @@ class ParamEstimation {
     // generate data
     val phylo = PerfectPhylo::generateUniform(nCells, nLoci, rand)
     val binaryMatrix = ReadOnlyCLMatrix::readOnly(CLMatrixUtils::syntheticPerturbedBinaryMatrix(rand, phylo, truth.get("fpr"), truth.get("fnr"))) 
-    val fpr = StaticUtils::latentReal
-    fpr.set(0.1)
-    val fnr = StaticUtils::latentReal
-    fnr.set(0.1)
+    val fpr = MatrixOperations::dense(1)
+    fpr.set(0, 0.1)
+    val fnr = MatrixOperations::dense(1)
+    fnr.set(0, 0.1)
     val noisy = new NoisyBinaryCLMatrix(binaryMatrix, fpr, fnr)
-    // create inference machinery
-    val modelBuilder = new GlobalErrorModel.Builder().setBinaryMatrix(binaryMatrix).setFpr(fpr).setFnr(fnr).setPhylo(new CorruptPhylo(phylo, noisy))
+    // create inference machinery 
+    val modelBuilder = new NoisyBinaryModel.Builder().setBinaryMatrix(binaryMatrix).setFpr(fpr).setFnr(fnr).setPhylo(new CorruptPhylo(phylo, noisy))
     val runner = new Runner(modelBuilder)
     runner.stripped = true
     runner.samplers = new SamplerBuilderOptions => [
@@ -53,7 +53,7 @@ class ParamEstimation {
       nChains = Optional.of(1)
     ]
     runner.run
-    runner.results.closeAll
+    runner.results.closeAll 
     for (stat : truth.keySet) {
       val samplesFile = new File(runner.results.resultsFolder, "samples/" + stat + ".csv")
       val summStat = new SummaryStatistics

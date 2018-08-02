@@ -1,6 +1,10 @@
 package corrupt
 
 import java.util.Set
+import blang.core.RealVar
+import blang.types.StaticUtils
+import xlinear.MatrixOperations
+import xlinear.Matrix
 
 class CorruptStaticUtils {
   public static val TreeNode root = new TreeNode("ROOT")
@@ -22,5 +26,13 @@ class CorruptStaticUtils {
          if (description.startsWith(Locus::PREFIX)) return new Locus(description)
     else if (description.startsWith(Cell::PREFIX )) return new Cell (description)
     else return root
+  }
+  
+  def static Matrix initializedLatentErrors(double max, int nLoci, boolean global) {
+    val nParams = if (global) 1 else nLoci
+    val result = MatrixOperations::dense(nParams)
+    for (i : 0 ..< nParams)
+      result.set(i, max / 2.0)
+    return result
   }
 }

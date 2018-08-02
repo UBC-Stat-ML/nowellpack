@@ -179,7 +179,7 @@ class CorruptPhylo {
   private static class NoisyBinaryCache implements Cache {
     val CorruptPhylo phylo
     val NoisyBinaryCLMatrix noisyMatrix
-    var NoiseStatistics stats = null
+    var List<NoiseStatistics> stats = null
     new(CorruptPhylo phylo) { 
       this.phylo = phylo
       this.noisyMatrix = phylo.tipInclPrs as NoisyBinaryCLMatrix
@@ -191,13 +191,26 @@ class CorruptPhylo {
       return stats !== null
     }
     override reset() {
-      stats = new NoiseStatistics
-      for (locus : phylo.loci)
-        stats.add(locus, phylo.reconstruction.getTips(locus), noisyMatrix.binaryMatrix) 
+      stats = new ArrayList
+      for (locus : phylo.loci) {
+        val currentStat = 
+          if (noisyMatrix.global) {
+            if (stats.empty) {
+              val global = new NoiseStatistics
+              stats.add(global)
+            }
+            stats.get(0)
+          } else {
+            val specific = new NoiseStatistics
+            stats.add(specific)
+            specific
+          }
+        currentStat.add(locus, phylo.reconstruction.getTips(locus), noisyMatrix.binaryMatrix) 
+      }
     }
     override update(Locus locus, Map<Cell, Boolean> tipsBefore, Map<Cell, Boolean> tipsAfter) {
-      stats.subtract(locus, tipsBefore, noisyMatrix.binaryMatrix) 
-      stats.add(locus, tipsAfter, noisyMatrix.binaryMatrix) 
+      stats.get(noisyMatrix.parameter(locus)).subtract(locus, tipsBefore, noisyMatrix.binaryMatrix) 
+      stats.get(noisyMatrix.parameter(locus)).add(locus, tipsAfter, noisyMatrix.binaryMatrix) 
     }
   }
   

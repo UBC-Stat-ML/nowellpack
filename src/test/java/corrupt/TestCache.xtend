@@ -29,6 +29,7 @@ class TestCache {
     runner.results = new ExperimentResults(folder.newFolder) 
     runner.engine = new SCM => [
       nParticles = 20
+      results = runner.results
     ]
     runner.run
     CorruptPhylo::testCacheCorrectness = false 
@@ -49,6 +50,7 @@ class TestCache {
     runner.results = new ExperimentResults(folder.newFolder) 
     runner.engine = new SCM => [
       nParticles = 20
+      results = runner.results
     ]
     runner.run
     CorruptPhylo::testCacheCorrectness = false 
