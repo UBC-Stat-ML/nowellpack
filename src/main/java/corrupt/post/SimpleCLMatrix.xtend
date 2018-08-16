@@ -9,6 +9,8 @@ import xlinear.MatrixOperations
 import java.util.Collection
 import corrupt.PerfectPhylo
 import corrupt.GenomeMap
+import blang.types.StaticUtils
+import bayonet.math.SpecialFunctions
 
 @Data class SimpleCLMatrix implements CellLocusMatrix {
   
@@ -60,6 +62,15 @@ import corrupt.GenomeMap
   def void /=(double divisor) {
     for (cell : cells) 
       for (locus : loci) 
-        set(cell, locus, get(cell, locus) / divisor)
+        set(cell, locus, get(cell, locus) / divisor) 
   }
+  
+  def logisticTransform() {
+    for (var int r = 0; r < matrix.nRows; r++) 
+      for (var int c = 0; c < matrix.nCols; c++) {
+        val rho = matrix.get(r,c)
+        matrix.set(r, c, 1) //SpecialFunctions::logistic(2*rho - 1))
+      }
+  }
+  
 }

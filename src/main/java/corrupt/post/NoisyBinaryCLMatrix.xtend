@@ -12,9 +12,6 @@ import java.util.Map
 import static xlinear.MatrixOperations.*
 import static extension xlinear.MatrixExtensions.*
 import java.util.HashMap
-import xlinear.DenseMatrix
-import xlinear.internals.MatrixVisitorEditInPlace
-import xlinear.internals.MatrixVisitorViewOnly
 import blang.core.RealConstant
 import blang.core.WritableRealVar
 import blang.runtime.internals.objectgraph.SkipDependency

@@ -18,6 +18,9 @@ class AverageCLMatrices extends Experiment {
   @Arg
   public Optional<File> referenceTree = Optional.empty
   
+  @Arg                @DefaultValue("true")
+  public boolean logisticTransform = true;
+  
   @Arg 
   @DefaultValue("value")
   public String field ="value"
@@ -26,7 +29,7 @@ class AverageCLMatrices extends Experiment {
   override run() {
     if (referenceTree.present)
       parsedTreeIndicators = CLMatrixUtils::fromPhylo(PerfectPhylo::parseNewick(referenceTree.get)) 
-    averageTipIndicators(BriefIO.readLines(csvFile).indexCSV.map[new PerfectPhylo(it.get(field))])
+    averageTipIndicators(BriefIO.readLines(csvFile).indexCSV.map[new PerfectPhylo(it.get(field))], logisticTransform)
     result.toCSV(results.getFileInResultFolder(OUTPUT_NAME), parsedTreeIndicators) 
   }
   
@@ -40,7 +43,7 @@ class AverageCLMatrices extends Experiment {
   /**
    * Null if empty.
    */
-  def void averageTipIndicators(Iterable<PerfectPhylo> phylos) {
+  def void averageTipIndicators(Iterable<PerfectPhylo> phylos, boolean logisticTransform) {
     var distanceOutput = 
       if (referenceTree === null) 
         null 
@@ -66,8 +69,11 @@ class AverageCLMatrices extends Experiment {
     if (!Double.isNaN(finalDistance)) {
       println("distance = " + finalDistance)
     }
-    if (result !== null)
+    if (result !== null) {
       result /= count
+      if (logisticTransform)
+        result.logisticTransform
+    }
   }
   
   private def double distance(SimpleCLMatrix refTree, SimpleCLMatrix sum, double count) {
