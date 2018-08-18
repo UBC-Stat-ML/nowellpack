@@ -23,13 +23,15 @@ import corrupt.GenomeMap
 class StraightenJitter extends Experiment {
   @Arg @DefaultValue("2") Integer neighborhoodSize = 2
   @Arg File input
+  @Arg  @DefaultValue("false")
+  public boolean viz = false
   
   override run() {
     val data = CLMatrixUtils::fromCSV(input)
     val GenomeMap lociMap = new GenomeMap(data.loci) 
     
     // viz initial matrix
-    viz(data.matrix.copy, "original.pdf")  
+    if (viz) viz(data.matrix.copy, "original.pdf")  
     
     // order loci by prevalence
     val List<Locus> orderedLoci = orderLoci(data)
@@ -51,7 +53,7 @@ class StraightenJitter extends Experiment {
             consumed.add(neighbor)
           }
       }
-    viz(data.matrix.copy, "final.pdf") 
+    if (viz) viz(data.matrix.copy, "final.pdf") 
     CLMatrixUtils::toCSV(data, results.getFileInResultFolder("output.csv")) 
   }
   
