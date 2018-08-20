@@ -32,12 +32,21 @@ class GraphViz2Newick extends Experiment {
     }
     val cells = new LinkedHashSet<Cell> 
     val loci = new LinkedHashSet<Locus>
-    for (edge : edges)
+    val iterator = edges.iterator
+    while (iterator.hasNext) {
+      val edge = iterator.next
       for (endPt : #[edge.key, edge.value]) 
         switch (endPt) {
           Locus : loci.add(endPt)
-          Cell : cells.add(endPt)
+          Cell : {
+            // SCITE puts cells in duplicates sometimes, remove these duplicates
+            if (cells.contains(endPt))
+              iterator.remove
+            else
+              cells.add(endPt)
+          }
         }
+      }
     val DirectedGraph<TreeNode, org.apache.commons.lang3.tuple.Pair<TreeNode,TreeNode>> topo = GraphUtils.<TreeNode>newDirectedGraph
     for (edge : edges) {
       topo.addVertex(edge.key)
