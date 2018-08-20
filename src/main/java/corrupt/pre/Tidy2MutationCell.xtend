@@ -16,7 +16,7 @@ class Tidy2MutationCell extends Experiment {
   
   override run() {
     val matrix = results.getAutoClosedBufferedWriter("matrix.csv")
-    val lociNames = results.getAutoClosedBufferedWriter("matrix.geneName")
+    val lociNames = results.getAutoClosedBufferedWriter("matrix.geneNames")
     for (locus : input.loci) {
       lociNames.append("" + locus + "\n")
       for (cell : input.cells) {
