@@ -14,6 +14,8 @@ import corrupt.Cell
 import blang.inits.providers.CoreProviders
 import xlinear.Matrix
 import blang.distributions.Generators
+import java.util.Set
+import java.util.HashSet
 
 class CLMatrixUtils {
   
@@ -31,6 +33,29 @@ class CLMatrixUtils {
       for (locus : matrix.loci)
         out.println('''«cell»,«locus»,«matrix.get(cell, locus)»«IF reference !== null»,«reference.get(cell, locus)»«ENDIF»''')
     out.close
+  }
+  
+  static def int locusEdgeDistance(PerfectPhylo phylo1, PerfectPhylo phylo2) {
+    val s1 = locusEdges(phylo1)
+    val s2 = locusEdges(phylo2)
+    val union = new HashSet => [
+      addAll(s1)
+      addAll(s2)
+    ]
+    val intersection = new HashSet(s1)
+    intersection.retainAll(s2)
+    union.removeAll(intersection)
+    return union.size
+  }
+  
+  static def Set<Pair<Locus,Locus>> locusEdges(PerfectPhylo phylo) {
+    val result = new HashSet
+    for (top : phylo.loci)
+      for (bottom : phylo.tree.children(top))
+        switch (bottom) {
+          Locus : result.add(top -> bottom)
+        }
+    return result
   }
   
   static def double distance(PerfectPhylo phylo1, PerfectPhylo phylo2) {
