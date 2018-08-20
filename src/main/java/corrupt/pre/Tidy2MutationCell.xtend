@@ -23,8 +23,8 @@ class Tidy2MutationCell extends Experiment {
         val value = input.get(cell, locus)
         matrix.append(
           switch (value) {
-            case 0 : "0"
-            case 1 : "1" 
+            case 0.0 : "0"
+            case 1.0 : "1" 
             default : throw new RuntimeException
           }
         )
