@@ -49,13 +49,17 @@ import java.util.Collections
    * Initialized with a star tree.
    */
   new(Set<Cell> cells, Set<Locus> loci) { 
-    this.cells = cells
-    this.loci = loci
-    tree = new DirectedTree(root)
+    this(cells, loci, new DirectedTree(root))
     for (cell : cells)
       tree.addEdge(root, cell)
     for (locus : loci) 
       tree.addEdge(root, locus)
+  }
+  
+  new(Set<Cell> cells, Set<Locus> loci, DirectedTree<TreeNode> tree) {
+    this.cells = cells
+    this.loci = loci
+    this.tree = tree
   }
   
   def static PerfectPhylo generateUniform(int nCells, int nLoci, Random rand) {

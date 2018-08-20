@@ -3,6 +3,7 @@ package corrupt.pre
 import blang.inits.Arg
 import blang.inits.experiments.Experiment
 import corrupt.post.ReadOnlyCLMatrix
+import briefj.BriefIO
 
 /**
  * Converts tidy matrix into the format used by SCITE, 
@@ -16,9 +17,7 @@ class Tidy2MutationCell extends Experiment {
   
   override run() {
     val matrix = results.getAutoClosedBufferedWriter("matrix.csv")
-    val lociNames = results.getAutoClosedBufferedWriter("matrix.geneNames")
     for (locus : input.loci) {
-      lociNames.append("" + locus + "\n")
       for (cell : input.cells) {
         val value = input.get(cell, locus)
         matrix.append(
@@ -31,6 +30,16 @@ class Tidy2MutationCell extends Experiment {
         matrix.append(" ")
       }
       matrix.append("\n")
+    }
+    
+    {
+      val file = results.getFileInResultFolder("matrix.geneNames")
+      BriefIO::write(file, input.loci.join("\n"))
+    }
+    
+    {
+      val file = results.getFileInResultFolder("matrix.cellNames")
+      BriefIO::write(file, input.cells.join("\n"))
     }
   }
   

@@ -7,15 +7,21 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import static java.util.Collections.emptyList
 import java.util.Collection
 import bayonet.graphs.GraphUtils
+import org.jgrapht.DirectedGraph
 
 @Data class DirectedTree<T> { 
   @Accessors(NONE)
-  val graph = GraphUtils.<T>newDirectedGraph
+  val DirectedGraph<T, org.apache.commons.lang3.tuple.Pair<T,T>> graph
   val T root
   
   new(T root) {
-    this.root = root
+    this(root,  GraphUtils.<T>newDirectedGraph)
     graph.addVertex(root)
+  }
+  
+  new(T root, DirectedGraph<T, org.apache.commons.lang3.tuple.Pair<T,T>> graph) {
+    this.graph = graph  
+    this.root = root
   }
   
   def T parent(T node) {

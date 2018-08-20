@@ -1,8 +1,6 @@
 package corrupt
 
 import java.util.Set
-import blang.core.RealVar
-import blang.types.StaticUtils
 import xlinear.MatrixOperations
 import xlinear.Matrix
 
