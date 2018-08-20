@@ -78,8 +78,9 @@ createScript(project, 'corrupt.viz.PerfectPhyloViz',    'corrupt-viz')
 createScript(project, 'corrupt.viz.TreeGrowthViz',      'corrupt-viz-growth')
 createScript(project, 'corrupt.pre.StraightenJitter',   'corrupt-straighten')
 createScript(project, 'corrupt.pre.Tidify',             'corrupt-tidify')
-createScript(project, 'corrupt.post.NoiseEstimator',    'corrupt-noise-estimate')
 createScript(project, 'corrupt.pre.Filter',             'corrupt-filter')
+createScript(project, 'corrupt.pre.Tidy2MutationCellMatrix','corrupt-tidy2mutcellmtx')
+createScript(project, 'corrupt.post.NoiseEstimator',    'corrupt-noise-estimate')
 createScript(project, 'corrupt.post.RankLoci',          'corrupt-rank-loci')
 
 uploadArchives {
