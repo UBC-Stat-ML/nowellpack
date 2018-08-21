@@ -158,6 +158,11 @@ import java.util.Collections
       builder.append(label) 
   }
   
+  /**
+   * A tree constructed from the perfect phylo by: 
+   * 1) removing all subtrees that contain no cell, and,
+   * 2) collapse chains into a single set containing all the nodes in the chain (which may then be a mix of cells, loci, root).
+   */
   def DirectedTree<Set<TreeNode>> collapsedTree() {
     val collapsed = collapsedTree(tree.root)
     val result = new DirectedTree(collapsed.label)
@@ -188,15 +193,13 @@ import java.util.Collections
     } else if (recursions.size === 1) {
       val child = recursions.get(0)
       if (child === null)
-        return null
+        throw new RuntimeException
       child.label.add(node) 
       return child
     } else {
       return new Tree(nodeSet, recursions)
     }
   }
-  
-  
   
   override String toString() { toNewick }
 }
