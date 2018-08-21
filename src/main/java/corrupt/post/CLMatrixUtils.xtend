@@ -16,6 +16,8 @@ import xlinear.Matrix
 import blang.distributions.Generators
 import java.util.Set
 import java.util.HashSet
+import corrupt.TreeNode
+import corrupt.DirectedTree
 
 class CLMatrixUtils {
   
@@ -36,8 +38,8 @@ class CLMatrixUtils {
   }
   
   static def int locusEdgeDistance(PerfectPhylo phylo1, PerfectPhylo phylo2) {
-    val s1 = locusEdges(phylo1)
-    val s2 = locusEdges(phylo2)
+    val s1 = locusEdges(phylo1.collapsedTree)
+    val s2 = locusEdges(phylo2.collapsedTree)
     val union = new HashSet => [
       addAll(s1)
       addAll(s2)
@@ -48,15 +50,19 @@ class CLMatrixUtils {
     return union.size
   }
   
-  static def Set<Pair<Locus,Locus>> locusEdges(PerfectPhylo phylo) {
+  static def Set<Pair<Locus,Locus>> locusEdges(DirectedTree<Set<TreeNode>> tree) {
     val result = new HashSet
-    for (top : phylo.loci)
-      for (bottom : phylo.tree.children(top))
-        switch (bottom) {
-          Locus : result.add(top -> bottom)
-        }
+    for (topNodeSet : tree.nodes) 
+      for (bottomNodeSet : tree.children(topNodeSet))
+        for (topNode : topNodeSet)
+          if (topNode instanceof Locus)
+            for (botNode : bottomNodeSet)
+              if (botNode instanceof Locus)
+                result.add((topNode as Locus) -> (botNode as Locus))
     return result
   }
+  
+  
   
   static def double distance(PerfectPhylo phylo1, PerfectPhylo phylo2) {
     return distance(fromPhylo(phylo1), fromPhylo(phylo2))
