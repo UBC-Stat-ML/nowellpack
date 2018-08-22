@@ -108,7 +108,7 @@ class CLMatrixUtils {
     return ReadOnlyCLMatrix.readOnly(syntheticInclusionPrs)
   }
   
-  static def ReadOnlyCLMatrix syntheticPerturbedBinaryMatrix(Random rand, PerfectPhylo phylo, double fpRate, double fnRate) {
+  static def BinaryCLMatrix syntheticPerturbedBinaryMatrix(Random rand, PerfectPhylo phylo, double fpRate, double fnRate) {
     val syntheticInclusionPrs = new SimpleCLMatrix(phylo.cells, phylo.loci)
     for (locus : phylo.loci) {
       val tips = phylo.getTips(locus)
@@ -124,7 +124,7 @@ class CLMatrixUtils {
         syntheticInclusionPrs.set(cell, locus, if (indic) 1.0 else 0.0) 
       }
     }
-    return ReadOnlyCLMatrix.readOnly(syntheticInclusionPrs)
+    return BinaryCLMatrix::binary(syntheticInclusionPrs)
   }
   
   static def void checkCompatible(SimpleCLMatrix cl1, SimpleCLMatrix cl2) {

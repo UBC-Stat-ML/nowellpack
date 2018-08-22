@@ -42,7 +42,7 @@ class TestCache {
     CorruptPhylo::testCacheCorrectness = true
     // generate data
     val phylo = PerfectPhylo::generateUniform(nCells, nLoci, rand)
-    val binaryMatrix = ReadOnlyCLMatrix::readOnly(CLMatrixUtils::syntheticPerturbedBinaryMatrix(rand, phylo, 0.2, 0.3)) 
+    val binaryMatrix = CLMatrixUtils::syntheticPerturbedBinaryMatrix(rand, phylo, 0.2, 0.3)
     val noisy = new NoisyBinaryCLMatrix(binaryMatrix, 0.1, 0.05) 
     // create inference machinery
     val modelBuilder = new FixedMatrixModel.Builder().setTipInclusionProbabilities(noisy)

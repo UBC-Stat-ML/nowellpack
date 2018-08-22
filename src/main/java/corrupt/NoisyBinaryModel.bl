@@ -1,15 +1,14 @@
 package corrupt
 
 import corrupt.post.NoisyBinaryCLMatrix
-import corrupt.post.ReadOnlyCLMatrix
 
-import static corrupt.CorruptStaticUtils.initializedLatentErrors 
+import static corrupt.CorruptStaticUtils.initializedLatentErrors import corrupt.post.BinaryCLMatrix
 
 model NoisyBinaryModel {
   param boolean globalParameterization ?: true
   param Double fprBound ?: 0.2
   param Double fnrBound ?: 0.2
-  param ReadOnlyCLMatrix binaryMatrix
+  param BinaryCLMatrix binaryMatrix
   random Matrix fpr ?: initializedLatentErrors(fprBound, binaryMatrix.loci.size, globalParameterization)
   random Matrix fnr ?: initializedLatentErrors(fnrBound, binaryMatrix.loci.size, globalParameterization)
   

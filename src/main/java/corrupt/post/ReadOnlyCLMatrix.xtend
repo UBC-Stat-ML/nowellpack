@@ -29,7 +29,6 @@ import java.io.File
   public static def ReadOnlyCLMatrix create(
       @Input String path
   ) { 
-    println("Loading tip inclusion probabilities...")
     return ReadOnlyCLMatrix::readOnly(CLMatrixUtils::fromCSV(new File(path)))    
   } 
 }

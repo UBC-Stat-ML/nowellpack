@@ -2,7 +2,6 @@ package blang.inits.experiments
 
 import org.junit.Test
 import bayonet.distributions.Random
-import corrupt.post.ReadOnlyCLMatrix
 import corrupt.post.CLMatrixUtils
 import corrupt.post.NoisyBinaryCLMatrix
 import blang.runtime.Runner
@@ -20,6 +19,7 @@ import corrupt.CorruptPhylo
 import org.junit.Assert
 import xlinear.MatrixOperations
 import corrupt.NoisyBinaryModel
+import corrupt.post.BinaryCLMatrix
 
 class ParamEstimation {
   @Rule
@@ -28,12 +28,12 @@ class ParamEstimation {
   @Test
   def void test() {
     val truth = #{"fpr" -> 0.15, "fnr" -> 0.17}
-    val nCells = 1000
+    val nCells = 10000
     val nLoci = 100 
     val rand = new Random(1)
     // generate data
     val phylo = PerfectPhylo::generateUniform(nCells, nLoci, rand)
-    val binaryMatrix = ReadOnlyCLMatrix::readOnly(CLMatrixUtils::syntheticPerturbedBinaryMatrix(rand, phylo, truth.get("fpr"), truth.get("fnr"))) 
+    val binaryMatrix = CLMatrixUtils::syntheticPerturbedBinaryMatrix(rand, phylo, truth.get("fpr"), truth.get("fnr"))
     val fpr = MatrixOperations::dense(1)
     fpr.set(0, 0.1)
     val fnr = MatrixOperations::dense(1)

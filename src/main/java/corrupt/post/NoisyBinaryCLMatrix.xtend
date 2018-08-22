@@ -18,7 +18,7 @@ import blang.runtime.internals.objectgraph.SkipDependency
 import xlinear.internals.CommonsDenseMatrix
 
 @Data class NoisyBinaryCLMatrix implements CellLocusMatrix {
-  val ReadOnlyCLMatrix binaryMatrix 
+  val BinaryCLMatrix binaryMatrix 
   val Matrix fpRates
   val Matrix fnRates
   @SkipDependency(isMutable = false) val Matrix nPositives
@@ -35,7 +35,7 @@ import xlinear.internals.CommonsDenseMatrix
   
   @DesignatedConstructor
   new(
-    @ConstructorArg("binaryMatrix") ReadOnlyCLMatrix binaryMatrix, 
+    @ConstructorArg("binaryMatrix") BinaryCLMatrix binaryMatrix, 
     @ConstructorArg("fpRate") double fpRate, 
     @ConstructorArg("fnRate") double fnRate
   ) {
@@ -43,7 +43,7 @@ import xlinear.internals.CommonsDenseMatrix
   }
   
   new(
-    ReadOnlyCLMatrix binaryMatrix, 
+    BinaryCLMatrix binaryMatrix, 
     RealVar fpRate, 
     RealVar fnRate
   ) {
@@ -51,7 +51,7 @@ import xlinear.internals.CommonsDenseMatrix
   }
 
   new(
-    ReadOnlyCLMatrix binaryMatrix, 
+    BinaryCLMatrix binaryMatrix, 
     Matrix fpRates, 
     Matrix fnRates
   ) {
