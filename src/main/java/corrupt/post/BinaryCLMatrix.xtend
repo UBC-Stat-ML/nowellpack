@@ -38,7 +38,7 @@ class BinaryCLMatrix implements CellLocusMatrix {
   }
   
   private def index(Cell cell, Locus locus) {
-    cellsIdx.o2i(cell) + lociIdx.size * lociIdx.o2i(locus)
+    cellsIdx.o2i(cell) + cellsIdx.size * lociIdx.o2i(locus)
   }
   
   override getCells() { cellsIdx.objects }
