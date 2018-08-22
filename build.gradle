@@ -69,6 +69,7 @@ run.enabled = false
 
 createScript(project, 'corrupt.FixedMatrixModel',       'corrupt-infer')
 createScript(project, 'corrupt.NoisyBinaryModel',       'corrupt-infer-with-noisy-params')
+createScript(project, 'corrupt.distances.L1Decoder',    'corrupt-l1-decode')
 createScript(project, 'corrupt.GenerateData',           'corrupt-generate')
 createScript(project, 'corrupt.post.AverageCLMatrices', 'corrupt-average')
 createScript(project, 'corrupt.Greedy',                 'corrupt-greedy')
