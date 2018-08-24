@@ -8,9 +8,20 @@ import blang.mcmc.Sampler
 import blang.mcmc.internals.ExponentiatedFactor
 import blang.mcmc.internals.SamplerBuilderContext
 
+//import blang.distributions.Generators;
+//import java.util.Random;
+
+import blang.inits.Arg
+import blang.inits.DefaultValue
+
+
+
 class CorruptGibbsSampler implements Sampler {
+  @Arg  @DefaultValue("1")
+  public int overSample = 1
+  
   @SampledVariable public CorruptPhylo phylo
-  @ConnectedFactor public LogScaleFactor numericFactor 
+  @ConnectedFactor public LogScaleFactor numericFactor
   
   private def double annealParameter() {
     val cast = numericFactor as ExponentiatedFactor
@@ -22,8 +33,13 @@ class CorruptGibbsSampler implements Sampler {
   override execute(Random rand) {
     if (useTest)
       phylo.gibbsTest(rand, annealParameter)
-    else
-      phylo.nextGibbs(rand, annealParameter)
+    else {
+	    	//val boolean resample = Random.nextBernoulli(new Random(10), skipProb) 
+		// TODO: Monitor ESS and only re-sample if it has dropped below a certain threshold
+		for (int p : 0 ..< overSample) {
+			phylo.nextGibbs(rand, annealParameter)
+		}
+    }
   }
   
   override setup(SamplerBuilderContext context) {
@@ -32,3 +48,4 @@ class CorruptGibbsSampler implements Sampler {
   
   public static var useTest = false // only for testing
 }
+
