@@ -4,30 +4,18 @@ import corrupt.post.NoisyBinaryCLMatrix
 
 import static corrupt.CorruptStaticUtils.initializedLatentErrors 
 import corrupt.post.BinaryCLMatrix
-import corrupt.post.CellLocusMatrix
-import corrupt.post.ConcatenationMatrix
 
 model NoisyBinaryModel {
-  param SamplerOptions samplerOptions ?: SamplerOptions::instance
   
-  // Binary model (for copy number)
+  param SamplerOptions samplerOptions ?: SamplerOptions::instance
   param boolean globalParameterization ?: true
   param Double fprBound ?: 0.2
   param Double fnrBound ?: 0.2
-  param BinaryCLMatrix copyNumberMarkers
-  random Matrix fpr ?: initializedLatentErrors(fprBound, copyNumberMarkers.loci.size, globalParameterization)
-  random Matrix fnr ?: initializedLatentErrors(fnrBound, copyNumberMarkers.loci.size, globalParameterization)
+  param BinaryCLMatrix binaryMatrix
+  random Matrix fpr ?: initializedLatentErrors(fprBound, binaryMatrix.loci.size, globalParameterization)
+  random Matrix fnr ?: initializedLatentErrors(fnrBound, binaryMatrix.loci.size, globalParameterization)
   
-  // Cached inclusion probabilities (for point mutations)
-  param CellLocusMatrix singleNucleotideMarkers
-  
-  random CorruptPhylo phylo ?: new CorruptPhylo(
-    new ConcatenationMatrix(#[
-      new NoisyBinaryCLMatrix(copyNumberMarkers, fpr, fnr),
-      singleNucleotideMarkers
-    ])
-    
-  )
+  random CorruptPhylo phylo ?: new CorruptPhylo(new NoisyBinaryCLMatrix(binaryMatrix, fpr, fnr))
   
   laws {
     for (int p : 0 ..< fpr.nEntries) {
