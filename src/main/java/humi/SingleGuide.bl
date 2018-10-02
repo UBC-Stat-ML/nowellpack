@@ -5,18 +5,16 @@ model SingleGuide {
   random SimpleCountFrequencies frequencies ?: new SimpleCountFrequencies
   random RealVar 
     mean ?: latentReal, 
-//    overdispersion, 
+    overdispersion ?: latentReal, 
     nUMIMean ?: latentReal
     
   laws { 
     mean ~ Exponential(1)
-//    overdispersion ~Exponential(1)
-    nUMIMean ~ Exponential(0.1) //0.01)
-    frequencies | nUMIMean, mean //, overdispersion 
-      ~ ZeroCensoredExchangeableCounts(
-          //Bernoulli::distribution(0.5),
-          Poisson::distribution(2.0),   
-          //NegativeBinomialMeanParam::distribution(mean, overdispersion), 
+    overdispersion ~ Exponential(1)
+    nUMIMean ~ Exponential(0.1)
+    frequencies | nUMIMean, mean, overdispersion 
+      ~ ZeroCensoredExchangeableCounts(  
+          NegativeBinomialMeanParam::distribution(mean, overdispersion), 
           nUMIMean
       )
   }

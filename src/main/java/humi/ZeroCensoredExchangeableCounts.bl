@@ -6,7 +6,6 @@ model ZeroCensoredExchangeableCounts {
   random CountFrequencies countFrequencies 
   
   laws {
-    
     logf(pmf, countFrequencies, poissonRate) {
       val p0 = Math.exp(pmf.logDensity(0))
       val logRenorm = Math.log1p(-p0)
@@ -22,26 +21,10 @@ model ZeroCensoredExchangeableCounts {
           result += frequency * (pmf.logDensity(count) - logRenorm)
         }
       }
-      return result + Poisson::distribution((1.0 - p0)*poissonRate).logDensity(nObserved)//HumiStaticUtils::logPoissonCensoringFormula(poissonRate, nObserved, p0 / (1.0 - p0))
+      // product of the observations (given they are not 0) and of a thinning probability, 
+      // where the probability of retaining is the pr that not equal zero
+      return result + Poisson::distribution((1.0 - p0)*poissonRate).logDensity(nObserved)
     }
-    
-//    logf(pmf, countFrequencies, poissonRate) {
-//      val p0 = Math.exp(pmf.logDensity(0))
-//      val logRenorm = Math.log1p(-p0)
-//      if (poissonRate <= 0.0) return NEGATIVE_INFINITY
-//      var result = 0.0
-//      var nObserved = 0
-//      for (count : countFrequencies.counts) {
-//        val frequency = countFrequencies.frequency(count)
-//        nObserved += frequency
-//        if (count == 0) throw new RuntimeException  
-//        if (frequency < 0) return NEGATIVE_INFINITY
-//        if (frequency !== 0) {
-//          result += frequency * (pmf.logDensity(count) - logRenorm)
-//        }
-//      }
-//      return result + HumiStaticUtils::logPoissonCensoringFormula(poissonRate, nObserved, p0 / (1.0 - p0))
-//    }
   }
   
   generate (rand) {

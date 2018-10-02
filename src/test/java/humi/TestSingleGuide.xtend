@@ -9,18 +9,18 @@ class TestSingleGuide {
   
   val SingleGuide singleGuideModel = new SingleGuide.Builder()
     .setFrequencies(new SimpleCountFrequencies)
-    .setMean(StaticUtils::latentReal)
+    .setMean(StaticUtils::latentReal) 
     .setNUMIMean(StaticUtils::latentReal)
-//    .setOverdispersion(StaticUtils::latentReal)
+    .setOverdispersion(StaticUtils::latentReal)
       .build 
   
   @Test 
   def void exactInvarianceTest() {
     val test = new ExactInvarianceTest
-    test.nPosteriorSamplesPerIndep = 500
+    test.nPosteriorSamplesPerIndep = 500 
     test.add(new Instance(singleGuideModel, 
       [mean.doubleValue], 
-//      [overdispersion.doubleValue], 
+      [overdispersion.doubleValue], 
       [NUMIMean.doubleValue]
     ))  
     test.check

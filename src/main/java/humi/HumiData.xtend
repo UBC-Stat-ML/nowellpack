@@ -5,6 +5,8 @@ import blang.inits.Arg
 import blang.types.Plate
 import blang.types.Plated
 import com.rits.cloning.Immutable
+import blang.types.Index
+import blang.inits.DefaultValue
 
 @Immutable
 class HumiData {
@@ -15,4 +17,11 @@ class HumiData {
   @Arg public Plate<Integer> targets
   @Arg public Plate<String> genes
   @Arg public Plate<String> experiments
+  
+  @Arg            @DefaultValue("ctl_")
+  public String controlPrefix = "ctl_"
+  def boolean isControl(Index<String> gene) {
+    if (gene.plate != genes) throw new RuntimeException
+    return gene.key.startsWith(controlPrefix)
+  }
 }

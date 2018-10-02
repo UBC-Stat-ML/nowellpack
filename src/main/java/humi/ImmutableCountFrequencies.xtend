@@ -18,5 +18,4 @@ class ImmutableCountFrequencies implements CountFrequencies {
   override frequency(int count) {
     return data.get(count).intValue
   }
-  
 }
