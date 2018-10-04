@@ -9,7 +9,7 @@ class ImmutableCountFrequencies implements CountFrequencies {
   val Map<Integer, Integer> data = new LinkedHashMap
   
   new(Map<Integer, Integer> data) {
-    data.putAll(data)
+    this.data.putAll(data)
   }
   
   override counts() {
