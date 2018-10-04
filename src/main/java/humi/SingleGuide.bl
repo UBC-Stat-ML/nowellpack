@@ -13,10 +13,8 @@ model SingleGuide {
     overdispersion ~ Exponential(0.1)
     nUMIMean ~ Exponential(0.001)
     frequencies | nUMIMean, mean, overdispersion 
-      ~ ExchangeableCounts(
-          NegativeBinomialMeanParam::distribution(mean, overdispersion)
-          , 
-          nUMIMean
+      ~ TruncatedExchangeableCounts(
+          NegativeBinomialMeanParam::distribution(mean, overdispersion), nUMIMean
       )
   }
 }

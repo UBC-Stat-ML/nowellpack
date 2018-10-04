@@ -1,6 +1,6 @@
 package humi
 
-model ZeroCensoredExchangeableCounts {
+model CensoredExchangeableCounts {
   param IntDistribution pmf
   param RealVar poissonRate
   random CountFrequencies countFrequencies 

@@ -26,10 +26,10 @@ class HumiStaticUtils {
       return targets.get(gene, target)
   }
   
-  def static nbMix(List<RealVar> means, List<RealVar> overds) {
+  def static nbMix(RealVar rate, List<RealVar> means, List<RealVar> overds) {
     val result = new ArrayList<IntDistribution>
     for (i : 0 ..< means.size)
-      result.add(NegativeBinomialMeanParam::distribution(means.get(i), overds.get(i)))
+      result.add(NegativeBinomialMeanParam::distribution([means.get(i).doubleValue * rate.doubleValue], overds.get(i)))
     return result
   }
 }

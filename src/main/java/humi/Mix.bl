@@ -5,13 +5,13 @@ import static humi.HumiStaticUtils.nbMix
 model Mix {
   param HumiData data
     
-  param Integer nComponents ?: 5
+  param Integer nComponents ?: 3
   random Simplex simplex ?: latentSimplex(nComponents)
   random List<RealVar> 
     means  ?: latentRealList(nComponents),
     overds ?: latentRealList(nComponents)
     
-  random IntVar prediction ?: latentInt
+  random Plated<RealVar> targetRates, experimentRates
   
   laws {
     
@@ -25,19 +25,27 @@ model Mix {
       overd ~ Exponential(0.01)
     }
     
+    for (Index<String> experiment : data.experiments.indices) {
+      experimentRates.get(experiment) ~ ContinuousUniform(0.5, 2.0)
+    }
+    
+    for (Index<Integer> target : data.targets.indices) {
+      targetRates.get(target) ~ ContinuousUniform(0.5, 2.0)
+    }
+    
     for (Index<Integer> target : data.targets.indices) {
             
       for (Index<String> experiment : data.experiments.indices(target)) {
         
         data.histograms.get(target, experiment)
-          | IntDistribution distrib = IntMixture::distribution(simplex, nbMix(means, overds))
-          ~ ExchangeableCounts(distrib)
+          | means, overds, simplex,
+            RealVar targetRate = targetRates.get(target),
+            RealVar experimentRate = experimentRates.get(experiment)
+          ~ TruncatedExchangeableCounts(IntMixture::distribution(simplex, nbMix([targetRate * experimentRate], means, overds)))
           
       }
       
     }
-    
-    prediction | simplex, means, overds ~ IntMixture(simplex, nbMix(means, overds))
     
   }
 }

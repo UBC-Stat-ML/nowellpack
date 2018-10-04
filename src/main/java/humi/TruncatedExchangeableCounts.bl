@@ -1,6 +1,6 @@
 package humi
 
-model ExchangeableCounts {
+model TruncatedExchangeableCounts {
   param IntDistribution pmf
   random CountFrequencies countFrequencies 
   
@@ -12,7 +12,7 @@ model ExchangeableCounts {
         if (count == 0) throw new RuntimeException  
         if (frequency < 0) return NEGATIVE_INFINITY
         if (frequency !== 0) {
-          result += frequency * pmf.logDensity(count)
+          result += frequency * pmf.logDensity(count-1)
         }
       }
       return result 

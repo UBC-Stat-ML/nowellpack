@@ -22,7 +22,7 @@ model Flat {
               RealVar targetOverdispersion = targetOverdispersions.get(gene, target)
 //              ,
 //              RealVar nUMIRate = nUMIRates.get(gene, target)
-            ~ ZeroCensoredExchangeableCounts(NegativeBinomialMeanParam::distribution(targetRate, targetOverdispersion), 2000)
+            ~ CensoredExchangeableCounts(NegativeBinomialMeanParam::distribution(targetRate, targetOverdispersion), 2000)
         }
         
       }
