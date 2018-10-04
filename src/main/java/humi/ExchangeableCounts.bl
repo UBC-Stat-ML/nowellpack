@@ -1,0 +1,25 @@
+package humi
+
+model ExchangeableCounts {
+  param IntDistribution pmf
+  random CountFrequencies countFrequencies 
+  
+  laws {
+    logf(pmf, countFrequencies) {
+      var result = 0.0
+      for (count : countFrequencies.counts) {
+        val frequency = countFrequencies.frequency(count)
+        if (count == 0) throw new RuntimeException  
+        if (frequency < 0) return NEGATIVE_INFINITY
+        if (frequency !== 0) {
+          result += frequency * pmf.logDensity(count)
+        }
+      }
+      return result 
+    }
+  }
+  
+  generate (rand) {
+    throw new RuntimeException
+  }
+}

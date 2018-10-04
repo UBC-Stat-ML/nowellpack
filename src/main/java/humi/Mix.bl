@@ -1,0 +1,43 @@
+package humi
+
+import static humi.HumiStaticUtils.nbMix
+
+model Mix {
+  param HumiData data
+    
+  param Integer nComponents ?: 5
+  random Simplex simplex ?: latentSimplex(nComponents)
+  random List<RealVar> 
+    means  ?: latentRealList(nComponents),
+    overds ?: latentRealList(nComponents)
+    
+  random IntVar prediction ?: latentInt
+  
+  laws {
+    
+    simplex | nComponents ~ SimplexUniform(nComponents)
+    
+    for (RealVar mean : means) {
+      mean ~ Exponential(0.01)
+    }
+    
+    for (RealVar overd : overds) {
+      overd ~ Exponential(0.01)
+    }
+    
+    for (Index<Integer> target : data.targets.indices) {
+            
+      for (Index<String> experiment : data.experiments.indices(target)) {
+        
+        data.histograms.get(target, experiment)
+          | IntDistribution distrib = IntMixture::distribution(simplex, nbMix(means, overds))
+          ~ ExchangeableCounts(distrib)
+          
+      }
+      
+    }
+    
+    prediction | simplex, means, overds ~ IntMixture(simplex, nbMix(means, overds))
+    
+  }
+}

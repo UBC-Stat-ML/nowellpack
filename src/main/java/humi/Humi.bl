@@ -1,0 +1,56 @@
+package humi
+
+model Humi {
+//  param GlobalDataSource data
+//  
+//  param String controlPrefix ?: "ctl_"
+//  
+//  param Plate<String> genes, experiments
+//  param Plate<Integer> counts, targets
+//  
+//  random RealVar 
+//    geneShapePriorShape ?: latentReal, geneShapePriorRate ?: latentReal,
+//    geneRatePriorShape ?: latentReal,  geneRatePriorRate ?: latentReal
+//  
+//  random Plated<RealVar> 
+//    geneShapes, geneRates, 
+//    targetRates,
+//    experimentMeans
+//     //, experimentOverdispersions
+//  
+//  random Plated<Integer> frequencies
+    
+  laws {
+//    for (Index<String> experiment : experiments.indices) {
+//      experimentMeans.get(experiment) ~ GammaMeanParam(2, 4) 
+////      experimentOverdispersions.get(experiment) ~ Exponential(0.01)
+//    }
+//
+//    geneShapePriorShape ~ GammaMeanParam(1, 0.5)   geneShapePriorRate ~ Gamma(2,2) // avoiding values very close to zero as they cause numerical issues
+//    geneRatePriorShape  ~ Gamma(2,2)   geneRatePriorRate  ~ Gamma(2,2)
+//    
+//    for (Index<String> gene : genes.indices.filter[!key.startsWith(controlPrefix)]) {
+//      geneShapes.get(gene) | geneShapePriorShape, geneShapePriorRate ~ Gamma(geneShapePriorShape, geneShapePriorRate)
+//      geneRates.get(gene)  | geneRatePriorShape,  geneRatePriorShape ~ Gamma(geneRatePriorShape, geneRatePriorShape)
+//      for (Index<Integer> target : targets.indices(gene)) {
+//        targetRates.get(gene, target) 
+//          | RealVar geneShape = geneShapes.get(gene), RealVar geneRate = geneRates.get(gene) 
+//          ~ GammaMeanParam(geneMean, geneSD)
+//      }
+//    }
+//    
+//    for (Index<String> gene : genes.indices) {
+//      for (Index<Integer> target : targets.indices(gene)) {
+//        for (Index<String> experiment : experiments.indices(gene, target)) {
+//          frequencies.slice(gene, target, experiment).imputeZeros(counts.indices(gene, target, experiment))  
+//            |
+//              RealVar targetRate = targetRates.orOneIfControl(controlPrefix, gene, target), 
+//              RealVar experimentMean = experimentMeans.get(experiment)
+////              ,
+////              RealVar experimentOverdispersion = experimentOverdispersions.get(experiment)
+//            ~ ExchangeableCounts(Poisson::distribution([experimentMean * targetRate]))
+//        }
+//      }
+//    }
+  }
+}

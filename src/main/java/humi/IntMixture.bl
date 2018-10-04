@@ -1,0 +1,25 @@
+package humi
+
+model IntMixture {
+  param Simplex proportions
+  param List<IntDistribution> components
+  random IntVar realization
+  
+  laws {
+    logf(proportions, components, realization) {
+      var sum = 0.0
+      if (components.size !== proportions.nEntries) throw new RuntimeException
+      for (i : 0 ..< components.size) {
+        val prop = proportions.get(i)
+        if (prop < 0.0 || prop > 1.0) return NEGATIVE_INFINITY
+        sum += prop * exp(components.get(i).logDensity(realization))
+      }
+      return log(sum)
+    }
+  }
+  
+  generate (rand) {
+    val category = rand.categorical(proportions.vectorToArray)
+    return components.get(category).sample(rand)
+  }
+}

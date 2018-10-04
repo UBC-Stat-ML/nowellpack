@@ -2,19 +2,20 @@ package humi
 
 // Used for testing purpose
 model SingleGuide {
-  random SimpleCountFrequencies frequencies ?: new SimpleCountFrequencies
+  random CountFrequencies frequencies ?: new SimpleCountFrequencies
   random RealVar 
     mean ?: latentReal, 
     overdispersion ?: latentReal, 
     nUMIMean ?: latentReal
     
   laws { 
-    mean ~ Exponential(1)
-    overdispersion ~ Exponential(1)
-    nUMIMean ~ Exponential(0.1)
+    mean ~ Exponential(0.1)
+    overdispersion ~ Exponential(0.1)
+    nUMIMean ~ Exponential(0.001)
     frequencies | nUMIMean, mean, overdispersion 
-      ~ ZeroCensoredExchangeableCounts(  
-          NegativeBinomialMeanParam::distribution(mean, overdispersion), 
+      ~ ExchangeableCounts(
+          NegativeBinomialMeanParam::distribution(mean, overdispersion)
+          , 
           nUMIMean
       )
   }

@@ -2,35 +2,29 @@ package humi
 
 model Flat {  
   param HumiData data
-  random Plated<RealVar> targetRates, experimentMeans, nUMIRates
+  random Plated<RealVar> targetRates, targetOverdispersions, nUMIRates
   
-  random RealVar a ?: latentReal, b ?: latentReal
     
   laws {
     
-    a ~ Exponential(0.001)
-    b ~ Exponential(0.001)
- 
-    for (Index<String> experiment : data.experiments.indices) {
-      experimentMeans.get(experiment) ~ Exponential(0.1)
-    }
-    
-    for (Index<String> gene : data.genes.indices.filter[!data.isControl(it)]) {
-      for (Index<Integer> target : data.targets.indices(gene)) {
-        targetRates.get(gene, target) ~ ContinuousUniform(0.1, 10.0)
-      }
-    }
-    
+  
     for (Index<String> gene : data.genes.indices) {
       for (Index<Integer> target : data.targets.indices(gene)) {
-        nUMIRates.get(gene, target) | a, b ~ Gamma(a, b)
+        
+        targetRates.get(gene, target) ~ Exponential(0.01)
+        targetOverdispersions.get(gene, target) ~ Exponential(0.01)
+        nUMIRates.get(gene, target) ~ GammaMeanParam(2000, 1000 * 1000)
+        
         for (Index<String> experiment : data.experiments.indices(gene, target)) {
+          
           data.histograms.get(gene, target, experiment)
-            | RealVar targetRate = if (data.isControl(gene)) 1.0 else targetRates.get(gene, target),  
-              RealVar nUMIRate = nUMIRates.get(gene, target),
-              RealVar experimentMean = experimentMeans.get(experiment)
-            ~ ZeroCensoredExchangeableCounts(Poisson::distribution([experimentMean * targetRate]), nUMIRate)
+            | RealVar targetRate = targetRates.get(gene, target), 
+              RealVar targetOverdispersion = targetOverdispersions.get(gene, target)
+//              ,
+//              RealVar nUMIRate = nUMIRates.get(gene, target)
+            ~ ZeroCensoredExchangeableCounts(NegativeBinomialMeanParam::distribution(targetRate, targetOverdispersion), 2000)
         }
+        
       }
     }
   }
