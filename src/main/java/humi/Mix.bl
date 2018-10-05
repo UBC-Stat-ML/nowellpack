@@ -11,7 +11,7 @@ model Mix {
     means  ?: latentRealList(nComponents),
     overds ?: latentRealList(nComponents)
     
-  random Plated<RealVar> targetRates, experimentRates
+  random PlatedMatrix targetRates, experimentRates
   
   laws {
     
@@ -25,13 +25,8 @@ model Mix {
       overd ~ Exponential(0.01)
     }
     
-    for (Index<String> experiment : data.experiments.indices) {
-      experimentRates.get(experiment) ~ ContinuousUniform(0.5, 2.0)
-    }
-    
-    for (Index<Integer> target : data.targets.indices) {
-      targetRates.get(target) ~ ContinuousUniform(0.5, 2.0)
-    }
+    experimentRates.getDenseSimplex(data.experiments) | int nExps = data.experiments.indices.size ~ SimplexUniform(nExps)
+    targetRates.getDenseSimplex(data.targets) | int nTargets = data.targets.indices.size ~ SimplexUniform(nTargets)
     
     for (Index<Integer> target : data.targets.indices) {
             
@@ -39,13 +34,11 @@ model Mix {
         
         data.histograms.get(target, experiment)
           | means, overds, simplex,
-            RealVar targetRate = targetRates.get(target),
-            RealVar experimentRate = experimentRates.get(experiment)
-          ~ TruncatedExchangeableCounts(IntMixture::distribution(simplex, nbMix([targetRate * experimentRate], means, overds)))
+            RealVar targetRate = targetRates.getDenseSimplexEntry(data.targets, target), 
+            RealVar experimentRate = experimentRates.getDenseSimplexEntry(data.experiments, experiment)
+          ~ TruncatedExchangeableCounts(IntMixture::distribution(simplex, nbMix([targetRate * experimentRate], means, overds))) 
           
       }
-      
     }
-    
   }
 }
