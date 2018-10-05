@@ -20,6 +20,9 @@ model CensoredExchangeableCounts {
         if (frequency !== 0) {
           result += frequency * (pmf.logDensity(count) - logRenorm)
         }
+        if (result.isNaN) {
+          return NEGATIVE_INFINITY // TODO: some uncaught numerical limitation in NegBin
+        }
       }
       // product of the observations (given they are not 0) and of a thinning probability, 
       // where the probability of retaining is the pr that not equal zero

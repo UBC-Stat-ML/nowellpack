@@ -14,6 +14,9 @@ model TruncatedExchangeableCounts {
         if (frequency !== 0) {
           result += frequency * pmf.logDensity(count-1)
         }
+        if (result.isNaN) {
+          return NEGATIVE_INFINITY // TODO: some uncaught numerical limitation in NegBin
+        }
       }
       return result 
     }
