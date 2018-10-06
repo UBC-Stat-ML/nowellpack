@@ -29,7 +29,7 @@ model Mix {
     
     experimentRates.getDenseSimplex(data.experiments) | int nExps = data.experiments.indices.size ~ SimplexUniform(nExps)
     
-    for (Index<String> gene : data.genes.indices.filter[data.isControl(it)]) {
+    for (Index<String> gene : data.genes.indices.filter[!data.isControl(it)]) {
       for (Index<Integer> target : data.targets.indices(gene)) {
         targetRates.get(target) ~ ContinuousUniform(0.5, 2.0)
       }
