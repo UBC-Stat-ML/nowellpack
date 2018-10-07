@@ -13,7 +13,7 @@ model Mix {
     
   random PlatedMatrix experimentRates
   
-  random Plated<RealVar> targetRates
+  random Plated<RealVar> targetRates, targetOverds
   
   laws {
     
@@ -29,20 +29,22 @@ model Mix {
     
     experimentRates.getDenseSimplex(data.experiments) | int nExps = data.experiments.indices.size ~ SimplexUniform(nExps)
     
-    for (Index<String> gene : data.genes.indices.filter[!data.isControl(it)]) {
-      for (Index<Integer> target : data.targets.indices(gene)) {
-        targetRates.get(target) ~ ContinuousUniform(0.5, 2.0)
-      }
-    }
+//    for (Index<String> gene : data.genes.indices.filter[!data.isControl(it)]) {
+//      for (Index<Integer> target : data.targets.indices(gene)) {
+//        targetRates.get(target) ~ ContinuousUniform(0.5, 2.0)
+//      }
+//    }
     
     for (Index<String> gene : data.genes.indices) {
       for (Index<Integer> target : data.targets.indices(gene)) {
         for (Index<String> experiment : data.experiments.indices(target)) {
           data.histograms.get(target, experiment)
-            | means, overds, simplex,
+            | RealVar targetRate = targetRates.get(target, experiment),
+              RealVar targetOverd = targetOverds.get(target, experiment)
+              //means, overds, simplex,
               //RealVar targetRate = { if (data.isControl(gene)) fixedReal(1.0) else targetRates.get(target) }, 
-              RealVar experimentRate = experimentRates.getDenseSimplexEntry(data.experiments, experiment)
-            ~ TruncatedExchangeableCounts(IntMixture::distribution(simplex, nbMix([experimentRate], means, overds))) 
+              //RealVar experimentRate = experimentRates.getDenseSimplexEntry(data.experiments, experiment)
+            ~ TruncatedExchangeableCounts(NegativeBinomialMeanParam::distribution(targetRate, targetOverd))
         }
       }
     }
