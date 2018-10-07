@@ -40,9 +40,9 @@ model Mix {
         for (Index<String> experiment : data.experiments.indices(target)) {
           data.histograms.get(target, experiment)
             | means, overds, simplex,
-              RealVar targetRate = { if (data.isControl(gene)) fixedReal(1.0) else targetRates.get(target) }, 
+              //RealVar targetRate = { if (data.isControl(gene)) fixedReal(1.0) else targetRates.get(target) }, 
               RealVar experimentRate = experimentRates.getDenseSimplexEntry(data.experiments, experiment)
-            ~ TruncatedExchangeableCounts(IntMixture::distribution(simplex, nbMix([targetRate * experimentRate], means, overds))) 
+            ~ TruncatedExchangeableCounts(IntMixture::distribution(simplex, nbMix([experimentRate], means, overds))) 
         }
       }
     }
