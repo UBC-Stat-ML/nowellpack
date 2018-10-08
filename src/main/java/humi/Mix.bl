@@ -44,11 +44,11 @@ model Mix {
         for (Index<String> experiment : data.experiments.indices(target)) {
           data.histograms.get(target, experiment)
             | RealVar targetRate = targetRates.get(target, experiment),
-              RealVar targetOverd = targetOverds.get(target, experiment)
+              RealVar targetOverd = targetOverds.get(target, experiment),
               //means, overds, simplex,
               //RealVar targetRate = { if (data.isControl(gene)) fixedReal(1.0) else targetRates.get(target) }, 
-              //RealVar experimentRate = experimentRates.getDenseSimplexEntry(data.experiments, experiment)
-            ~ TruncatedExchangeableCounts(NegativeBinomialMeanParam::distribution(targetRate, targetOverd))
+              RealVar experimentRate = experimentRates.getDenseSimplexEntry(data.experiments, experiment)
+            ~ TruncatedExchangeableCounts(NegativeBinomialMeanParam::distribution(experimentRate * targetRate, targetOverd))
         }
       }
     }
