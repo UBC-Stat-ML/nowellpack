@@ -3,16 +3,22 @@ package humi
 model Humi {
   param HumiData data
     
-  random PlatedMatrix experimentRates
-  random Plated<RealVar> targetRates, targetOverds
+  random Plated<RealVar> targetRates, targetOverds, experimentRates
   
   laws {
 
-    experimentRates.getDenseSimplex(data.experiments) | int nExps = data.experiments.indices.size ~ SimplexUniform(nExps)  
+    for (Index<String> experiment : data.experiments.indices) {
+      experimentRates.get(experiment) ~ Exponential(0.01)
+    }
+    
+    for (Index<String> gene : data.genes.indices.filter[!data.isControl(it)]) {
+      for (Index<Integer> target : data.targets.indices(gene)) {
+        targetRates.get(target) ~ ContinuousUniform(0.1, 10.0)
+      }
+    }
     
     for (Index<String> gene : data.genes.indices) {
       for (Index<Integer> target : data.targets.indices(gene)) {
-        targetRates.get(target) ~ Exponential(0.01)
         for (Index<String> experiment : data.experiments.indices(target)) {
           targetOverds.get(target, experiment) ~ Exponential(0.01)
         }
@@ -23,9 +29,9 @@ model Humi {
       for (Index<Integer> target : data.targets.indices(gene)) {
         for (Index<String> experiment : data.experiments.indices(target)) {
           data.histograms.get(target, experiment)
-            | RealVar targetRate = targetRates.get(target),
+            | RealVar targetRate = { if (data.isControl(gene)) fixedReal(1.0) else targetRates.get(target) },
               RealVar targetOverd = targetOverds.get(target, experiment),
-              RealVar experimentRate = experimentRates.getDenseSimplexEntry(data.experiments, experiment)
+              RealVar experimentRate = experimentRates.get(experiment)
             ~ TruncatedExchangeableCounts(NegativeBinomialMeanParam::distribution(experimentRate * targetRate, targetOverd))
         }
       }
