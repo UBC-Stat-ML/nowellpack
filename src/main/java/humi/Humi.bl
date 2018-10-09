@@ -2,7 +2,6 @@ package humi
 
 model Humi {
   param HumiData data
-    
   random Plated<RealVar> targetRates, targetOverds, experimentRates
   
   laws {
@@ -13,7 +12,7 @@ model Humi {
     
     for (Index<String> gene : data.genes.indices.filter[!data.isControl(it)]) {
       for (Index<Integer> target : data.targets.indices(gene)) {
-        targetRates.get(target) ~ ContinuousUniform(0.1, 10.0)
+        targetRates.get(target) ~ ContinuousUniform(0.5, 2.0)
       }
     }
     
