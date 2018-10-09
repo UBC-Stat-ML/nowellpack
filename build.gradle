@@ -85,6 +85,8 @@ createScript(project, 'corrupt.pre.GraphViz2Newick',    'corrupt-graphviz2newick
 createScript(project, 'corrupt.post.NoiseEstimator',    'corrupt-noise-estimate')
 createScript(project, 'corrupt.post.RankLoci',          'corrupt-rank-loci')
 
+createScript(project, 'humi.Humi',                      'humi-run')
+
 uploadArchives {
   repositories {
     mavenDeployer {
