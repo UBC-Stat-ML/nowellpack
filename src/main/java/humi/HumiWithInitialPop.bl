@@ -21,7 +21,7 @@ model HumiWithInitialPop {
     
     for (Index<String> gene : data.genes.indices.filter[!data.isControl(it)]) {
       for (Index<Integer> target : data.targets.indices(gene)) {
-        targetRates.get(target) ~ ContinuousUniform(0.5, 2.0)
+        targetRates.get(target) ~ ContinuousUniform(0.1, 10.0)
       }
     }
     
