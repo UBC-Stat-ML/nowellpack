@@ -3,22 +3,23 @@ package humi
 model HumiWithInitialPop {
   param HumiData data
   param Plated<IntVar> initialPopCounts 
-  random Plated<RealVar> targetRates, targetOverds, experimentRates, initialExperimentRates
+  random Plated<RealVar> targetRates, targetOverds, experimentRates
+  param RealVar initialRate
   
   laws {
     
-    // Initial population related
+    // Variation across experiments
     
-    for (Index<String> experiment : data.experiments.indices) {
-      initialExperimentRates.get(experiment) ~ Exponential(0.01)
-    }
-    
-    // Late population related
-
     for (Index<String> experiment : data.experiments.indices) {
       experimentRates.get(experiment) ~ Exponential(0.01)
     }
     
+    // Initial population related
+    
+    initialRate ~ Exponential(0.01)
+    
+    // Late population related
+
     for (Index<String> gene : data.genes.indices.filter[!data.isControl(it)]) {
       for (Index<Integer> target : data.targets.indices(gene)) {
         targetRates.get(target) ~ ContinuousUniform(0.1, 10.0)
@@ -40,9 +41,9 @@ model HumiWithInitialPop {
             | RealVar targetRate = { if (data.isControl(gene)) fixedReal(1.0) else targetRates.get(target) },
               RealVar targetOverd = targetOverds.get(target, experiment),
               RealVar experimentRate = experimentRates.get(experiment),
-              RealVar initialExperimentRate = initialExperimentRates.get(experiment),
+              initialRate,
               IntVar initialPopCount = initialPopCounts.get(target)
-            ~ CensoredExchangeableCounts(NegativeBinomialMeanParam::distribution(experimentRate * targetRate, targetOverd), initialExperimentRate * initialPopCount)
+            ~ CensoredExchangeableCounts(NegativeBinomialMeanParam::distribution(experimentRate * targetRate, targetOverd), initialRate * experimentRate * initialPopCount)
         }
       }
     }
