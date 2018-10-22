@@ -86,6 +86,7 @@ createScript(project, 'corrupt.post.NoiseEstimator',    'corrupt-noise-estimate'
 createScript(project, 'corrupt.post.RankLoci',          'corrupt-rank-loci')
 
 createScript(project, 'humi.Humi',                      'humi-run')
+createScript(project, 'humi.HumiWithInitialPop',        'humi-withInitPop')
 
 uploadArchives {
   repositories {

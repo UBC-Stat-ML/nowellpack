@@ -18,8 +18,8 @@ class HumiData {
   @Arg public Plate<String> genes
   @Arg public Plate<String> experiments
   
-  @Arg            @DefaultValue("ctl_")
-  public String controlPrefix = "ctl_"
+  @Arg            @DefaultValue("ctl")
+  public String controlPrefix = "ctl"
   def boolean isControl(Index<String> gene) {
     if (gene.plate != genes) throw new RuntimeException
     return gene.key.startsWith(controlPrefix)
