@@ -9,7 +9,7 @@ plugins {
 dependencies {
   xtextLanguages "ca.ubc.stat.blang:ca.ubc.stat.blang:3.25.2"
   compile group: 'ca.ubc.stat', name: 'conifer', version: '2.0.4'
-  compile group: 'ca.ubc.stat', name: 'blangSDK', version: '1.18.0'
+  compile group: 'ca.ubc.stat', name: 'blangSDK', version: '1.19.0'
   compile group: 'ca.ubc.stat', name: 'bayonet', version: '4.1.0'
   compile group: 'ca.ubc.stat', name: 'conifer', version: '2.0.4'
   compile group: 'ca.ubc.stat', name: 'pxviz', version: '1.1.0'
@@ -87,6 +87,7 @@ createScript(project, 'corrupt.post.RankLoci',          'corrupt-rank-loci')
 
 createScript(project, 'humi.Humi',                      'humi-run')
 createScript(project, 'humi.HumiWithInitialPop',        'humi-withInitPop')
+createScript(project, 'humi.HumiYuleWithInitialPop',    'humi-yuleWithInitPop')
 
 uploadArchives {
   repositories {
