@@ -21,7 +21,7 @@ import java.util.LinkedHashSet
     // check cell sets match
     for (var int i = 1; i < matrices.size; i++)
       if (matrices.get(0).cells != matrices.get(1).cells)
-        throw new RuntimeException
+        throw new RuntimeException("The set of cells need to match when performing concatenation analyses.")
     // check loci disjoint
     
     var sum = 0
@@ -30,7 +30,7 @@ import java.util.LinkedHashSet
       sum += matrix.loci.size
     }
     if (sum != union.size)
-      throw new RuntimeException
+      throw new RuntimeException("Loci in any two concatenated matrices should bear distinct identifiers.")
     // create index
     for (var int i = 0; i < matrices.size; i++)
       for (locus : matrices.get(i).loci)

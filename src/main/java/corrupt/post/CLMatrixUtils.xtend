@@ -72,7 +72,9 @@ class CLMatrixUtils {
     val values = new ArrayList<Double>
     for (line : BriefIO::readLines(f).indexCSV) {
       if (!line.containsKey(CELLS) || !line.containsKey(LOCI) || !line.containsKey(TIP_INCL_PRS))
-        throw new RuntimeException
+        throw new RuntimeException("The following column headers should be present in " + f.name + ": " + 
+          CELLS + ", " + LOCI + ", " + TIP_INCL_PRS + "\nFound: " + line.keySet.join(", ")
+        )
       cells.add(new Cell(line.get(CELLS)))
       loci.add(new Locus(line.get(LOCI)))
       values.add(CoreProviders::parse_double(line.get(TIP_INCL_PRS)))
