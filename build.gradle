@@ -88,6 +88,7 @@ createScript(project, 'corrupt.post.RankLoci',          'corrupt-rank-loci')
 createScript(project, 'humi.Humi',                      'humi-run')
 createScript(project, 'humi.HumiWithInitialPop',        'humi-withInitPop')
 createScript(project, 'humi.HumiYuleWithInitialPop',    'humi-yuleWithInitPop')
+createScript(project, 'humi.Preprocessed',              'humi-preprocess')
 
 uploadArchives {
   repositories {
