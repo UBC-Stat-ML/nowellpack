@@ -11,9 +11,9 @@ model SingleGuide {
   laws { 
     mean ~ Exponential(0.1)
     overdispersion ~ Exponential(0.1)
-    nUMIMean ~ Exponential(0.001)
+    nUMIMean ~ Exponential(1)
     frequencies | nUMIMean, mean, overdispersion 
-      ~ TruncatedExchangeableCounts(
+      ~ CensoredExchangeableCounts(
           NegativeBinomialMeanParam::distribution(mean, overdispersion), nUMIMean
       )
   }
