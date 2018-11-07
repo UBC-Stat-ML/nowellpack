@@ -15,6 +15,8 @@ import briefj.BriefLog
 import corrupt.post.NoiseStatistics
 import corrupt.post.NoisyBinaryCLMatrix
 import blang.runtime.internals.objectgraph.SkipDependency
+import corrupt.post.ConcatenationMatrix
+import java.util.Set
 
 @Samplers(CorruptGibbsSampler)
 class CorruptPhylo {
@@ -40,7 +42,11 @@ class CorruptPhylo {
       throw new RuntimeException
     this.tipInclPrs = tipInclPrs
     this.reconstruction = phylo
-    this.cache = pickCacheImpl(this, tipInclPrs.class) 
+    val cache = pickCacheImpl(this, tipInclPrs) 
+    this.cache = if (corrupt.CorruptPhylo.testCacheCorrectness) 
+      new DebugCache(cache, new NoCache(this))
+    else
+      cache
   }
   
   // un-annealed
@@ -55,6 +61,10 @@ class CorruptPhylo {
   }
   
   def logProbability(Locus locus, Map<Cell, Boolean> tips) {
+    return logProbability(locus, tips, tipInclPrs)
+  }
+  
+  def static logProbability(Locus locus, Map<Cell, Boolean> tips, CellLocusMatrix tipInclPrs) {
     var sum = 0.0
     for (entry : tips.entrySet) {
       val included = entry.value
@@ -136,43 +146,78 @@ class CorruptPhylo {
   // Caching stuff
     
   static interface Cache {
+    def Set<Locus> loci()
     def double cachedLogPr()
     def boolean initialized()
     def void reset()
     def void update(Locus locus, Map<Cell, Boolean> tipsBefore, Map<Cell, Boolean> tipsAfter)
   }
   
-  def private static Cache pickCacheImpl(CorruptPhylo phylo, Class<? extends CellLocusMatrix> matrixType) {
-    val Cache selection = switch (matrixType) {
-      case ReadOnlyCLMatrix : new ReadOnlyMatrixCache(phylo)
-      case NoisyBinaryCLMatrix : new NoisyBinaryCache(phylo)
+  def private static Cache pickCacheImpl(CorruptPhylo phylo, CellLocusMatrix matrix) {
+    return switch (matrix) {
+      ConcatenationMatrix : new ConcatenationCache(phylo, matrix)
+      ReadOnlyCLMatrix : new ReadOnlyMatrixCache(phylo, matrix)
+      NoisyBinaryCLMatrix : new NoisyBinaryCache(phylo, matrix)
       default : {
-        BriefLog::warnOnce("No cache found for " + matrixType.simpleName + "... this may make certain infer schemes very slow")
-        new NoCache(phylo)
+        BriefLog::warnOnce("No cache found for " + matrix.class.simpleName + "... this may make certain infer schemes very slow")
+        new NoCache(phylo) 
       }
     }
-    if (corrupt.CorruptPhylo.testCacheCorrectness) 
-      return new DebugCache(selection, new NoCache(phylo))
-    else
-      return selection
   }
   
   public static boolean testCacheCorrectness = false
   
+  private static class ConcatenationCache implements Cache {
+    val List<Cache> caches
+    new (CorruptPhylo phylo, ConcatenationMatrix concatenation) {
+      caches = new ArrayList
+      for (matrix : concatenation.matrices) 
+        caches.add(pickCacheImpl(phylo, matrix))
+    }
+    override loci() { throw new RuntimeException }
+    override cachedLogPr() {
+      var sum = 0.0
+      for (cache : caches) 
+        sum += cache.cachedLogPr
+      return sum
+    }
+    override initialized() {
+      for (cache : caches)
+        if (!cache.initialized)
+          return false
+      return true
+    }
+    override reset() {
+      for (cache : caches) cache.reset
+    }
+    override update(Locus locus, Map<Cell, Boolean> tipsBefore, Map<Cell, Boolean> tipsAfter) {
+      for (cache : caches)
+        if (cache.loci.contains(locus))
+          cache.update(locus, tipsBefore, tipsAfter) 
+    }
+  }
+  
   private static class ReadOnlyMatrixCache implements Cache {
     val CorruptPhylo phylo
-    new(CorruptPhylo phylo) { this.phylo = phylo }
+    val ReadOnlyCLMatrix matrix
+    new(CorruptPhylo phylo, ReadOnlyCLMatrix matrix) { 
+      this.phylo = phylo
+      this.matrix = matrix
+    }
     var double cachedValue = Double.NaN
+    override loci() { matrix.loci }
     override cachedLogPr() { cachedValue }
     override initialized() { !Double.isNaN(cachedValue) }
     override reset() {
       cachedValue = 0.0
-      for (locus : phylo.loci) 
-        cachedValue += phylo.logProbability(locus)
+      for (locus : matrix.loci) {
+         val tips = phylo.reconstruction.getTips(locus)
+         cachedValue += logProbability(locus, tips, matrix)
+      }
     }
     override update(Locus locus, Map<Cell, Boolean> tipsBefore, Map<Cell, Boolean> tipsAfter) {
-      val loglBefore = phylo.logProbability(locus, tipsBefore)
-      val loglAfter = phylo.logProbability(locus, tipsAfter)
+      val loglBefore = logProbability(locus, tipsBefore, matrix)
+      val loglAfter = logProbability(locus, tipsAfter, matrix)
       cachedValue += - loglBefore + loglAfter
     }
   }
@@ -181,10 +226,11 @@ class CorruptPhylo {
     val CorruptPhylo phylo
     val NoisyBinaryCLMatrix noisyMatrix
     var List<NoiseStatistics> stats = null
-    new(CorruptPhylo phylo) { 
+    new(CorruptPhylo phylo, NoisyBinaryCLMatrix matrix) { 
       this.phylo = phylo
-      this.noisyMatrix = phylo.tipInclPrs as NoisyBinaryCLMatrix
+      this.noisyMatrix = matrix
     }
+    override loci() { noisyMatrix.loci }
     override cachedLogPr() {
       noisyMatrix.sumLogPrs(stats) 
     }
@@ -193,7 +239,7 @@ class CorruptPhylo {
     }
     override reset() {
       stats = new ArrayList
-      for (locus : phylo.loci) {
+      for (locus : noisyMatrix.loci) {
         val currentStat = 
           if (noisyMatrix.global) {
             if (stats.empty) {
@@ -218,6 +264,7 @@ class CorruptPhylo {
   private static class NoCache implements Cache {
     val CorruptPhylo phylo
     new(CorruptPhylo phylo) { this.phylo = phylo }
+    override loci() { phylo.loci }
     override cachedLogPr() {
       var sum = 0.0
       for (locus : phylo.loci)
@@ -236,6 +283,7 @@ class CorruptPhylo {
       this.c1 = c1
       this.c2 = c2
     }
+    override loci() { throw new RuntimeException }
     override cachedLogPr() {
       val v1 = c1.cachedLogPr
       val v2 = c2.cachedLogPr

@@ -16,6 +16,7 @@ import xlinear.Matrix
 import blang.distributions.Generators
 import java.util.HashSet
 import corrupt.distances.LocusEdgeStat
+import java.util.Set
 
 class CLMatrixUtils {
   
@@ -92,10 +93,13 @@ class CLMatrixUtils {
   }
   
   static def ReadOnlyCLMatrix syntheticInclusionPrs(Random rand, PerfectPhylo phylo, double stdDev) {
-    val syntheticInclusionPrs = new SimpleCLMatrix(phylo.cells, phylo.loci)
+    syntheticInclusionPrs(rand, phylo, stdDev, phylo.loci)
+  }
+  static def ReadOnlyCLMatrix syntheticInclusionPrs(Random rand, PerfectPhylo phylo, double stdDev, Set<Locus> loci) {
+    val syntheticInclusionPrs = new SimpleCLMatrix(phylo.cells, loci)
     val inclNormal = Normal::distribution(fixedReal(0.0), fixedReal(stdDev * stdDev))
     val exclNormal = Normal::distribution(fixedReal(1.0), fixedReal(stdDev * stdDev))
-    for (locus : phylo.loci) {
+    for (locus : loci) {
       val tips = phylo.getTips(locus)
       for (cell : phylo.cells) {
         val dist = if (tips.get(cell)) inclNormal else exclNormal
@@ -111,8 +115,11 @@ class CLMatrixUtils {
   }
   
   static def BinaryCLMatrix syntheticPerturbedBinaryMatrix(Random rand, PerfectPhylo phylo, double fpRate, double fnRate) {
-    val syntheticInclusionPrs = new SimpleCLMatrix(phylo.cells, phylo.loci)
-    for (locus : phylo.loci) {
+    syntheticPerturbedBinaryMatrix(rand, phylo, fpRate, fnRate, phylo.loci)
+  }
+  static def BinaryCLMatrix syntheticPerturbedBinaryMatrix(Random rand, PerfectPhylo phylo, double fpRate, double fnRate, Set<Locus> loci) {
+    val syntheticInclusionPrs = new SimpleCLMatrix(phylo.cells, loci)
+    for (locus : loci) {
       val tips = phylo.getTips(locus)
       for (cell : phylo.cells) {
         var indic = tips.get(cell)
