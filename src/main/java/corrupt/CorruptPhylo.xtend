@@ -59,6 +59,7 @@ class CorruptPhylo {
     for (entry : tips.entrySet) {
       val included = entry.value
       val pr = tipInclPrs.get(entry.key, locus)
+      if (pr == Double::NEGATIVE_INFINITY) return Double::NEGATIVE_INFINITY
       sum += if (included) Math.log(pr) else Math.log1p(- pr)
     }
     return sum

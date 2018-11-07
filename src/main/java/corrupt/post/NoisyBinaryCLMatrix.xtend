@@ -88,8 +88,9 @@ import xlinear.internals.CommonsDenseMatrix
   }
   
   override get(Cell cell, Locus locus) { 
+    if (!valid) 
+      return Double::NEGATIVE_INFINITY 
     val boolValue = binaryValue(cell, locus)
-    check
     val paramIndex = parameter(locus)
     if (boolValue) return p_x1_given_y1(paramIndex)
     else           return p_x1_given_y0(paramIndex)
@@ -100,11 +101,6 @@ import xlinear.internals.CommonsDenseMatrix
       if (fp(p) <= 0.0 || fp(p) >= 1.0 || fn(p) <= 0.0 || fn(p) >= 1.0)
         return false
     return true
-  }
-  
-  def void check() {  
-    if (!valid) 
-      throw new RuntimeException
   }
   
   def double fp(int paramIndex) { fpRates.get(paramIndex) }
