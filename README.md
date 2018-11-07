@@ -1,7 +1,7 @@
 Summary
 -------
 
-<!-- [![Build Status](https://travis-ci.org/alexandrebouchard/nowellpack.png?branch=master)](https://travis-ci.org/alexandrebouchard/nowellpack) -->
+[![Build Status](https://travis-ci.org/alexandrebouchard/nowellpack.png?branch=master)](https://travis-ci.org/alexandrebouchard/nowellpack)
 
 ``nowellpack`` is a Blang library for cancer genomics. The main current features focus on Bayesian phylogenetic tree inference from single cell data. We make the approximation that change points in the copy number profiles are *perfect phylogeny markers*. However those markers are observed in a noisy fashion hence the name we give to this model: **corrupt phylogenies**. 
 
