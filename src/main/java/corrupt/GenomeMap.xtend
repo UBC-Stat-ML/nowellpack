@@ -29,11 +29,9 @@ class GenomeMap {
   }
   
   def static boolean genomeMapFormatted(Collection<Locus> loci) {
-    if (!genomeMapFormatted(loci.iterator.next))
-      return false
     for (locus : loci) 
       if (!genomeMapFormatted(locus))
-        throw new RuntimeException
+        return false
     return true
   }
   
