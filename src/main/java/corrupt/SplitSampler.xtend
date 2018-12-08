@@ -12,11 +12,8 @@ import static bayonet.distributions.Multinomial.expNormalize
 import static bayonet.math.NumericalUtils.logAdd
 import java.util.ArrayList
 import static extension corrupt.CorruptExtensionUtils.*
-import org.eclipse.xtend.lib.annotations.Accessors
 
 class SplitSampler {
-  
-  @Accessors(PUBLIC_GETTER) var double logNormalization
   
   /**
    * Sample from the likelihood times a uniform prior. 
@@ -57,14 +54,13 @@ class SplitSampler {
   
   val DirectedTree<TreeNode> phylogeny 
   val Map<TreeNode, SubtreeLikelihood> likelihoods = new LinkedHashMap
-  val double rootExclLog
   val Indexer<TreeNode> rootLociIndexer = new Indexer
   
   private new (DirectedTree<TreeNode> phylogeny, Map<Cell, SubtreeLikelihood> cellLikelihoods) {
     this.phylogeny = phylogeny
     rootLociIndexer.addAllToIndex(phylogeny.lociAndRoot) 
     likelihoods.putAll(cellLikelihoods) // (1)
-    rootExclLog = computeLikelihood(phylogeny.root).exclusionLog
+    computeLikelihood(phylogeny.root)
   }
   
   /**
@@ -113,15 +109,15 @@ class SplitSampler {
   }
   
   private def void sample(Random random, Locus locusToAdd) {
-    // parent    
+    // step 1 of the sampling process: pick a parent    
     val double [] prs = newDoubleArrayOfSize(rootLociIndexer.size)
     for (parentIndex : 0 ..< rootLociIndexer.size) {
       val node = rootLociIndexer.i2o(parentIndex)
       prs.set(parentIndex, logAttachPr(node))
     }
-    logNormalization = expNormalize(prs)
+    expNormalize(prs)
     val sampledParent = rootLociIndexer.i2o(random.nextCategorical(prs)) 
-    // children to move
+    // step 2 of the sampling process: which children to move?
     val children = phylogeny.children(sampledParent)
     val childrenToMove = new ArrayList
     for (child : children) {
@@ -130,13 +126,22 @@ class SplitSampler {
       if (include)
         childrenToMove.add(child)
     }
+    // step 3: apply the change to the tree
     phylogeny.addEdge(sampledParent, locusToAdd, childrenToMove)
   }
-  
+
+  /**
+   * This computes, in the paper's notation, "\bar \rho_v" up to a 
+   * normalization constant.
+   * 
+   * Give the result in log scale.
+   * 
+   * The input of the function, "node" is "v" in the paper's 
+   * mathematical notation.
+   */  
   def private double logAttachPr(TreeNode node) {
-    
     val recursions = likelihoods.get(node)
-    return rootExclLog + recursions.logProductPQ - recursions.exclusionLog
+    return recursions.logProductPQ - recursions.exclusionLog
   }
   
   def private double inclusionPr(SubtreeLikelihood recursion) {
