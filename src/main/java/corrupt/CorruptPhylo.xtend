@@ -151,7 +151,6 @@ class CorruptPhylo {
     def double cachedLogPr()
     def boolean initialized()
     def void reset()
-    def void update(Locus locus, Map<Cell, Boolean> tipsBefore, Map<Cell, Boolean> tipsAfter)
   }
   
   def private static Cache pickCacheImpl(CorruptPhylo phylo, CellLocusMatrix matrix) {
@@ -191,11 +190,6 @@ class CorruptPhylo {
     override reset() {
       for (cache : caches) cache.reset
     }
-    override update(Locus locus, Map<Cell, Boolean> tipsBefore, Map<Cell, Boolean> tipsAfter) {
-      for (cache : caches)
-        if (cache.loci.contains(locus))
-          cache.update(locus, tipsBefore, tipsAfter) 
-    }
   }
   
   private static class ReadOnlyMatrixCache implements Cache {
@@ -215,11 +209,6 @@ class CorruptPhylo {
          val tips = phylo.reconstruction.getTips(locus)
          cachedValue += logProbability(locus, tips, matrix)
       }
-    }
-    override update(Locus locus, Map<Cell, Boolean> tipsBefore, Map<Cell, Boolean> tipsAfter) {
-      val loglBefore = logProbability(locus, tipsBefore, matrix)
-      val loglAfter = logProbability(locus, tipsAfter, matrix)
-      cachedValue += - loglBefore + loglAfter
     }
   }
   
@@ -256,10 +245,6 @@ class CorruptPhylo {
         currentStat.add(locus, phylo.reconstruction.getTips(locus), noisyMatrix.binaryMatrix) 
       }
     }
-    override update(Locus locus, Map<Cell, Boolean> tipsBefore, Map<Cell, Boolean> tipsAfter) {
-      stats.get(noisyMatrix.parameter(locus)).subtract(locus, tipsBefore, noisyMatrix.binaryMatrix) 
-      stats.get(noisyMatrix.parameter(locus)).add(locus, tipsAfter, noisyMatrix.binaryMatrix) 
-    }
   }
   
   private static class NoCache implements Cache {
@@ -274,7 +259,6 @@ class CorruptPhylo {
     }
     override initialized() { true }
     override reset() {}
-    override update(Locus locus, Map<Cell, Boolean> tipsBefore, Map<Cell, Boolean> tipsAfter) {}
   }
   
   private static class DebugCache implements Cache {
@@ -299,10 +283,6 @@ class CorruptPhylo {
     override reset() {
       c1.reset
       c2.reset
-    }
-    override update(Locus locus, Map<Cell, Boolean> tipsBefore, Map<Cell, Boolean> tipsAfter) {
-      c1.update(locus, tipsBefore, tipsAfter)
-      c2.update(locus, tipsBefore, tipsAfter)
     }
   }
 }
