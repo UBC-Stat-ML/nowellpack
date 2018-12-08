@@ -16,7 +16,8 @@ import static extension corrupt.CorruptExtensionUtils.*
 class SplitSampler {
   
   /**
-   * Sample from the likelihood times a uniform prior. 
+   * Sample from the likelihood times a uniform prior, by doing block 
+   * Gibbs sampling of one column of the cell-locus matrix.
    * Modifies the phylogeny in place.
    */
   def static SplitSampler sampleInPlace(

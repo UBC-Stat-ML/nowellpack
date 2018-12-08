@@ -17,6 +17,7 @@ import corrupt.post.NoisyBinaryCLMatrix
 import blang.runtime.internals.objectgraph.SkipDependency
 import corrupt.post.ConcatenationMatrix
 import java.util.Set
+import java.util.Collection
 
 @Samplers(CorruptGibbsSampler)
 class CorruptPhylo {
@@ -96,50 +97,50 @@ class CorruptPhylo {
     return shuffled
   }
   
-  var List<Locus> _shuffled = null
-  var int _index = 0
-  def void nextGibbs(Random rand, double annealingParameter) {
-    val index = _index % loci.size
-    if (index === 0)
-      _shuffled = shuffledLoci(rand)
-    _gibbSample(rand, annealingParameter, _shuffled.get(index))
-    _index++
+  def void sample(Random rand, double annealingParameter) {
+    sample(rand, annealingParameter, shuffledLoci(rand), cells)
   }
   
-  def void gibbsTest(Random rand, double annealingParameters) {    
+  def void sample(Random rand, double annealingParameter, Collection<Locus> sampledLoci, Collection<Cell> sampledCells) {
+    for (locus : sampledLoci) {
+      reconstruction.tree.collapseEdge(locus) 
+      SplitSampler::sampleInPlace(reconstruction.tree, locus, inclusionLogProbabilities(annealingParameter, locus), rand)
+    }
+    for (cell : sampledCells) {
+      reconstruction.tree.collapseEdge(cell)
+      CellSampler::sampleInPlace(reconstruction.tree, cell, inclusionLogProbabilities(annealingParameter, cell), rand)
+    }
     cache.reset
-    for (locus : loci)
-      _gibbSample(rand, annealingParameters, locus)
   }
-  
-  // private as doing only one locus retriggers full likelihood computation
-  private def void _gibbSample(Random rand, double annealingParameter, Locus locus) {
-    ensureCache
-    val tipsBefore = reconstruction.getTips(locus)
-    reconstruction.tree.collapseEdge(locus) 
-    SplitSampler::sampleInPlace(reconstruction.tree, locus, cellInclusionLogProbabilities(annealingParameter, locus), rand)
-    val tipsAfter = reconstruction.getTips(locus)
-    cache.update(locus, tipsBefore, tipsAfter)
+
+  def Map<Cell,SubtreeLikelihood> inclusionLogProbabilities(double annealingParameter, Locus locus) {
+    return inclusionLogProbabilities(annealingParameter, locus, cells)
   }
-  
-  static val LOG_EPSILON = -1e6 // we rely on division to cancel things, so keep non-zero
-  static val LOG_ONE_MINUS_EPSILON = Math.log1p(Math.exp(LOG_EPSILON))
-  def Map<Cell,SubtreeLikelihood> cellInclusionLogProbabilities(double annealingParameter, Locus locus) {
-    val result = new LinkedHashMap
-    for (cell : cells) {
+  def Map<Locus,SubtreeLikelihood> inclusionLogProbabilities(double annealingParameter, Cell cell) {
+    return inclusionLogProbabilities(annealingParameter, cell, loci)
+  }
+  def <T> Map<T,SubtreeLikelihood> inclusionLogProbabilities(double annealingParameter, TreeNode reference, Collection<T> orthogonals) {
+    val result = new LinkedHashMap<T,SubtreeLikelihood>
+    for (orthogonal : orthogonals) {
       if (annealingParameter == 0.0) {
-        result.put(cell, SubtreeLikelihood::missingTip) 
+        result.put(orthogonal, SubtreeLikelihood::missingTip) 
       } else {
-        val inclPr = tipInclPrs.get(cell, locus)
+        val inclPr = switch reference {
+          Locus : tipInclPrs.get(orthogonal as Cell, reference)
+          Cell :  tipInclPrs.get(reference, orthogonal as Locus)
+          default : throw new RuntimeException
+        }
         var logP = annealingParameter * Math.log(inclPr)
         var logQ = annealingParameter * Math.log1p(- inclPr)
              if (logP < LOG_EPSILON) { logP = LOG_EPSILON; logQ = LOG_ONE_MINUS_EPSILON }
         else if (logQ < LOG_EPSILON) { logQ = LOG_EPSILON; logP = LOG_ONE_MINUS_EPSILON }
-        result.put(cell, SubtreeLikelihood::tip(logP, logQ))
+        result.put(orthogonal, SubtreeLikelihood::tip(logP, logQ))
       }
     }
     return result
   }
+  static val LOG_EPSILON = -1e6 // we rely on division to cancel things, so keep non-zero
+  static val LOG_ONE_MINUS_EPSILON = Math.log1p(Math.exp(LOG_EPSILON))
   
   override toString(){ reconstruction.toString }
   

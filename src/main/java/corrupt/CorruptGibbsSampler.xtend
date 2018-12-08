@@ -7,9 +7,10 @@ import blang.mcmc.SampledVariable
 import blang.mcmc.Sampler
 import blang.mcmc.internals.ExponentiatedFactor
 import blang.mcmc.internals.SamplerBuilderContext
+import java.util.Collections
+import java.util.ArrayList
 
 class CorruptGibbsSampler implements Sampler {
-  SamplerOptions options = SamplerOptions::instance 
   @SampledVariable public CorruptPhylo phylo
   @ConnectedFactor public LogScaleFactor numericFactor
   
@@ -21,18 +22,22 @@ class CorruptGibbsSampler implements Sampler {
   }
   
   override execute(Random rand) {
-    if (useTest)
-      phylo.gibbsTest(rand, annealParameter)
-    else {
-    		for (int p : 0 ..< options.numberLociSampledPerMove) {
-    			phylo.nextGibbs(rand, annealParameter)
-    		}
-    }
+    if (useTest) 
+      executeTest(rand)
+    else
+      phylo.sample(rand, annealParameter)
+  }
+  
+  def executeTest(Random rand) {
+    if (rand.nextBernoulli(0.5))
+      phylo.sample(rand, annealParameter, Collections::emptyList, new ArrayList => [add(phylo.cells.get(rand.nextInt(phylo.cells.size)))])
+    else
+      phylo.sample(rand, annealParameter, new ArrayList => [add(phylo.loci .get(rand.nextInt(phylo.loci .size)))], Collections::emptyList)
   }
   
   override setup(SamplerBuilderContext context) {
     return true
   }
   
-  public static var useTest = false // only for testing
+  public static var useTest = false
 }

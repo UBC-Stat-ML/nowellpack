@@ -65,7 +65,11 @@ import org.jgrapht.DirectedGraph
   def void addEdge(T existingTopNode, T newBottomNode) {
     addEdge(existingTopNode, newBottomNode, emptyList)
   }
-
+  
+  /**
+   * See Figure in paper. The movedChildren are those that become the children 
+   * of the newBottomNode (in bold in figure).  
+   */
   def void addEdge(T existingTopNode, T newBottomNode, List<T> movedChildren) {
     if (!graph.addVertex(newBottomNode))
       throw new RuntimeException("Should not be in the tree: " + newBottomNode)

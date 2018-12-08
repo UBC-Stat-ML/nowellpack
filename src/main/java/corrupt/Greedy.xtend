@@ -39,7 +39,7 @@ class Greedy extends Experiment {
     var iteration = 0
     while (!queue.empty) {
       val popped = queue.pop
-      val logPr = SplitSampler::maximize(phylo.reconstruction.tree, popped,  phylo.cellInclusionLogProbabilities(1.0, popped))
+      val logPr = SplitSampler::maximize(phylo.reconstruction.tree, popped,  phylo.inclusionLogProbabilities(1.0, popped))
       
       if (output)
         println("Processing locus " + (iteration+1) + "/" + tipInclusionProbabilities.loci.size + " logPr=" + logPr)
@@ -110,7 +110,7 @@ class Greedy extends Experiment {
     new (Locus l) { this.locus = l }
     var double priority = Double.NaN
     def recomputePriority(CorruptPhylo phylo) {
-      priority = SplitSampler::maxLogConditional(phylo.reconstruction.tree, phylo.cellInclusionLogProbabilities(1.0, locus)) 
+      priority = SplitSampler::maxLogConditional(phylo.reconstruction.tree, phylo.inclusionLogProbabilities(1.0, locus)) 
     }
   }
   

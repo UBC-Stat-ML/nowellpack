@@ -17,7 +17,7 @@ class LinAlgebraChecks {
   val static nLoci = 2
   
   @Test
-  def void test() {
+  def void testMove() {
     CorruptGibbsSampler::useTest = true
     for (anneal : #[0.0, 0.42, 1.0]) {
       val list = enumerateSyntheticModels(nCells, nLoci, anneal) 
