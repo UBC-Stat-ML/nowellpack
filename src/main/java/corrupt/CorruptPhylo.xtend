@@ -101,6 +101,10 @@ class CorruptPhylo {
     sample(rand, annealingParameter, shuffledLoci(rand), cells)
   }
   
+  def void sampleWithoutCellReallocation(Random rand, double annealingParameter) {
+    sample(rand, annealingParameter, shuffledLoci(rand), Collections::emptyList)
+  }
+  
   def void sample(Random rand, double annealingParameter, Collection<Locus> sampledLoci, Collection<Cell> sampledCells) {
     for (locus : sampledLoci) {
       reconstruction.tree.collapseEdge(locus) 

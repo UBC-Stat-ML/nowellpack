@@ -24,8 +24,12 @@ class CorruptGibbsSampler implements Sampler {
   override execute(Random rand) {
     if (useTest) 
       executeTest(rand)
-    else
-      phylo.sample(rand, annealParameter)
+    else {
+      if (SamplerOptions::instance.useCellReallocationMove)
+        phylo.sample(rand, annealParameter)
+      else
+        phylo.sampleWithoutCellReallocation(rand, annealParameter)
+    }
   }
   
   def executeTest(Random rand) {

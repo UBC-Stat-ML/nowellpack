@@ -1,8 +1,12 @@
 package corrupt
 
+import blang.inits.Arg
+import blang.inits.DefaultValue
 import blang.inits.DesignatedConstructor
 
 class SamplerOptions {
+  @Arg                      @DefaultValue("true")
+  public boolean useCellReallocationMove = true
   
   private static SamplerOptions _instance = null
   @DesignatedConstructor
