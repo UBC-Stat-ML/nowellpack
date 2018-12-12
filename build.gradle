@@ -84,6 +84,7 @@ createScript(project, 'corrupt.pre.Tidy2MutationCell',  'corrupt-tidy2mutcellmtx
 createScript(project, 'corrupt.pre.GraphViz2Newick',    'corrupt-graphviz2newick')
 createScript(project, 'corrupt.post.NoiseEstimator',    'corrupt-noise-estimate')
 createScript(project, 'corrupt.post.RankLoci',          'corrupt-rank-loci')
+createScript(project, 'corrupt.GrowTree',               'corrupt-grow')
 
 createScript(project, 'humi.Humi',                      'humi-run')
 createScript(project, 'humi.HumiWithInitialPop',        'humi-withInitPop')

@@ -12,6 +12,7 @@ import static bayonet.distributions.Multinomial.expNormalize
 import static bayonet.math.NumericalUtils.logAdd
 import java.util.ArrayList
 import static extension corrupt.CorruptExtensionUtils.*
+import org.eclipse.xtend.lib.annotations.Accessors
 
 class SplitSampler {
   
@@ -42,7 +43,7 @@ class SplitSampler {
   /**
    * Return log probability of the argmax
    */
-  def static double maximize(
+  def static double maximizeInPlace(
     DirectedTree<TreeNode> phylogeny, 
     Locus locusToAdd, 
     Map<Cell, SubtreeLikelihood> cellLikelihoods
@@ -55,9 +56,11 @@ class SplitSampler {
   
   val DirectedTree<TreeNode> phylogeny 
   val Map<TreeNode, SubtreeLikelihood> likelihoods = new LinkedHashMap
+  
+  @Accessors(PUBLIC_GETTER)
   val Indexer<TreeNode> rootLociIndexer = new Indexer
   
-  private new (DirectedTree<TreeNode> phylogeny, Map<Cell, SubtreeLikelihood> cellLikelihoods) {
+  public new (DirectedTree<TreeNode> phylogeny, Map<Cell, SubtreeLikelihood> cellLikelihoods) {
     this.phylogeny = phylogeny
     rootLociIndexer.addAllToIndex(phylogeny.lociAndRoot) 
     likelihoods.putAll(cellLikelihoods) // (1)
@@ -109,14 +112,19 @@ class SplitSampler {
     return pair.value
   }
   
-  private def void sample(Random random, Locus locusToAdd) {
-    // step 1 of the sampling process: pick a parent    
-    val double [] prs = newDoubleArrayOfSize(rootLociIndexer.size)
+  public def double[] attachProbabilities() {
+    val prs = newDoubleArrayOfSize(rootLociIndexer.size)
     for (parentIndex : 0 ..< rootLociIndexer.size) {
       val node = rootLociIndexer.i2o(parentIndex)
       prs.set(parentIndex, logAttachPr(node))
     }
     expNormalize(prs)
+    return prs
+  }
+  
+  private def void sample(Random random, Locus locusToAdd) {
+    // step 1 of the sampling process: pick a parent    
+    val double [] prs = attachProbabilities()
     val sampledParent = rootLociIndexer.i2o(random.nextCategorical(prs)) 
     // step 2 of the sampling process: which children to move?
     val children = phylogeny.children(sampledParent)

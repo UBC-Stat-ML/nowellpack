@@ -118,12 +118,17 @@ class CorruptPhylo {
   }
 
   def Map<Cell,SubtreeLikelihood> inclusionLogProbabilities(double annealingParameter, Locus locus) {
-    return inclusionLogProbabilities(annealingParameter, locus, cells)
+    return inclusionLogProbabilities(annealingParameter, locus, cells, tipInclPrs)
   }
   def Map<Locus,SubtreeLikelihood> inclusionLogProbabilities(double annealingParameter, Cell cell) {
-    return inclusionLogProbabilities(annealingParameter, cell, loci)
+    return inclusionLogProbabilities(annealingParameter, cell, loci, tipInclPrs)
   }
-  def <T> Map<T,SubtreeLikelihood> inclusionLogProbabilities(double annealingParameter, TreeNode reference, Collection<T> orthogonals) {
+  def static <T> Map<T,SubtreeLikelihood> inclusionLogProbabilities(
+    double annealingParameter, 
+    TreeNode reference, 
+    Collection<T> orthogonals,
+    CellLocusMatrix tipInclPrs
+  ) {
     val result = new LinkedHashMap<T,SubtreeLikelihood>
     for (orthogonal : orthogonals) {
       if (annealingParameter == 0.0) {

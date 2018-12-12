@@ -42,3 +42,35 @@ The loci should follow the format ``1_100500001_101000000`` where
 Cells can use arbitrary unique identifiers.
 
 
+Tree growing
+------------
+
+Let us say you have a pre-computed tree inferred from a cell/loci matrix M and you like to either:
+
+- add more cells that were measured with the same set of loci as M
+- add more loci that were measured with the same set of cells as M
+
+In such cases you can use the ``corrupt-grow`` utility to quickly grow the tree by using the extra data. This is done using MAP placement which has the advantage of being very fast but does not provide measures of uncertainty. 
+
+To use the ``corrupt-grow`` utility:
+
+1. Clone the repo
+2. Build using ``./setup-cli.sh``
+3. Add ``build/install/nowellpack/bin`` to your path
+4. Invoke with ``corrupt-grow --matrix ReadOnlyCLMatrix XXX --phylo YYY`` where YYY is the pre-computed phylogeny in newick format, and XXX is a matrix in the format
+
+```
+cells,loci,tipInclusionProbabilities
+```
+
+followed by lines of the form
+
+```
+myfirstcell,somelocus,0.123
+...
+``` 
+
+where the entries are the "local posterior distributions" described in the write-up. Alternatively, you can use ``corrupt-grow --matrix NoisyBinaryCLMatrix --matrix.binaryMatrix XXX --matrix.fpr 0.1 --matrix.fnr 0.2 --phylo YYY`` for a binary matrix XXX with prescribed false positive and false negative rates.
+
+
+

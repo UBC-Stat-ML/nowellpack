@@ -28,6 +28,16 @@ class CellSampler {
     return result
   }
   
+  def static CellSampler maximizeInPlace(
+    DirectedTree<TreeNode> phylogeny, 
+    Cell cellToAdd,
+    Map<Locus, SubtreeLikelihood> cellLikelihoods 
+  ) {
+    val result = new CellSampler(phylogeny, cellLikelihoods)
+    result.maximize(cellToAdd) 
+    return result
+  }
+  
   val DirectedTree<TreeNode> phylogeny 
   val Map<Locus, SubtreeLikelihood> likelihoods
   val Indexer<TreeNode> rootLociIndexer = new Indexer
@@ -44,6 +54,22 @@ class CellSampler {
     expNormalize(prs)
     val sampledParent = rootLociIndexer.i2o(random.nextCategorical(prs)) 
     phylogeny.addEdge(sampledParent, cellToAdd, Collections::emptyList)
+  }
+  
+  def private void maximize(Cell cellToAdd) {
+    val double [] prs = newDoubleArrayOfSize(rootLociIndexer.size)
+    computeLogPrs(phylogeny.root, 0.0, prs)
+    var max = Double::NEGATIVE_INFINITY
+    var int argmax = -1
+    for (i : 0 ..< prs.length) {
+      val cur = prs.get(i)
+      if (cur > max) {
+        max = cur
+        argmax = i
+      }
+    }
+    val parent = rootLociIndexer.i2o(argmax) 
+    phylogeny.addEdge(parent, cellToAdd, Collections::emptyList)
   }
   
   def private void computeLogPrs(TreeNode node, double parentLogPr, double [] prs) {
