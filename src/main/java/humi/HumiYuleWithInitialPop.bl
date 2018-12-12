@@ -1,6 +1,9 @@
 package humi
 
 model HumiYuleWithInitialPop {
+  param RealVar minRate ?: 0.1
+  param RealVar maxRate ?: 10.0
+  
   param HumiData data
   param Plated<IntVar> initialPopCounts 
   random Plated<RealVar> targetRates, experimentRates, initialExperimentRates
@@ -21,7 +24,7 @@ model HumiYuleWithInitialPop {
     
     for (Index<String> gene : data.genes.indices.filter[!data.isControl(it)]) {
       for (Index<Integer> target : data.targets.indices(gene)) {
-        targetRates.get(target) ~ ContinuousUniform(0.1, 10.0)
+        targetRates.get(target) | minRate, maxRate ~ ContinuousUniform(minRate, maxRate)
       }
     }
     
