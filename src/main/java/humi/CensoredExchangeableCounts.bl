@@ -7,9 +7,11 @@ model CensoredExchangeableCounts {
   
   laws {
     logf(pmf, countFrequencies, poissonRate) {
-      val p0 = Math.exp(pmf.logDensity(0))
-      val logRenorm = Math.log1p(-p0)
       if (poissonRate <= 0.0) return NEGATIVE_INFINITY
+      val p0 = Math.exp(pmf.logDensity(0))
+      if (!(p0 > 0.0 && p0 < 1))
+        return NEGATIVE_INFINITY
+      val logRenorm = Math.log1p(-p0)
       var result = 0.0
       var nObserved = 0
       for (count : countFrequencies.counts) {
@@ -18,10 +20,10 @@ model CensoredExchangeableCounts {
         if (count == 0) throw new RuntimeException  
         if (frequency < 0) return NEGATIVE_INFINITY
         if (frequency !== 0) {
-          result += frequency * (pmf.logDensity(count) - logRenorm)
-        }
-        if (result.isNaN) {
-          return NEGATIVE_INFINITY // TODO: some uncaught numerical limitation in NegBin
+          val curlogPMF = pmf.logDensity(count)
+          if (curlogPMF == NEGATIVE_INFINITY)
+            return NEGATIVE_INFINITY
+          result += frequency * (curlogPMF - logRenorm)
         }
       }
       // product of the observations (given they are not 0) and of a thinning probability, 
