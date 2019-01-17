@@ -1,6 +1,6 @@
 package humi
 
-model HumiYule2WithInitialPop {
+model HumiExpYuleWithInitialPop {
   
   param HumiData data
   param Plated<IntVar> initialPopCounts 

@@ -89,6 +89,7 @@ createScript(project, 'corrupt.GrowTree',               'corrupt-grow')
 createScript(project, 'humi.Humi',                      'humi-run')
 createScript(project, 'humi.HumiWithInitialPop',        'humi-withInitPop')
 createScript(project, 'humi.HumiYuleWithInitialPop',    'humi-yuleWithInitPop')
+createScript(project, 'humi.HumiExpYuleWithInitialPop', 'humi-expYuleWithInitPop')
 createScript(project, 'humi.Preprocess',                'humi-preprocess')
 
 uploadArchives {
