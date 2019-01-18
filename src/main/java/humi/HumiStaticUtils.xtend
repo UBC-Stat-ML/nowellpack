@@ -8,8 +8,20 @@ import java.util.List
 import java.util.ArrayList
 import blang.distributions.NegativeBinomialMeanParam
 import blang.core.IntDistribution
+import blang.core.IntVar
 
-class HumiStaticUtils { 
+class HumiStaticUtils {
+  
+  def static List<IntVar> controlIndicatorsList(HumiData data, Plated<IntVar> controlIndicators) {
+    // extract indicators for the controls
+    val indicators = new ArrayList<IntVar>
+    for (Index<String> gene : data.genes.indices.filter[data.isControl(it)]) {
+      for (Index<Integer> target : data.targets.indices(gene)) {
+        indicators.add(controlIndicators.get(target))
+      }
+    }
+    return indicators
+  }
   
   def static double logPoissonCensoringFormula(double poissonRate, int numberGreaterThanZero, double probabilityForOneZero) {
     return 
