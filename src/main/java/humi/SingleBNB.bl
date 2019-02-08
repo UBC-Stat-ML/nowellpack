@@ -1,0 +1,23 @@
+package humi
+
+model SingleBNB {
+  random CountFrequencies frequencies
+  random RealVar lambda ?: latentReal
+  random RealVar r ?: latentReal
+  random RealVar alpha ?: latentReal
+  random RealVar beta ?: latentReal
+  
+  laws {
+    lambda ~ Exponential(0.0001) 
+    r ~ Exponential(0.1)
+    alpha ~ Exponential(0.01)
+    beta ~ Exponential(0.01)
+    frequencies | r, alpha, beta
+      , lambda 
+      ~ CensoredExchangeableCounts(
+      BetaNegativeBinomial::distribution(r, alpha, beta)
+      ,
+      lambda 
+    )
+  }
+}

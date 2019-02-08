@@ -10,6 +10,8 @@ import blang.distributions.NegativeBinomialMeanParam
 import blang.core.IntDistribution
 import blang.core.IntVar
 
+import static bayonet.math.SpecialFunctions.*
+
 class HumiStaticUtils {
   
   def static List<IntVar> controlIndicatorsList(HumiData data, Plated<IntVar> controlIndicators) {
