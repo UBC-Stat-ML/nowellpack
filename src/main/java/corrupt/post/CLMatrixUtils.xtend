@@ -140,4 +140,10 @@ class CLMatrixUtils {
     if (cl1.cellsIdx != cl2.cellsIdx || cl1.lociIdx != cl2.lociIdx)
       throw new RuntimeException
   }
+  
+  static def void main(String [] args) {
+    val matrix = fromCSV(new File(args.get(0)))
+    println("nCells: " + matrix.cells.size)
+    println("nLoci: " + matrix.loci.size)
+  }
 }

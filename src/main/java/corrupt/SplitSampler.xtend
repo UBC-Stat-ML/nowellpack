@@ -138,7 +138,7 @@ class SplitSampler {
     // step 3: apply the change to the tree
     phylogeny.addEdge(sampledParent, locusToAdd, childrenToMove)
   }
-
+  
   /**
    * This computes, in the paper's notation, "\bar \rho_v" up to a 
    * normalization constant.
@@ -153,6 +153,9 @@ class SplitSampler {
     return recursions.logProductPQ - recursions.exclusionLog
   }
   
+  /**
+   * Last equation of section 4.1 in latex document.
+   */
   def private double inclusionPr(SubtreeLikelihood recursion) {
     return exp(recursion.inclusionLog - logAdd(recursion.inclusionLog, recursion.exclusionLog))
   }

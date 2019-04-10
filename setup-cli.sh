@@ -10,5 +10,5 @@ mkdir build/blang/test
 if hash blang 2>/dev/null; then
     echo "Done"
 else
-    echo "Add the following to classpath: $(pwd)/build/install/blang/bin/"
+    echo "Add the following to classpath: $(pwd)/build/install/nowellpack/bin/"
 fi

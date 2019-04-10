@@ -6,6 +6,9 @@ import corrupt.post.CellLocusMatrix
 import blang.inits.DefaultValue
 
 import static extension briefj.BriefIO.write
+import java.util.Collections
+import bayonet.distributions.Random
+import java.util.ArrayList
 
 class GrowTree extends Experiment {
   @Arg public CellLocusMatrix matrix
@@ -13,6 +16,12 @@ class GrowTree extends Experiment {
   
   @Arg @DefaultValue("2")
   int   nIterations = 2
+  
+  @Arg @DefaultValue("true")
+  boolean randomize = true
+  
+  @Arg @DefaultValue("1")
+  Random random = new Random(1)
   
   override run() {
     if (phylo.cells == matrix.cells)
@@ -28,8 +37,11 @@ class GrowTree extends Experiment {
   }
   
   def void addLoci() {
-    for (i : 0 ..< nIterations)
-      for (locus : matrix.loci) {
+    for (i : 0 ..< nIterations) {
+      val loci = new ArrayList(matrix.loci)
+      if (randomize) 
+        Collections.shuffle(loci, random)
+      for (locus : loci) {
         if (phylo.tree.nodes.contains(locus)) {
           if (i == 0) throw new RuntimeException("Locus " + locus + " already placed in tree")
           phylo.tree.collapseEdge(locus)
@@ -37,6 +49,7 @@ class GrowTree extends Experiment {
         val likelihoods = CorruptPhylo::inclusionLogProbabilities(1.0, locus, matrix.cells, matrix)
         SplitSampler::maximizeInPlace(phylo.tree, locus, likelihoods)
       }
+    }
   }
   
   def void addCells() {
