@@ -20,6 +20,7 @@ import org.junit.Assert
 import xlinear.MatrixOperations
 import corrupt.NoisyBinaryModel
 import corrupt.post.BinaryCLMatrix
+import blang.engines.internals.factories.PT.InitType
 
 class ParamEstimation {
   @Rule
@@ -50,6 +51,7 @@ class ParamEstimation {
     runner.engine = new PT => [
       results = runner.results 
       nScans = 1000
+      initialization = InitType.COPIES
       nChains = Optional.of(1)
     ]
     runner.run
