@@ -12,8 +12,7 @@ model SingleMix {
     lambda ~ Exponential(0.0001) 
     rho1 ~ Exponential(0.1)
     rho2 ~ Exponential(0.1)
-    frequencies | rho1, rho2, pi
-      , lambda 
+    frequencies | rho1, rho2, pi, lambda 
       ~ CensoredExchangeableCounts({
           if (pi < 0.0 || pi > 1.0) invalidParameter
           IntMixture::distribution(

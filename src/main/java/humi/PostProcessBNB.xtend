@@ -4,7 +4,7 @@ import blang.inits.experiments.Experiment
 import java.io.File
 import blang.inits.Arg
 import briefj.BriefIO
-import blang.distributions.YuleSimon
+import blang.distributions.BetaNegativeBinomial
 import bayonet.distributions.Random
 import blang.types.StaticUtils
 import java.util.List
