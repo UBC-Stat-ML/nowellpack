@@ -7,7 +7,7 @@ model TruncatedExchangeableCounts {
   laws {
     logf(pmf, countFrequencies) {
       var result = 0.0
-      for (count : countFrequencies.counts) {
+      for (count : countFrequencies.distinctCounts) {
         val frequency = countFrequencies.frequency(count)
         if (count == 0) throw new RuntimeException  
         if (frequency < 0) return NEGATIVE_INFINITY

@@ -21,7 +21,7 @@ class PostProcessSingle extends Experiment {
     // check number of obs
     var nObserved = 0
     var dataset = 0
-    for (count : freqs.counts) {
+    for (count : freqs.distinctCounts) {
       val freq = freqs.frequency(count)
       nObserved += freq
       for (i : 0 ..< freq) 
