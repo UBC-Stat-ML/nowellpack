@@ -17,6 +17,8 @@ import java.util.ArrayList
 import java.util.Collections
 import blang.types.Index
 import blang.inits.DefaultValue
+import briefj.BriefIO
+import binc.Command
 
 class DeltaMethod extends Experiment {
   @Arg HumiData data
@@ -24,6 +26,9 @@ class DeltaMethod extends Experiment {
   
   @Arg @DefaultValue("0.95")
   public double winsorizedTailCutoff = 0.95
+  
+  @Arg   @DefaultValue("Rscript")
+  public String rCmd = "Rscript"
   
   override run() {
     val controlInitialCounts = controlInitialCounts
@@ -37,17 +42,44 @@ class DeltaMethod extends Experiment {
           val targetFinalCounts = finalCounts(sgRNA, experiment, false)
           val estimate = (targetFinalCounts / controlFinalCounts) / (targetInitialCounts / controlInitialCounts)
           val fgRatio = finalCounts(sgRNA, experiment, true) / (finalCounts(sgRNA, experiment,false) ** 2)
-          val interval = 1.96 * Math::sqrt(controlFGRatio + fgRatio)
+          val interval = 1.96 * Math::sqrt(controlFGRatio + fgRatio + 1.0/controlInitialCounts + 1.0/targetInitialCounts)
           writer.write(
             sgRNA.plate.name -> sgRNA.key,
             gene.plate.name -> gene.key,
             "estimate" -> estimate,
-            "leftInterval" -> estimate - interval,
-            "rightInterval" -> estimate + interval,
+            "logEstimate" -> Math::log(estimate),
+            "leftInterval" -> Math::log(estimate) - interval,
+            "rightInterval" -> Math::log(estimate) + interval,
             "width" -> interval
           )
         }
     }
+    results.flushAll
+    plot
+  }
+  
+  def plot() {
+    val plotResults = results.child("plots")
+    val scriptFile = plotResults.getFileInResultFolder("script.r")
+    BriefIO::write(scriptFile, '''
+      require("ggplot2")
+      data <- read.csv("«results.getFileInResultFolder("estimates.csv").absolutePath»")
+      cols = rainbow(200, s=.6, v=.9)[sample(1:200,200)]
+      p <- ggplot(data, aes(x = factor(gene), y = logEstimate, colour = factor(sgrna))) + 
+        coord_flip() + 
+        geom_errorbar(aes(ymin=leftInterval, ymax=rightInterval)) +
+        geom_point() + 
+        facet_grid(. ~ dataset) + 
+        theme_bw() + 
+        xlab("Gene") + 
+        ylab("log(ratio)") + 
+        ggtitle("Ratio of clone sizes relative to controls", subtitle = "Delta-method intervals") + 
+        scale_colour_manual(values=cols) + 
+        geom_hline(yintercept=0) + 
+        theme(legend.position="none") 
+      ggsave("«plotResults.getFileInResultFolder("intevals.pdf").absolutePath»", height = 10)
+    ''')
+    Command.call(Command.cmd(rCmd).appendArg(scriptFile.getAbsolutePath()))
   }
   
   def controlFGRatio(Index<String> experiment) {
