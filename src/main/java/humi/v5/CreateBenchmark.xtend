@@ -79,7 +79,7 @@ class CreateBenchmark extends Experiment {
     BriefIO::write(scriptFile, '''
       require("ggplot2")
       data <- read.csv("«results.getFileInResultFolder("all.csv").absolutePath»")
-      p <- ggplot(data, aes(x = cloneSize, y = log(freq), shape = factor(type), colour = factor(type))) + 
+      p <- ggplot(data, aes(x = cloneSize, y = log10(freq), shape = factor(type), colour = factor(type))) + 
         geom_point() + 
         facet_grid(~ sgRNA)
       ggsave("«plotResults.getFileInResultFolder("freqs.pdf").absolutePath»", width = 3000, limitsize = F)
