@@ -6,9 +6,8 @@ model InitialCountsTest {
   random Plated<IntVar> counts1, counts2
   random Plated<IntVar> indicators
   
-  random RealVar 
-    rate1 ?: latentReal, 
-    rate2 ?: latentReal
+  random DenseSimplex 
+    relativeRate ?: latentSimplex(2)
   
   random RealVar 
     alpha ?: latentReal, 
@@ -20,11 +19,10 @@ model InitialCountsTest {
     
     pi ~ SimplexUniform(2)
     
-    alpha ~ Exponential(0.1)
-    beta ~ Exponential(0.1)
+    alpha ~ Exponential(0.001)
+    beta ~ Exponential(0.001)
     
-    rate1 ~ Exponential(0.001)
-    rate2 ~ Exponential(0.001)
+    relativeRate ~ SimplexUniform(2)
     
     for (Index<Integer> sgrna : sgRNA.indices) {
       
@@ -32,10 +30,12 @@ model InitialCountsTest {
       
       | 
         alpha, beta,
-        rate1, rate2,
+        relativeRate,
         IntVar indic = indicators.get(sgrna),
         IntVar count1 = counts1.get(sgrna), 
         IntVar count2 = counts2.get(sgrna) ~ LogPotential({
+          val rate1 = relativeRate.get(0)
+          val rate2 = relativeRate.get(1)
           if (alpha <= 0.0 || beta <= 0.0 || rate1 <= 0.0 || rate2 <= 0.0) return NEGATIVE_INFINITY
           if (indic != 0 && indic != 1) return NEGATIVE_INFINITY
           val priorNorm = alpha * log(beta) - logGamma(alpha)
