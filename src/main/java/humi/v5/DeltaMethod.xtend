@@ -1,36 +1,37 @@
 package humi.v5
 
+import binc.Command
 import blang.inits.Arg
-import humi.HumiData
-import blang.types.Plated
+import blang.inits.DefaultValue
 import blang.inits.experiments.Experiment
-import blang.inits.experiments.ParsingConfigs
-import blang.io.internals.GlobalDataSourceStore
-import blang.io.Parsers
-import blang.inits.providers.CoreProviders
-import blang.inits.Creators
 import blang.inits.parsing.Posix
-import blang.inits.parsing.Arguments
-import blang.inits.Creator
+import blang.types.Index
+import blang.types.Plated
+import briefj.BriefIO
 import humi.CountFrequencies
+import humi.HumiData
+import humi.HumiStaticUtils
 import java.util.ArrayList
 import java.util.Collections
-import blang.types.Index
-import blang.inits.DefaultValue
-import briefj.BriefIO
-import binc.Command
 
 class DeltaMethod extends Experiment {
   @Arg HumiData data
   @Arg Plated<Integer> initialPopCounts
   
-  @Arg @DefaultValue("0.95")
+  @Arg                  @DefaultValue("0.95")
   public double winsorizedTailCutoff = 0.95
   
   @Arg   @DefaultValue("Rscript")
   public String rCmd = "Rscript"
   
   override run() {
+    compute(true)
+    plot
+  }
+  
+  static enum Columns { logRatio, logRatioIntervalWidth }
+  
+  def void compute(boolean withIntervals) {
     val controlInitialCounts = controlInitialCounts
     for (experiment : data.experiments.indices) {
       val writer = results.getTabularWriter("estimates").child(experiment.plate.name, experiment.key)
@@ -43,19 +44,17 @@ class DeltaMethod extends Experiment {
           val estimate = (targetFinalCounts / controlFinalCounts) / (targetInitialCounts / controlInitialCounts)
           val fgRatio = finalCounts(sgRNA, experiment, true) / (finalCounts(sgRNA, experiment,false) ** 2)
           val interval = 1.96 * Math::sqrt(controlFGRatio + fgRatio + 1.0/controlInitialCounts + 1.0/targetInitialCounts)
-          writer.write(
+          (if (withIntervals)  
+            writer.child(Columns::logRatioIntervalWidth, interval)
+          else writer
+          ).write(
             sgRNA.plate.name -> sgRNA.key,
             gene.plate.name -> gene.key,
-            "estimate" -> estimate,
-            "logEstimate" -> Math::log(estimate),
-            "leftInterval" -> Math::log(estimate) - interval,
-            "rightInterval" -> Math::log(estimate) + interval,
-            "width" -> interval
+            Columns::logRatio -> Math::log(estimate)
           )
         }
     }
     results.flushAll
-    plot
   }
   
   def plot() {
@@ -65,11 +64,11 @@ class DeltaMethod extends Experiment {
       require("ggplot2")
       data <- read.csv("«results.getFileInResultFolder("estimates.csv").absolutePath»")
       cols = rainbow(200, s=.6, v=.9)[sample(1:200,200)]
-      p <- ggplot(data, aes(x = factor(gene), y = logEstimate, colour = factor(sgrna))) + 
+      p <- ggplot(data, aes(x = factor(«data.genes.name»), y = «Columns::logRatio», colour = factor(«data.targets.name»))) + 
         coord_flip() + 
-        geom_errorbar(aes(ymin=leftInterval, ymax=rightInterval)) +
+        geom_errorbar(aes(ymin=«Columns::logRatio» - «Columns::logRatioIntervalWidth», ymax=«Columns::logRatio» + «Columns::logRatioIntervalWidth»)) +
         geom_point() + 
-        facet_grid(. ~ dataset) + 
+        facet_grid(. ~ «data.experiments.name») + 
         theme_bw() + 
         xlab("Gene") + 
         ylab("log(ratio)") + 
@@ -151,15 +150,6 @@ class DeltaMethod extends Experiment {
   }
   
   def static void main(String [] args) {
-    val Arguments parsedArgs = Posix.parse(args)
-    val Creator creator = Creators::empty()
-    creator.addFactories(CoreProviders)
-    creator.addFactories(Parsers)
-    val GlobalDataSourceStore globalDS = new GlobalDataSourceStore
-    creator.addGlobal(GlobalDataSourceStore, globalDS)
-    
-    val ParsingConfigs parsingConfigs = new ParsingConfigs
-    parsingConfigs.setCreator(creator) 
-    Experiment::start(args, parsedArgs, parsingConfigs)
+    Experiment::start(args, Posix::parse(args), HumiStaticUtils::parsingConfigs)
   }
 }

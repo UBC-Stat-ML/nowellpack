@@ -1,39 +1,34 @@
 package humi.v5
 
+import bayonet.smc.ParticlePopulation
+import bayonet.smc.ResamplingScheme
+import binc.Command
 import blang.inits.Arg
+import blang.inits.DefaultValue
 import blang.inits.experiments.Experiment
-import humi.CountFrequencies
-import humi.HumiData
-import java.util.List
+import blang.inits.parsing.Posix
 import blang.types.Index
 import blang.types.Plated
-import bayonet.smc.ParticlePopulation
-import java.util.ArrayList
-import bayonet.smc.ResamplingScheme
-import java.util.Random
-import humi.SimpleCountFrequencies
-import blang.inits.DefaultValue
-import blang.inits.parsing.Arguments
-import blang.inits.Creator
-import blang.inits.providers.CoreProviders
-import blang.io.Parsers
-import blang.io.internals.GlobalDataSourceStore
-import blang.inits.Creators
-import blang.inits.parsing.Posix
-import blang.inits.experiments.ParsingConfigs
 import briefj.BriefIO
-import binc.Command
+import humi.CountFrequencies
+import humi.HumiData
+import humi.HumiStaticUtils
+import humi.SimpleCountFrequencies
+import java.util.ArrayList
+import java.util.List
+import java.util.Random
+import humi.Preprocess
 
-class CreateBenchmark extends Experiment {
+class GenerateData extends Experiment {
   @Arg HumiData data
   @Arg List<String> experiments
   @Arg List<Double> lambdas
-  @Arg Plated<Integer> initialPopCounts 
+  @Arg Plated<Integer> initialPopCounts  // TODO: resample this as well!
   
-  @Arg @DefaultValue("1")
+  @Arg        @DefaultValue("1")
   Random random = new Random(1)
   
-  @Arg @DefaultValue("false")
+  @Arg              @DefaultValue("false")
   boolean justComputeLambdaBound = false
   
   @Arg   @DefaultValue("Rscript")
@@ -52,22 +47,26 @@ class CreateBenchmark extends Experiment {
         val trueHistogram = data.histograms.get(sgRNA, experiment)
         val nNonZeroClones = trueHistogram.nDataPoints
         val curBound = nNonZeroClones as double / initialPopCounts.get(sgRNA)
-        println('''bound = S_t / J_t = «trueHistogram.nDataPoints» / «initialPopCounts.get(sgRNA)» = «curBound»''')
+        if (justComputeLambdaBound)
+          println('''bound = S_t / J_t = «trueHistogram.nDataPoints» / «initialPopCounts.get(sgRNA)» = «curBound»''')
         bound = Math::max(bound, curBound )
         if (!justComputeLambdaBound) {
           val double imputedZeros = lambda * initialPopCounts.get(sgRNA) - trueHistogram.nDataPoints
-          println("\tImputed zeros " + imputedZeros)
+          if (justComputeLambdaBound)
+            println("\tImputed zeros " + imputedZeros)
           if (imputedZeros < 0) 
             throw new RuntimeException('''Try lower lambda. At sgRNA «sgRNA.key», experiment «experiment.key» expected non-negative value: «lambda * initialPopCounts.get(sgRNA)» - «trueHistogram.nDataPoints» = «imputedZeros»''')
           val resampledHistogram = resample(trueHistogram, imputedZeros)
           record(sgRNA.key, trueHistogram, imputedZeros, resampledHistogram)
-          results.getTabularWriter("complete").write(expIndex, rnaIndex, "histogram" -> resampledHistogram)
+          results.getTabularWriter("complete").write(expIndex, rnaIndex, Preprocess::HISTOGRAM_COLUMN -> resampledHistogram)
           resampledHistogram.dropZeros
-          println("\tnNonZeroClones before and after resampling: " + nNonZeroClones + " " + resampledHistogram.nDataPoints)
-          results.getTabularWriter("censored").write(expIndex, rnaIndex, "histogram" -> resampledHistogram)
+          if (justComputeLambdaBound)
+            println("\tnNonZeroClones before and after resampling: " + nNonZeroClones + " " + resampledHistogram.nDataPoints)
+          results.getTabularWriter("censored").write(expIndex, rnaIndex, Preprocess::HISTOGRAM_COLUMN -> resampledHistogram)
         }
       }
-      println("Experiment " + experiment.key + " bound: " + bound)
+      if (justComputeLambdaBound)
+        println("Experiment " + experiment.key + " bound: " + bound)
     }
     if (!justComputeLambdaBound)
       plot
@@ -133,15 +132,6 @@ class CreateBenchmark extends Experiment {
   }
   
   def static void main(String [] args) {
-    val Arguments parsedArgs = Posix.parse(args)
-    val Creator creator = Creators::empty()
-    creator.addFactories(CoreProviders)
-    creator.addFactories(Parsers)
-    val GlobalDataSourceStore globalDS = new GlobalDataSourceStore
-    creator.addGlobal(GlobalDataSourceStore, globalDS)
-    
-    val ParsingConfigs parsingConfigs = new ParsingConfigs
-    parsingConfigs.setCreator(creator) 
-    Experiment::start(args, parsedArgs, parsingConfigs)
+    Experiment::start(args, Posix::parse(args), HumiStaticUtils::parsingConfigs)
   }
 }
