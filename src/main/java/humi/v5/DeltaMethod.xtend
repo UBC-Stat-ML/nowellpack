@@ -21,8 +21,16 @@ class DeltaMethod extends Experiment {
   @Arg                  @DefaultValue("0.95")
   public double winsorizedTailCutoff = 0.95
   
-  @Arg           @DefaultValue("1.96")
-  public double criticalValue = 1.96
+  /*
+   * Value determined empirically to achieve approximate 95% coverage.
+   * See ./nextflow run replicate-calibration.nf -resume --critical 5
+   * got: 96% coverage between X0569_422234{1,2} and {2,3} and {1,3}
+   * tried --critical 4 and got as low as 88% coverage. 
+   * Theoretical value of 1.96 works on synthetic data (see bootstrap-calibration) 
+   * but fails on replicate-calibration (as low as 60% coverage).
+   */
+  @Arg           @DefaultValue("5")
+  public double criticalValue = 5  
   
   @Arg   @DefaultValue("Rscript")
   public String rCmd = "Rscript"
