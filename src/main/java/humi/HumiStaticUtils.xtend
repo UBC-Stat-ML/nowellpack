@@ -10,7 +10,12 @@ import blang.distributions.NegativeBinomialMeanParam
 import blang.core.IntDistribution
 import blang.core.IntVar
 
-import static bayonet.math.SpecialFunctions.*
+import blang.inits.Creator
+import blang.inits.Creators
+import blang.inits.providers.CoreProviders
+import blang.io.Parsers
+import blang.io.internals.GlobalDataSourceStore
+import blang.inits.experiments.ParsingConfigs
 
 class HumiStaticUtils {
   
@@ -45,5 +50,17 @@ class HumiStaticUtils {
     for (i : 0 ..< means.size)
       result.add(NegativeBinomialMeanParam::distribution([means.get(i).doubleValue * rate.doubleValue], overds.get(i)))
     return result
+  }
+  
+  // TODO: move to Blang SDK
+  def static parsingConfigs() {
+    val Creator creator = Creators::empty()
+    creator.addFactories(CoreProviders)
+    creator.addFactories(Parsers)
+    val GlobalDataSourceStore globalDS = new GlobalDataSourceStore
+    creator.addGlobal(GlobalDataSourceStore, globalDS)
+    val ParsingConfigs parsingConfigs = new ParsingConfigs
+    parsingConfigs.setCreator(creator) 
+    return parsingConfigs
   }
 }
