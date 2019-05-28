@@ -7,7 +7,6 @@ import blang.inits.Arg
 import blang.inits.DefaultValue
 import blang.inits.experiments.Experiment
 import blang.inits.parsing.Posix
-import blang.types.Index
 import blang.types.Plated
 import briefj.BriefIO
 import humi.CountFrequencies
@@ -34,45 +33,59 @@ class GenerateData extends Experiment {
   @Arg   @DefaultValue("Rscript")
   public String rCmd = "Rscript"
   
+  @Arg              @DefaultValue("1.0")
+  public double relativeDataSize = 1.0
+  
   override run() {
     if (experiments.size !== lambdas.size)
       throw new RuntimeException
-    for (i : 0 ..< experiments.size) {
-      val experiment = new Index(data.experiments, experiments.get(i))
-      val lambda = lambdas.get(i)
-      val expIndex = experiment.plate.name -> experiment.key
-      var bound = 0.0
-      for (sgRNA : data.targets.indices) {
-        val rnaIndex = sgRNA.plate.name -> sgRNA.key
-        val trueHistogram = data.histograms.get(sgRNA, experiment)
-        val nNonZeroClones = trueHistogram.nDataPoints
-        val curBound = nNonZeroClones as double / initialPopCounts.get(sgRNA)
-        if (justComputeLambdaBound)
-          println('''bound = S_t / J_t = «trueHistogram.nDataPoints» / «initialPopCounts.get(sgRNA)» = «curBound»''')
-        bound = Math::max(bound, curBound )
-        if (!justComputeLambdaBound) {
-          val double imputedZeros = lambda * initialPopCounts.get(sgRNA) - trueHistogram.nDataPoints
+    for (experiment : data.experiments.indices) {
+      val lambda = lambda(experiment.key)
+      if (lambda !== null) { 
+        val expIndex = experiment.plate.name -> experiment.key
+        var bound = 0.0
+        for (gene : data.genes.indices)
+        for (sgRNA : data.targets.indices(gene)) {
+          val rnaIndex = sgRNA.plate.name -> sgRNA.key
+          val geneIndex = gene.plate.name -> gene.key
+          val trueHistogram = data.histograms.get(sgRNA, experiment)
+          val nNonZeroClones = trueHistogram.nDataPoints
+          val curBound = nNonZeroClones as double / initialPopCounts.get(sgRNA)
           if (justComputeLambdaBound)
-            println("\tImputed zeros " + imputedZeros)
-          if (imputedZeros < 0) 
-            throw new RuntimeException('''Try lower lambda. At sgRNA «sgRNA.key», experiment «experiment.key» expected non-negative value: «lambda * initialPopCounts.get(sgRNA)» - «trueHistogram.nDataPoints» = «imputedZeros»''')
-          val resampledHistogram = resample(trueHistogram, imputedZeros)
-          record(sgRNA.key, trueHistogram, imputedZeros, resampledHistogram)
-          results.getTabularWriter("complete").write(expIndex, rnaIndex, Preprocess::HISTOGRAM_COLUMN -> resampledHistogram)
-          resampledHistogram.dropZeros
-          if (justComputeLambdaBound)
-            println("\tnNonZeroClones before and after resampling: " + nNonZeroClones + " " + resampledHistogram.nDataPoints)
-          results.getTabularWriter("censored").write(expIndex, rnaIndex, Preprocess::HISTOGRAM_COLUMN -> resampledHistogram)
+            println('''bound = S_t / J_t = «trueHistogram.nDataPoints» / «initialPopCounts.get(sgRNA)» = «curBound»''')
+          bound = Math::max(bound, curBound )
+          if (!justComputeLambdaBound) {
+            val double imputedZeros = lambda * initialPopCounts.get(sgRNA) - trueHistogram.nDataPoints
+            if (justComputeLambdaBound)
+              println("\tImputed zeros " + imputedZeros)
+            if (imputedZeros < 0) 
+              throw new RuntimeException('''Try lower lambda. At sgRNA «sgRNA.key», experiment «experiment.key» expected non-negative value: «lambda * initialPopCounts.get(sgRNA)» - «trueHistogram.nDataPoints» = «imputedZeros»''')
+            val resampledHistogram = resample(trueHistogram, imputedZeros)
+            record(sgRNA.key, trueHistogram, imputedZeros, resampledHistogram)
+            results.getTabularWriter("complete").write(expIndex, rnaIndex, geneIndex, Preprocess::HISTOGRAM_COLUMN -> resampledHistogram)
+            resampledHistogram.dropZeros
+            if (justComputeLambdaBound)
+              println("\tnNonZeroClones before and after resampling: " + nNonZeroClones + " " + resampledHistogram.nDataPoints)
+            results.getTabularWriter("censored").write(expIndex, rnaIndex, geneIndex, Preprocess::HISTOGRAM_COLUMN -> resampledHistogram)
+          }
         }
-      }
-      if (justComputeLambdaBound)
-        println("Experiment " + experiment.key + " bound: " + bound)
+        if (justComputeLambdaBound)
+          println("Experiment " + experiment.key + " bound: " + bound)
+        }
     }
     if (!justComputeLambdaBound)
       plot
   }
   
+  def Double lambda(String string) {
+    for (i : 0 ..< experiments.size) {
+      if (experiments.get(i) == string) return lambdas.get(i)
+    }
+    return null
+  }
+  
   def plot() {
+    results.flushAll
     val plotResults = results.child("plots")
     val scriptFile = plotResults.getFileInResultFolder("script.r")
     BriefIO::write(scriptFile, '''
@@ -118,7 +131,7 @@ class GenerateData extends Experiment {
       logWeights.set(i++, Math::log(frequencies.frequency(count)))
       particles.add(count)
     }
-    var nTimesToResample = imputedZeros + frequencies.nDataPoints
+    var nTimesToResample = (imputedZeros + frequencies.nDataPoints) * relativeDataSize
     val preResampling = ParticlePopulation.buildDestructivelyFromLogWeights(logWeights, particles, 0.0)
     val resampled = ResamplingScheme.MULTINOMIAL.resample(random, preResampling.normalizedWeights, particles, nTimesToResample.intValue);
     return new SimpleCountFrequencies => [addAll(resampled)]

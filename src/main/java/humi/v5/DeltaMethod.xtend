@@ -29,7 +29,7 @@ class DeltaMethod extends Experiment {
     plot
   }
   
-  static enum Columns { logRatio, logRatioIntervalWidth }
+  static enum Columns { logRatio, logRatioIntervalRadius }
   
   def void compute(boolean withIntervals) {
     val controlInitialCounts = controlInitialCounts
@@ -43,9 +43,14 @@ class DeltaMethod extends Experiment {
           val targetFinalCounts = finalCounts(sgRNA, experiment, false)
           val estimate = (targetFinalCounts / controlFinalCounts) / (targetInitialCounts / controlInitialCounts)
           val fgRatio = finalCounts(sgRNA, experiment, true) / (finalCounts(sgRNA, experiment,false) ** 2)
-          val interval = 1.96 * Math::sqrt(controlFGRatio + fgRatio + 1.0/controlInitialCounts + 1.0/targetInitialCounts)
+          val corCorrection = 2.0 * Math::sqrt( (controlFGRatio-1/controlFinalCounts)/controlFinalCounts ) + 
+                              2.0 * Math::sqrt( (fgRatio-1/targetFinalCounts)/targetFinalCounts) + 
+                              2.0 * Math::sqrt( (controlFGRatio-1/controlFinalCounts)/targetFinalCounts ) + 
+                              2.0 * Math::sqrt( (fgRatio-1/targetFinalCounts)/controlFinalCounts) +
+                              2.0 * Math::sqrt( 1.0 / controlFinalCounts / targetFinalCounts)
+          val interval = 1.96 * Math::sqrt(controlFGRatio + fgRatio + corCorrection + 1.0/controlInitialCounts + 1.0/targetInitialCounts)
           (if (withIntervals)  
-            writer.child(Columns::logRatioIntervalWidth, interval)
+            writer.child(Columns::logRatioIntervalRadius, interval)
           else writer
           ).write(
             sgRNA.plate.name -> sgRNA.key,
@@ -66,7 +71,7 @@ class DeltaMethod extends Experiment {
       cols = rainbow(200, s=.6, v=.9)[sample(1:200,200)]
       p <- ggplot(data, aes(x = factor(«data.genes.name»), y = «Columns::logRatio», colour = factor(«data.targets.name»))) + 
         coord_flip() + 
-        geom_errorbar(aes(ymin=«Columns::logRatio» - «Columns::logRatioIntervalWidth», ymax=«Columns::logRatio» + «Columns::logRatioIntervalWidth»)) +
+        geom_errorbar(aes(ymin=«Columns::logRatio» - «Columns::logRatioIntervalRadius», ymax=«Columns::logRatio» + «Columns::logRatioIntervalRadius»)) +
         geom_point() + 
         facet_grid(. ~ «data.experiments.name») + 
         theme_bw() + 
