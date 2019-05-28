@@ -21,6 +21,9 @@ class DeltaMethod extends Experiment {
   @Arg                  @DefaultValue("0.95")
   public double winsorizedTailCutoff = 0.95
   
+  @Arg           @DefaultValue("1.96")
+  public double criticalValue = 1.96
+  
   @Arg   @DefaultValue("Rscript")
   public String rCmd = "Rscript"
   
@@ -43,12 +46,7 @@ class DeltaMethod extends Experiment {
           val targetFinalCounts = finalCounts(sgRNA, experiment, false)
           val estimate = (targetFinalCounts / controlFinalCounts) / (targetInitialCounts / controlInitialCounts)
           val fgRatio = finalCounts(sgRNA, experiment, true) / (finalCounts(sgRNA, experiment,false) ** 2)
-          val corCorrection = 2.0 * Math::sqrt( (controlFGRatio-1/controlFinalCounts)/controlFinalCounts ) + 
-                              2.0 * Math::sqrt( (fgRatio-1/targetFinalCounts)/targetFinalCounts) + 
-                              2.0 * Math::sqrt( (controlFGRatio-1/controlFinalCounts)/targetFinalCounts ) + 
-                              2.0 * Math::sqrt( (fgRatio-1/targetFinalCounts)/controlFinalCounts) +
-                              2.0 * Math::sqrt( 1.0 / controlFinalCounts / targetFinalCounts)
-          val interval = 1.96 * Math::sqrt(controlFGRatio + fgRatio + corCorrection + 1.0/controlInitialCounts + 1.0/targetInitialCounts)
+          val interval = criticalValue * Math::sqrt(controlFGRatio + fgRatio + 1.0/controlInitialCounts + 1.0/targetInitialCounts)
           (if (withIntervals)  
             writer.child(Columns::logRatioIntervalRadius, interval)
           else writer
