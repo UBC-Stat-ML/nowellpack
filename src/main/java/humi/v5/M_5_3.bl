@@ -1,0 +1,91 @@
+package humi.v5
+
+import humi.HumiData
+import humi.IntMixture
+
+model M_5_3 { 
+  param HumiData data
+  param Plated<IntVar> initialPopCounts
+  random Plated<RealVar> thinnedUMIRates, rho1s, rho2s, pis, rateMultipliers
+  random RealVar initCountShape ?: latentReal, initCountRate ?: latentReal
+  random DenseSimplex initialCountDefectivePr ?: latentSimplex(2)
+  random RealVar 
+    a ?: latentReal, 
+    b ?: latentReal, 
+    c ?: latentReal, 
+    d ?: latentReal, 
+    e ?: latentReal, 
+    f ?: latentReal,
+    g ?: latentReal,
+    h ?: latentReal
+  param RealVar vagueRate ?: 0.001
+  
+  laws {
+    
+    initialCountDefectivePr ~ SimplexUniform(2)
+    initCountShape | vagueRate ~ Exponential(vagueRate)
+    initCountRate | vagueRate ~ Exponential(vagueRate)
+    a | vagueRate ~ Exponential(vagueRate)
+    b | vagueRate ~ Exponential(vagueRate)
+    c | vagueRate ~ Exponential(vagueRate)
+    d | vagueRate ~ Exponential(vagueRate)
+    e | vagueRate ~ Exponential(vagueRate)
+    f | vagueRate ~ Exponential(vagueRate)
+    g | vagueRate ~ Exponential(vagueRate)
+    h | vagueRate ~ ContinuousUniform(0, 1)
+    
+    for (Index<String> experiment : data.experiments.indices) {
+      rateMultipliers.get(experiment) | vagueRate ~ Exponential(vagueRate)
+    }
+    
+    for (Index<Integer> target : data.targets.indices) {
+      
+      // robust initial count modelling
+      thinnedUMIRates.get(target) | initCountShape, initCountRate ~ Gamma(initCountShape, initCountRate)
+      initialPopCounts.get(target) | g, h, initialCountDefectivePr, initCountShape, initCountRate, RealVar thinnedUMIRate = thinnedUMIRates.get(target)
+//        ~ Poisson(thinnedUMIRate)
+        ~ IntMixture(initialCountDefectivePr, #[
+          Poisson::distribution(thinnedUMIRate),
+          NegativeBinomial::distribution(g, h)
+        ])
+        
+      pis.get(target) | a, b ~ Beta(a, b)
+      rho1s.get(target) | c, d ~ Gamma(c, d)
+      rho2s.get(target) | e, f ~ Gamma(e, f)
+       
+      for (Index<String> experiment : data.experiments.indices(target)) {
+        // final counts likelihood
+        data.histograms.get(target, experiment) |
+          RealVar rho1 = rho1s.get(target),
+          RealVar rho2 = rho2s.get(target),
+          RealVar pi = pis.get(target),
+          RealVar rateMultiplier = rateMultipliers.get(experiment), 
+          RealVar thinnedUMIRate = thinnedUMIRates.get(target)
+        ~ CensoredExchangeableCounts(
+          {
+            if (pi < 0.0 || pi > 1.0) invalidParameter
+            IntMixture::distribution(
+              fixedSimplex(pi, 1.0 - pi), 
+              #[ // Warning: if edited, need to change M_5_Postprocess
+                YuleSimon::distribution(rho1), 
+                YuleSimon::distribution(rho1 + rho2)
+              ]
+            )
+          }, 
+          thinnedUMIRate * rateMultiplier
+        )  
+      }   
+    }
+  }
+}
+
+
+
+//      | thinning, initialCountDefectivePr, initCountShape, initCountRate, IntVar initCount = initialPopCounts.get(target)
+//      ~ LogPotential({
+//        if (initialCountDefectivePr < 0.0 || initialCountDefectivePr > 1.0) return NEGATIVE_INFINITY
+//        if (thinning < 0.0 || thinning > 1.0) return NEGATIVE_INFINITY
+//        val outlierLogPr = log(initialCountDefectivePr) + Double.NaN
+//        val regularLogPr = log1p(- initialCountDefectivePr) + Poisson::distribution(Double.NaN).logDensity(initCount)
+//        return NumericalUtils::logAdd(outlierLogPr, regularLogPr)
+//      })

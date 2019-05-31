@@ -1,0 +1,78 @@
+package humi.v5
+
+import humi.HumiData
+import humi.IntMixture
+
+model M_5_2 {
+  param HumiData data
+  param Plated<IntVar> initialPopCounts
+  
+  random Plated<RealVar> countLogDistortions, rho1s, rho2s, pis
+  
+  random RealVar initialDefectivePr ?: latentReal
+  random Plated<IntVar> initialDefectiveIndic
+  random Plated<RealVar> defectiveInitialRates 
+  
+  random RealVar 
+    a ?: latentReal, 
+    b ?: latentReal, 
+    c ?: latentReal, 
+    d ?: latentReal, 
+    e ?: latentReal, 
+    f ?: latentReal,
+    g ?: latentReal,
+    h ?: latentReal
+  
+  laws {
+    
+    a ~ Exponential(0.1)
+    b ~ Exponential(0.1)
+    c ~ Exponential(0.1)
+    d ~ Exponential(0.1)
+    e ~ Exponential(0.1)
+    f ~ Exponential(0.1)
+    g ~ Exponential(0.1)
+    h ~ Exponential(0.1)
+    
+    initialDefectivePr ~ Beta(1, 1)
+    
+    for (Index<String> experiment : data.experiments.indices) {
+      countLogDistortions.get(experiment) ~ Normal(0.0, 10.0) // roughly 0.1--10x distortion max expected
+    }
+    
+    for (Index<Integer> target : data.targets.indices.filter[it.key < 3]) {
+      
+      pis.get(target) | a, b ~ Beta(a, b)
+      rho1s.get(target) | c, d ~ Gamma(c, d)
+      rho2s.get(target) | e, f ~ Gamma(e, f)
+      
+      initialDefectiveIndic.get(target) | initialDefectivePr ~ Bernoulli(initialDefectivePr)
+      defectiveInitialRates.get(target) | g, h ~ Gamma(g, h)
+    
+      for (Index<String> experiment : data.experiments.indices(target)) {
+        data.histograms.get(target, experiment) |
+          IntVar initialPopCount = initialPopCounts.get(target),
+          RealVar countLogDistortion = countLogDistortions.get(experiment),
+          RealVar rho1 = rho1s.get(target),
+          RealVar rho2 = rho2s.get(target),
+          RealVar defectiveInitialRate = defectiveInitialRates.get(target),
+          IntVar curInitialDefectiveIndic = initialDefectiveIndic.get(target),
+          RealVar pi = pis.get(target) 
+        ~ CensoredExchangeableCounts(
+          {
+            if (pi < 0.0 || pi > 1.0) invalidParameter
+            if (curInitialDefectiveIndic != 0 && curInitialDefectiveIndic != 1) invalidParameter
+            IntMixture::distribution(
+              fixedSimplex(pi, 1.0 - pi), 
+              #[ // Warning: if edited, need to change M_5_Postprocess
+                YuleSimon::distribution(rho1), 
+                YuleSimon::distribution(rho1 + rho2)
+              ]
+            )
+          }, 
+          (if (curInitialDefectiveIndic == 1) defectiveInitialRate.doubleValue else exp(countLogDistortion)) * initialPopCount
+        )    
+      }   
+    }
+  }
+}
