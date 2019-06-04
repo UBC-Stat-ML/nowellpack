@@ -6,9 +6,9 @@ import humi.IntMixture
 model M_5_3 { 
   param HumiData data
   param Plated<IntVar> initialPopCounts
-  random Plated<RealVar> thinnedUMIRates, rho1s, rateMultipliers
-  random RealVar initCountShape ?: latentReal, initCountRate ?: latentReal
-  random DenseSimplex initialCountDefectivePr ?: latentSimplex(2)
+  random Plated<RealVar> thinnedUMIRates, rho1s
+//  random RealVar initCountShape ?: latentReal, initCountRate ?: latentReal
+//  random DenseSimplex initialCountDefectivePr ?: latentSimplex(2)
   random RealVar 
 //    a ?: latentReal, 
 //    b ?: latentReal, 
@@ -19,14 +19,17 @@ model M_5_3 {
 //    g ?: latentReal,
 //    h ?: latentReal,
     rho2 ?: latentReal,
-    pi ?: latentReal
+    multi ?: latentReal
+    
+  random PlatedMatrix rateMultipliers
+  random DenseSimplex  pi ?: latentSimplex(2)
   param RealVar vagueRate ?: 0.001
   
   laws {
     
-    initialCountDefectivePr ~ SimplexUniform(2)
-    initCountShape | vagueRate ~ Exponential(vagueRate)
-    initCountRate | vagueRate ~ Exponential(vagueRate)
+//    initialCountDefectivePr ~ SimplexUniform(2)
+//    initCountShape | vagueRate ~ Exponential(vagueRate)
+//    initCountRate | vagueRate ~ Exponential(vagueRate)
 //    a | vagueRate ~ Exponential(vagueRate)
 //    b | vagueRate ~ Exponential(vagueRate)
 //    c | vagueRate ~ Exponential(vagueRate)
@@ -36,18 +39,19 @@ model M_5_3 {
 //    g | vagueRate ~ Exponential(vagueRate)
 //    h | vagueRate ~ ContinuousUniform(0, 1)
     
-    for (Index<String> experiment : data.experiments.indices) {
-      rateMultipliers.get(experiment) | vagueRate ~ Exponential(vagueRate)
-    }
+    rateMultipliers.getDenseSimplex(data.experiments) | int size = data.experiments.indices.size ~ SimplexUniform(size)
+    multi | vagueRate ~ Exponential(vagueRate)
     
-    pi ~ ContinuousUniform(0, 1)
+    pi ~ Dirichlet(denseCopy(#[10.0, 1.0]))
     rho2 | vagueRate ~ Exponential(vagueRate)
     
     for (Index<Integer> target : data.targets.indices) {
       
       // robust initial count modelling
-      thinnedUMIRates.get(target) | initCountShape, initCountRate ~ Gamma(initCountShape, initCountRate)
-      initialPopCounts.get(target) | initialCountDefectivePr, initCountShape, initCountRate, RealVar thinnedUMIRate = thinnedUMIRates.get(target)
+      thinnedUMIRates.get(target) | vagueRate ~ Exponential(vagueRate) //initCountShape, initCountRate ~ Gamma(initCountShape, initCountRate)
+      initialPopCounts.get(target) | 
+//      initialCountDefectivePr, initCountShape, initCountRate, 
+      RealVar thinnedUMIRate = thinnedUMIRates.get(target)
         ~ Poisson(thinnedUMIRate)
 //        ~ IntMixture(initialCountDefectivePr, #[
 //          Poisson::distribution(thinnedUMIRate),
@@ -60,21 +64,20 @@ model M_5_3 {
         // final counts likelihood
         data.histograms.get(target, experiment) |
           RealVar rho1 = rho1s.get(target),
-          rho2, pi,
-          RealVar rateMultiplier = rateMultipliers.get(experiment), 
+          rho2, pi, multi,
+          RealVar rateMultiplier = rateMultipliers.getDenseSimplexEntry(data.experiments, experiment), 
           RealVar thinnedUMIRate = thinnedUMIRates.get(target)
         ~ CensoredExchangeableCounts(
           {
-            if (pi < 0.0 || pi > 1.0) invalidParameter
             IntMixture::distribution(
-              fixedSimplex(pi, 1.0 - pi), 
+              pi, 
               #[ // Warning: if edited, need to change M_5_Postprocess
                 YuleSimon::distribution(rho1), 
                 YuleSimon::distribution(rho2)
               ]
             )
           }, 
-          thinnedUMIRate * rateMultiplier
+          thinnedUMIRate * rateMultiplier * multi
         )  
       }   
     }
