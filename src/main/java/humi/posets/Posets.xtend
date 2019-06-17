@@ -10,8 +10,16 @@ import com.google.common.collect.Sets
 import java.util.List
 import briefj.BriefMaps
 import java.util.LinkedHashMap
+import bayonet.graphs.DotExporter
 
 class Posets {
+  
+  def static dotExporter(Poset<String> poset) {
+    val graph = GraphPoset.from(poset).graph
+    val hasse = Posets.hasseDiagram(graph)
+    return new DotExporter(hasse)
+  }
+  
   
   def static <T> DirectedGraph<T, Pair<T,T>> hasseDiagram(DirectedGraph<T, Pair<T,T>> poset) {
     val result = GraphUtils.newDirectedGraph()

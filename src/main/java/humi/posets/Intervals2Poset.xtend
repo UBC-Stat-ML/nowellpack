@@ -9,7 +9,6 @@ import briefj.BriefIO
 import humi.v5.DeltaMethod
 import blang.inits.Arg
 import blang.inits.DefaultValue
-import bayonet.graphs.DotExporter
 import java.util.LinkedHashMap
 
 class Intervals2Poset extends Experiment {
@@ -27,15 +26,7 @@ class Intervals2Poset extends Experiment {
   
   override run() {
     val poset = loadPoset
-    plot(poset)
-  }
-  
-  def File plot(Poset<String> poset) {
-    val graph = GraphPoset.from(poset).graph
-    val hasse = Posets.hasseDiagram(graph)
-    val result = results.getFileInResultFolder("hasse.dot")
-    new DotExporter(hasse).export(result) 
-    return result
+    Posets::dotExporter(poset).export(results.getFileInResultFolder("hasse.dot"))
   }
   
   def Poset<String> loadPoset() {
