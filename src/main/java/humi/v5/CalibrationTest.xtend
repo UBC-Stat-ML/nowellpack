@@ -21,19 +21,20 @@ class CalibrationTest  extends Experiment {
   
   override run() {
     val truth = loadReference()
-    val radia = new SummaryStatistics
+    val widths = new SummaryStatistics
     val coverage = new SummaryStatistics
     for (line : BriefIO::readLines(intervals).indexCSV) { 
       val sgRNA = Integer::parseInt(line.get(sgRNAField))
       if (!truth.containsKey(sgRNA)) throw new RuntimeException
-      val logRatio = Double::parseDouble(line.get(DeltaMethod.Columns.logRatio.toString))
-      val radius = Double::parseDouble(line.get(DeltaMethod.Columns.logRatioIntervalRadius.toString))
-      radia.addValue(radius)
-      coverage.addValue(if (Math::abs(logRatio - truth.get(sgRNA)) < radius) 1.0 else 0.0)
+      val left = Double::parseDouble(line.get(DeltaMethod.Columns.logRatioLeftBound.toString))
+      val right = Double::parseDouble(line.get(DeltaMethod.Columns.logRatioRightBound.toString))
+      widths.addValue(right - left)
+      val curRef = truth.get(sgRNA)
+      coverage.addValue(if (curRef >= left && curRef <= right) 1.0 else 0.0)
       truth.remove(sgRNA) 
     }
-    println(radia.mean)
-    println(coverage.mean)
+    println("Average width: " + widths.mean)
+    println("Actual coverage: " + coverage.mean)
   }
   
   def loadReference() {

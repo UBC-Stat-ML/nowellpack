@@ -13,6 +13,7 @@ import humi.HumiData
 import humi.HumiStaticUtils
 import java.util.ArrayList
 import java.util.Collections
+import blang.inits.experiments.ExperimentResults
 
 class DeltaMethod extends Experiment {
   @Arg HumiData data
@@ -37,10 +38,10 @@ class DeltaMethod extends Experiment {
   
   override run() {
     compute(true)
-    plot
+    plot(results, data, rCmd, true, "Delta-method intervals")
   }
   
-  static enum Columns { logRatio, logRatioIntervalRadius }
+  static enum Columns { logRatio, logRatioLeftBound,  logRatioRightBound}
   
   def void compute(boolean withIntervals) {
     val controlInitialCounts = controlInitialCounts
@@ -53,22 +54,25 @@ class DeltaMethod extends Experiment {
           val targetInitialCounts = initialPopCounts.get(sgRNA)
           val targetFinalCounts = finalCounts(sgRNA, experiment, false)
           val estimate = (targetFinalCounts / controlFinalCounts) / (targetInitialCounts / controlInitialCounts)
+          val logEstimate = Math::log(estimate)
           val fgRatio = finalCounts(sgRNA, experiment, true) / (finalCounts(sgRNA, experiment,false) ** 2)
           val interval = criticalValue * Math::sqrt(controlFGRatio + fgRatio + 1.0/controlInitialCounts + 1.0/targetInitialCounts)
           (if (withIntervals)  
-            writer.child(Columns::logRatioIntervalRadius, interval)
+            writer
+              .child(Columns::logRatioLeftBound, logEstimate-interval)
+              .child(Columns::logRatioRightBound, logEstimate+interval)
           else writer
           ).write(
             sgRNA.plate.name -> sgRNA.key,
             gene.plate.name -> gene.key,
-            Columns::logRatio -> Math::log(estimate)
+            Columns::logRatio -> logEstimate
           )
         }
     }
     results.flushAll
   }
   
-  def plot() {
+  def static plot(ExperimentResults results, HumiData data, String rCmd, boolean expSpecific, String caption) {
     val plotResults = results.child("plots")
     val scriptFile = plotResults.getFileInResultFolder("script.r")
     BriefIO::write(scriptFile, '''
@@ -77,13 +81,13 @@ class DeltaMethod extends Experiment {
       cols = rainbow(200, s=.6, v=.9)[sample(1:200,200)]
       p <- ggplot(data, aes(x = factor(«data.genes.name»), y = «Columns::logRatio», colour = factor(«data.targets.name»))) + 
         coord_flip() + 
-        geom_errorbar(aes(ymin=«Columns::logRatio» - «Columns::logRatioIntervalRadius», ymax=«Columns::logRatio» + «Columns::logRatioIntervalRadius»)) +
+        geom_errorbar(aes(ymin=«Columns::logRatioLeftBound», ymax=«Columns::logRatioRightBound»)) +
         geom_point() + 
-        facet_grid(. ~ «data.experiments.name») + 
+        «IF expSpecific»facet_grid(. ~ «data.experiments.name») + «ENDIF»
         theme_bw() + 
         xlab("Gene") + 
         ylab("log(ratio)") + 
-        ggtitle("Ratio of clone sizes relative to controls", subtitle = "Delta-method intervals") + 
+        ggtitle("Ratio of clone sizes relative to controls", subtitle = "«caption»") + 
         scale_colour_manual(values=cols) + 
         geom_hline(yintercept=0) + 
         theme(legend.position="none") 
