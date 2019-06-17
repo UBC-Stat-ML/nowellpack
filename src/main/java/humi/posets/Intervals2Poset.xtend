@@ -10,6 +10,7 @@ import humi.v5.DeltaMethod
 import blang.inits.Arg
 import blang.inits.DefaultValue
 import bayonet.graphs.DotExporter
+import java.util.LinkedHashMap
 
 class Intervals2Poset extends Experiment {
   
@@ -29,7 +30,7 @@ class Intervals2Poset extends Experiment {
     plot(poset)
   }
   
-  def File plot(Poset<LabelledInterval> poset) {
+  def File plot(Poset<String> poset) {
     val graph = GraphPoset.from(poset).graph
     val hasse = Posets.hasseDiagram(graph)
     val result = results.getFileInResultFolder("hasse.dot")
@@ -37,37 +38,42 @@ class Intervals2Poset extends Experiment {
     return result
   }
   
-  def loadIntervals() {
-    val result = new LinkedHashSet<LabelledInterval>
+  def Poset<String> loadPoset() {
+    if (threshold < 0.0) throw new RuntimeException
+    
+    val leftIntervals = new LinkedHashMap<String,Double>
+    val rightIntervals = new LinkedHashMap<String,Double>
     val names = new LinkedHashSet
+    
     for (line : BriefIO::readLines(intervalsCSVFile).indexCSV) {
       val name = line.get(geneAField) + " (" + line.get(sgRNAField) + ")"
       if (names.contains(name)) throw new RuntimeException
       names.add(name)
       val left = Double.parseDouble(line.get(DeltaMethod.Columns::logRatioLeftBound.toString))
       val right = Double.parseDouble(line.get(DeltaMethod.Columns::logRatioRightBound.toString))
-      val interval = new LabelledInterval(name, left, right)
-      result.add(interval)
+      
+      if (right < -threshold || left > threshold) {
+        leftIntervals.put(name, left)
+        rightIntervals.put(name, right)
+      }
     }
-    return result
-  }
-  
-  def Poset<LabelledInterval> loadPoset() {
-    if (threshold < 0.0) throw new RuntimeException
-    val _objects = loadIntervals.filter[
-      right < -threshold || left > threshold
-    ].toSet
-    _objects.add(new LabelledInterval("controls", 0.0, 0.0))
-    return new Poset<LabelledInterval>() {
-      override compare(LabelledInterval first, LabelledInterval second) {
-        if (first.right < second.left) return -1
-        if (second.right < first.left) return 1
+     
+    val controls = "controls"
+    leftIntervals.put(controls, 0.0)
+    rightIntervals.put(controls, 0.0)
+    
+    val poset = new Poset<String>() {
+      override compare(String first, String second) {
+        if (rightIntervals.get(first) < leftIntervals.get(second)) return -1
+        if (rightIntervals.get(second) < leftIntervals.get(first)) return 1
         return null
       }
       override objects() {
-        return _objects
+        return leftIntervals.keySet
       }
     }
+    
+    return GraphPoset.from(poset) 
   }
   
   def static void main(String [] args) {
