@@ -1,0 +1,54 @@
+package humi.v5
+
+import humi.HumiData
+import humi.IntMixture
+
+model M_5_Basic { 
+  param HumiData data
+  param Plated<IntVar> initialPopCounts
+  random Plated<RealVar> rho1s, rho2s, pis
+
+  random RealVar initialUMICoverage ?: latentReal 
+    
+  random PlatedMatrix rateMultipliers
+  param RealVar vagueRate ?: 0.01
+  
+  laws {
+    
+    initialUMICoverage ~ ContinuousUniform(0.01, 0.1)
+    
+    rateMultipliers.getDenseSimplex(data.experiments) | int size = data.experiments.indices.size ~ SimplexUniform(size)
+    
+    for (Index<Integer> target : data.targets.indices) {
+      
+      pis.get(target) ~ ContinuousUniform(0.0, 1.0) 
+      rho1s.get(target) | vagueRate ~ Exponential(vagueRate)
+      rho2s.get(target) | vagueRate ~ Exponential(vagueRate)
+       
+      for (Index<String> experiment : data.experiments.indices(target)) {
+        // final counts likelihood
+        data.histograms.get(target, experiment) |
+          RealVar rho1 = rho1s.get(target),
+          RealVar rho2 = rho2s.get(target),
+          RealVar pi = pis.get(target),
+          IntVar initialPopCount = initialPopCounts.get(target), 
+          initialUMICoverage,
+          RealVar rateMultiplier = rateMultipliers.getDenseSimplexEntry(data.experiments, experiment), 
+          double nExperiments = data.experiments.indices.size
+        ~ CensoredExchangeableCounts(
+          {
+            if (pi < 0.0 || pi > 1.0) invalidParameter
+            IntMixture::distribution(
+              fixedSimplex(pi, 1.0 - pi), 
+              #[ // Warning: if edited, need to change M_5_Postprocess
+                YuleSimon::distribution(rho1), 
+                YuleSimon::distribution(rho1 + rho2)
+              ]
+            )
+          }, 
+          initialPopCount * (nExperiments*rateMultiplier) / initialUMICoverage
+        )   
+      }   
+    }
+  }
+}
