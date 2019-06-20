@@ -21,29 +21,21 @@ class DeltaMethod extends Experiment {
   
   @Arg                  @DefaultValue("0.95")
   public double winsorizedTailCutoff = 0.95
-  
-  /*
-   * Value determined empirically to achieve approximate 95% coverage.
-   * See ./nextflow run replicate-calibration.nf -resume --critical 5
-   * got: 96% coverage between X0569_422234{1,2} and {2,3} and {1,3}
-   * tried --critical 4 and got as low as 88% coverage. 
-   * Theoretical value of 1.96 works on synthetic data (see bootstrap-calibration) 
-   * but fails on replicate-calibration (as low as 60% coverage).
-   */
-  @Arg           @DefaultValue("5")
-  public double criticalValue = 5  
+
+  @Arg           @DefaultValue("1.96")
+  public double criticalValue = 1.96  
   
   @Arg   @DefaultValue("Rscript")
   public String rCmd = "Rscript"
   
   override run() {
-    compute(true)
+    compute
     plot(results, data, rCmd, true, "Delta-method intervals")
   }
   
   static enum Columns { logRatio, logRatioLeftBound,  logRatioRightBound}
   
-  def void compute(boolean withIntervals) {
+  def void compute() {
     val controlInitialCounts = controlInitialCounts
     for (experiment : data.experiments.indices) {
       val writer = results.getTabularWriter("estimates").child(experiment.plate.name, experiment.key)
@@ -57,12 +49,9 @@ class DeltaMethod extends Experiment {
           val logEstimate = Math::log(estimate)
           val fgRatio = finalCounts(sgRNA, experiment, true) / (finalCounts(sgRNA, experiment,false) ** 2)
           val interval = criticalValue * Math::sqrt(controlFGRatio + fgRatio + 1.0/controlInitialCounts + 1.0/targetInitialCounts)
-          (if (withIntervals)  
-            writer
-              .child(Columns::logRatioLeftBound, logEstimate-interval)
-              .child(Columns::logRatioRightBound, logEstimate+interval)
-          else writer
-          ).write(
+          writer.write(
+            Columns::logRatioLeftBound -> logEstimate-interval,    
+            Columns::logRatioRightBound -> logEstimate+interval,
             sgRNA.plate.name -> sgRNA.key,
             gene.plate.name -> gene.key,
             Columns::logRatio -> logEstimate

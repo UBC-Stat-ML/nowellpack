@@ -11,6 +11,7 @@ import java.util.List
 import briefj.BriefMaps
 import java.util.LinkedHashMap
 import bayonet.graphs.DotExporter
+import java.io.File
 
 class Posets {
   
@@ -19,7 +20,6 @@ class Posets {
     val hasse = Posets.hasseDiagram(graph)
     return new DotExporter(hasse)
   }
-  
   
   def static <T> DirectedGraph<T, Pair<T,T>> hasseDiagram(DirectedGraph<T, Pair<T,T>> poset) {
     val result = GraphUtils.newDirectedGraph()
@@ -71,5 +71,12 @@ class Posets {
         result.addEdge(value, labels.get(child.right)) 
     }
     return result
+  }
+  
+  def static void main(String [] args) {
+    val poset = power(3)
+    val fullGraph = GraphPoset::from(poset).graph
+    new DotExporter(fullGraph).export(new File("full.dot"))
+    new DotExporter(hasseDiagram(fullGraph)).export(new File("hasse.dot"))
   }
 }
