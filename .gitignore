@@ -5,3 +5,5 @@ bin/
 build
 results
 data
+full.dot
+hasse.dot

@@ -6,15 +6,15 @@ model Subset {
   random List<IntVar> indicators
   
   laws {
-    indicator(indicators, minSizeIncl) {
-      var size = 0
-      for (indic : indicators) {
-        if (!indic.isBool)
-          return false
-        size += indic
-      }
-      return size >= minSizeIncl
-    }
+//    indicator(indicators, minSizeIncl) {
+//      var size = 0
+//      for (indic : indicators) {
+//        if (!indic.isBool)
+//          return false
+//        size += indic
+//      }
+//      return size >= minSizeIncl
+//    }
   }
   
   generate (rand) {

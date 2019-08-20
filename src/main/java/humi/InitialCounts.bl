@@ -1,0 +1,21 @@
+package humi
+
+model InitialCounts {
+  
+  param GlobalDataSource source
+  param Plate<Integer> sgRNA
+  random Plated<IntVar> counts
+  
+  random RealVar mean ?: latentReal
+  random RealVar overd ?: latentReal
+  random IntVar predictive ?: latentInt
+  
+  laws {
+    mean ~ Exponential(0.0001)
+    overd ~ Exponential(0.0001)
+    for (Index<Integer> target : sgRNA.indices) {
+      counts.get(target) | mean, overd ~ NegativeBinomialMeanParam(mean, overd)
+    }
+    predictive | mean, overd ~ NegativeBinomialMeanParam(mean, overd)
+  }
+}

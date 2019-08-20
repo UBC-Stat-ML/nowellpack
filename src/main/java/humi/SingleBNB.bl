@@ -1,5 +1,9 @@
 package humi
 
+import static humi.CensoredExchangeableUtils.sampleTotalCount
+import static humi.DerivedRealVar.derivedReal
+import static humi.DerivedIntVar.derivedInt
+
 model SingleBNB {
   random CountFrequencies frequencies
   random RealVar lambda ?: latentReal
@@ -7,16 +11,28 @@ model SingleBNB {
   random RealVar alpha ?: latentReal
   random RealVar beta ?: latentReal
   
+  param IntDistribution likelihood ?: BetaNegativeBinomial::distribution(r, alpha, beta)
+  
+  random Random predictiveRand ?: new Random(1)
+  random RealVar distinctUMIs ?: derivedReal[
+    sampleTotalCount(
+      predictiveRand, 
+      likelihood,
+      lambda,
+      frequencies.nDataPoints
+    ) as double
+  ]
+  random IntVar predictive ?: derivedInt[likelihood.sample(predictiveRand)
+  ]
+  
   laws {
     lambda ~ Exponential(0.0001) 
     r ~ Exponential(0.1)
     alpha ~ Exponential(0.01)
     beta ~ Exponential(0.01)
-    frequencies | r, alpha, beta
-      , lambda 
+    frequencies | likelihood, lambda 
       ~ CensoredExchangeableCounts(
-      BetaNegativeBinomial::distribution(r, alpha, beta)
-      ,
+      likelihood,
       lambda 
     )
   }

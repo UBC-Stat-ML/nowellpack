@@ -1,0 +1,12 @@
+package humi
+
+model ToyCensored {
+  random RealVar lambda ?: latentReal
+  random IntVar n ?: latentInt
+  random IntVar m ?: fixedInt(10)
+  laws {
+    lambda ~ Exponential(0.0001)
+    n | lambda ~ Poisson(lambda)
+    m | n ~ Binomial(n, 0.5)
+  }
+}

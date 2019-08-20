@@ -1,0 +1,39 @@
+package humi.v5
+
+import humi.HumiData
+import humi.IntMixture
+
+model M_6_onlyOne { 
+  param HumiData data
+  param Plated<IntVar> initialPopCounts
+  random Plated<RealVar> rhos
+    
+  random Plated<RealVar> lambdas
+  
+  param RealVar vagueRate ?: 0.01
+  
+  laws {
+    
+    for (Index<String> experiment : data.experiments.indices) {
+      lambdas.get(experiment) | vagueRate ~ Exponential(vagueRate)
+    }
+    
+    for (Index<Integer> target : data.targets.indices) {
+      
+      rhos.get(target) | vagueRate ~ Exponential(vagueRate)
+       
+      for (Index<String> experiment : data.experiments.indices(target)) {
+        // final counts likelihood
+        data.histograms.get(target, experiment) |
+          RealVar rho = rhos.get(target),
+          RealVar lambda = lambdas.get(experiment),
+          IntVar initialPopCount = initialPopCounts.get(target), 
+          double nExperiments = data.experiments.indices.size
+        ~ CensoredExchangeableCounts(
+          YuleSimon::distribution(rho),
+          initialPopCount * lambda
+        )   
+      }   
+    }
+  }
+}
