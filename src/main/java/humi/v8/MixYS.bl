@@ -42,8 +42,8 @@ model MixYS {
             val initialPopCount = initialPopCounts.get(target)
             val result = IntMixture::distribution(pi, #[ 
                 YuleSimon::distribution(rho1), 
-                YuleSimon::distribution([rho1 + rho2]), // NB: [...] important here
-                YuleSimon::distribution([rho1 + rho2 + rho3])
+                YuleSimon::distribution(rho2), // NB: [...] important here
+                YuleSimon::distribution(rho3)
               ]
             )
             
