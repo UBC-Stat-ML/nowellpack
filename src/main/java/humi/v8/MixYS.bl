@@ -7,7 +7,8 @@ import humi.Monitor
 model MixYS { 
   param HumiData data
   param Plated<IntVar> initialPopCounts
-  random Plated<RealVar> rho1s, rho2s, pis
+  random Plated<RealVar> rho1s, rho2s, rho3s
+  random Plated<DenseSimplex> pis ?: Plated::latent("pis", [latentSimplex(2)])
     
   random Plated<RealVar> lambdas
     
@@ -23,7 +24,7 @@ model MixYS {
         
     for (Index<Integer> target : data.targets.indices) {
       
-      pis.get(target) ~ ContinuousUniform(0.0, 1.0)
+      pis.get(target) ~ SimplexUniform(2)
       rho1s.get(target) | vagueRate ~ Exponential(vagueRate)
       rho2s.get(target) | vagueRate ~ Exponential(vagueRate)
        
@@ -37,13 +38,9 @@ model MixYS {
             val rho2 = rho2s.get(target)
             val lambda = lambdas.get(experiment)
             val initialPopCount = initialPopCounts.get(target)
-            val result = IntMixture::distribution({
-                if (pi < 0.0 || pi > 1.0) invalidParameter
-                fixedSimplex(#[pi, 1.0 - pi])
-              }, 
-              #[ 
+            val result = IntMixture::distribution(pi, #[ 
                 YuleSimon::distribution(rho1), 
-                YuleSimon::distribution([1.0 + rho2]) // NB: [...] important here
+                YuleSimon::distribution([rho1 + rho2]) // NB: [...] important here
               ]
             )
             
