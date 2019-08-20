@@ -2,6 +2,7 @@ package humi.v8
 
 import humi.HumiData
 import humi.IntMixture
+import humi.Monitor
 
 model MixYS { 
   param HumiData data
@@ -10,8 +11,8 @@ model MixYS {
     
   random DenseSimplex pi ?: latentSimplex(2)
   random Plated<RealVar> lambdas
-  
-  random Plated<DistributionSummary> distributionSummaries 
+    
+  random Plated<Monitor> visibleCloneNumbers, truncatedMeans
   
   param RealVar vagueRate ?: 0.01
   
@@ -30,23 +31,36 @@ model MixYS {
        
       for (Index<String> experiment : data.experiments.indices(target)) {
         data.histograms.get(target, experiment) |
-          pi,
-          RealVar lambda = lambdas.get(experiment),
+          RealVar lambda = lambdas.get(experiment), pi,
           IntVar initialPopCount = initialPopCounts.get(target),
           IntDistribution dist = {
             val rho1 = rho1s.get(target)
             val rho2 = rho2s.get(target)
             val lambda = lambdas.get(experiment)
             val initialPopCount = initialPopCounts.get(target)
-            val result = IntMixture::distribution(
-              pi, 
+            val result = IntMixture::distribution(pi, 
               #[ 
                 YuleSimon::distribution(rho1), 
-                YuleSimon::distribution([1.0 + rho2])
+                YuleSimon::distribution([1.0 + rho2]) // NB: [...] important here
               ]
             )
-            distributionSummaries.get(target).init(result, [initialPopCount * lambda], data.histograms.get(target, experiment))
-//            distributionSummaries.put(target.key, new DistributionSummary(result, [initialPopCount * lambda]), data, target)
+            
+            // register visible clone number monitors
+            visibleCloneNumbers.get(target, DistributionSummary::modelIndex).init[
+              val p0 = Math.exp(result.logDensity(0))
+              return (1.0 - p0) * initialPopCount * lambda
+            ]
+            val observedHist = data.histograms.get(target, experiment)
+            val dataVisibleCloneNumbers = observedHist.nDataPoints
+            visibleCloneNumbers.get(target, DistributionSummary::dataIndex).init[dataVisibleCloneNumbers]
+            
+            // register truncated mean monitors
+            truncatedMeans.get(target, DistributionSummary::modelIndex).init[
+              DistributionSummary::mean(DistributionSummary::truncatedNormalizedCounter(result))
+            ]
+            val dataCloneTM = DistributionSummary::mean(DistributionSummary::truncatedNormalizedCounter(observedHist))
+            truncatedMeans.get(target, DistributionSummary::dataIndex).init[ dataCloneTM ]
+            
             return result
           }
         ~ CensoredExchangeableCounts(dist, initialPopCount * lambda)   
