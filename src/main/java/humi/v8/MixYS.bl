@@ -1,0 +1,56 @@
+package humi.v8
+
+import humi.HumiData
+import humi.IntMixture
+
+model MixYS { 
+  param HumiData data
+  param Plated<IntVar> initialPopCounts
+  random Plated<RealVar> rho1s, rho2s
+    
+  random DenseSimplex pi ?: latentSimplex(2)
+  random Plated<RealVar> lambdas
+  
+  random Plated<DistributionSummary> distributionSummaries 
+  
+  param RealVar vagueRate ?: 0.01
+  
+  laws {
+    
+    for (Index<String> experiment : data.experiments.indices) {
+      lambdas.get(experiment) | vagueRate ~ Exponential(vagueRate)
+    }
+    
+    pi ~ SimplexUniform(2)
+    
+    for (Index<Integer> target : data.targets.indices) {
+      
+      rho1s.get(target) ~ ContinuousUniform(0.0, 1.0)
+      rho2s.get(target) | vagueRate ~ Exponential(vagueRate)
+       
+      for (Index<String> experiment : data.experiments.indices(target)) {
+        data.histograms.get(target, experiment) |
+          pi,
+          RealVar lambda = lambdas.get(experiment),
+          IntVar initialPopCount = initialPopCounts.get(target),
+          IntDistribution dist = {
+            val rho1 = rho1s.get(target)
+            val rho2 = rho2s.get(target)
+            val lambda = lambdas.get(experiment)
+            val initialPopCount = initialPopCounts.get(target)
+            val result = IntMixture::distribution(
+              pi, 
+              #[ 
+                YuleSimon::distribution(rho1), 
+                YuleSimon::distribution([1.0 + rho2])
+              ]
+            )
+            distributionSummaries.get(target).init(result, [initialPopCount * lambda], data.histograms.get(target, experiment))
+//            distributionSummaries.put(target.key, new DistributionSummary(result, [initialPopCount * lambda]), data, target)
+            return result
+          }
+        ~ CensoredExchangeableCounts(dist, initialPopCount * lambda)   
+      }   
+    }
+  }
+}
