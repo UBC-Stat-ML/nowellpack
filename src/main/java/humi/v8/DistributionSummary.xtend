@@ -24,10 +24,12 @@ class DistributionSummary {
   public static Index<String> modelIndex = new Index(description, modelString)
   
   static val cutoff = 20
+  static val winsorizationP = 0.95
   
   def static registerMonitors(
     Plated<Monitor> visibleCloneNumbers, 
     Plated<Monitor> truncatedMeans, 
+    Plated<Monitor> winsorizedMeans,
     Index<Integer> target,
     Supplier<IntDistribution> dist,
     Plated<IntVar> initialPopCounts,
@@ -56,6 +58,36 @@ class DistributionSummary {
     })
     val dataCloneTM = DistributionSummary::mean(DistributionSummary::truncatedNormalizedCounter(observedHist))
     truncatedMeans.get(target, DistributionSummary::dataIndex).init(new RealConstant(dataCloneTM))
+    
+    // winsorized mean
+    winsorizedMeans.get(target).init(new RealVar() {
+      override doubleValue() {
+        return winsorizedMean(dist.get, winsorizationP)
+      }
+    })
+  }
+  
+  def static double winsorizedMean(IntDistribution distribution, double p) {
+    return mean(truncate(distribution, p))
+  }
+  
+  def private static Counter<Integer> truncate(IntDistribution distribution, double p) {
+    val result = new Counter
+    var mass = 0.0
+    var c = 0
+    while (true) {
+      val cur =  Math::exp(distribution.logDensity(c))
+      
+      if (mass + cur < p) {
+        result.setCount(c, cur)
+        mass += cur
+      } else {
+        result.setCount(c, 1.0 - mass)
+        NumericalUtils::checkIsClose(result.totalCount, 1.0)
+        return result
+      }
+      c++
+    }
   }
   
   def static Counter<Integer> truncatedNormalizedCounter(CountFrequencies frequencies) {

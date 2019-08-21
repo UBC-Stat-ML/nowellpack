@@ -9,7 +9,7 @@ model NB {
   random Plated<RealVar> means, ods
   random Plated<RealVar> lambdas
   random RealVar shape ?: latentReal, rate ?: latentReal
-  random Plated<Monitor> visibleCloneNumbers, truncatedMeans
+  random Plated<Monitor> visibleCloneNumbers, truncatedMeans, winsorizedMeans
   param RealVar vagueRate ?: 0.01
   
   laws {
@@ -31,7 +31,7 @@ model NB {
             val Supplier<IntDistribution> result = [NegativeBinomialMeanParam::distribution(mean, od)]
             val lambda = lambdas.get(target)
             DistributionSummary::registerMonitors(
-              visibleCloneNumbers, truncatedMeans, target, result, 
+              visibleCloneNumbers, truncatedMeans, winsorizedMeans, target, result, 
               initialPopCounts, lambda, data, experiment
             )
             return result
