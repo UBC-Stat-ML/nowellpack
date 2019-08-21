@@ -1,0 +1,88 @@
+package humi.v8
+
+import humi.HumiData
+import humi.IntMixture
+import humi.Monitor
+import java.util.function.Supplier
+
+model MixBNB { 
+  param HumiData data
+  param Plated<IntVar> initialPopCounts
+  random Plated<RealVar> r1s, alpha1s, beta1s, r2s, alpha2s, beta2s, pis
+    
+  random Plated<RealVar> lambdas
+  random RealVar shape ?: latentReal, rate ?: latentReal
+    
+  random Plated<Monitor> visibleCloneNumbers, truncatedMeans
+  
+  param RealVar vagueRate ?: 0.01
+  
+  laws {
+    
+    shape | vagueRate ~ Exponential(vagueRate)
+    rate | vagueRate ~ Exponential(vagueRate)
+    
+    for (Index<Integer> target : data.targets.indices) {
+      lambdas.get(target) | shape, rate ~ Gamma(shape, rate)
+    }
+        
+    for (Index<Integer> target : data.targets.indices) {
+      
+      pis.get(target) ~ ContinuousUniform(0.0, 1.0)
+      r1s.get(target) | vagueRate ~ Exponential(vagueRate)
+      alpha1s.get(target) | vagueRate ~ Exponential(vagueRate)
+      beta1s.get(target) | vagueRate ~ Exponential(vagueRate)
+      
+      r2s.get(target) | vagueRate ~ Exponential(vagueRate)
+      alpha2s.get(target) | vagueRate ~ Exponential(vagueRate)
+      beta2s.get(target) | vagueRate ~ Exponential(vagueRate)
+       
+      for (Index<String> experiment : data.experiments.indices(target)) {
+        data.histograms.get(target, experiment) |
+          RealVar lambda = lambdas.get(target), 
+          IntVar initialPopCount = initialPopCounts.get(target),
+          Supplier<IntDistribution> dist = {
+            val pi = pis.get(target)
+            val r1 = r1s.get(target)
+            val alpha1 = alpha1s.get(target)
+            val beta1 = beta1s.get(target)
+            
+            val r2 = r2s.get(target)
+            val alpha2 = alpha2s.get(target)
+            val beta2 = beta2s.get(target)
+
+            val lambda = lambdas.get(target)
+            val initialPopCount = initialPopCounts.get(target)
+            val Supplier<IntDistribution> result = 
+            [IntMixture::distribution({
+                if (pi < 0.0 || pi > 1.0) invalidParameter
+                fixedSimplex(#[pi, 1.0 - pi])
+              }, #[ 
+                BetaNegativeBinomial::distribution(r1, alpha1, beta1), 
+                BetaNegativeBinomial::distribution(r2, alpha2, beta2)
+              ]
+            )]
+            
+            // register visible clone number monitors
+            visibleCloneNumbers.get(target, DistributionSummary::modelIndex).init[
+              val p0 = Math.exp(result.get.logDensity(0))
+              return (1.0 - p0) * initialPopCount * lambda
+            ]
+            val observedHist = data.histograms.get(target, experiment)
+            val dataVisibleCloneNumbers = observedHist.nDataPoints
+            visibleCloneNumbers.get(target, DistributionSummary::dataIndex).init[dataVisibleCloneNumbers]
+            
+            // register truncated mean monitors
+            truncatedMeans.get(target, DistributionSummary::modelIndex).init[
+              DistributionSummary::mean(DistributionSummary::truncatedNormalizedCounter(result.get))
+            ]
+            val dataCloneTM = DistributionSummary::mean(DistributionSummary::truncatedNormalizedCounter(observedHist))
+            truncatedMeans.get(target, DistributionSummary::dataIndex).init[ dataCloneTM ]
+            
+            return result
+          }
+        ~ CensoredExchangeableCounts(dist.get, initialPopCount * lambda)   
+      }   
+    }
+  }
+}
