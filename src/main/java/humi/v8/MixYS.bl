@@ -3,6 +3,7 @@ package humi.v8
 import humi.HumiData
 import humi.IntMixture
 import humi.Monitor
+import java.util.function.Supplier
 
 model MixYS { 
   param HumiData data
@@ -31,24 +32,24 @@ model MixYS {
         data.histograms.get(target, experiment) |
           RealVar lambda = lambdas.get(experiment), 
           IntVar initialPopCount = initialPopCounts.get(target),
-          IntDistribution dist = {
+          Supplier<IntDistribution> dist = {
             val pi = pis.get(target)
             val rho1 = rho1s.get(target)
             val rho2 = rho2s.get(target)
             val lambda = lambdas.get(experiment)
             val initialPopCount = initialPopCounts.get(target)
-            val result = IntMixture::distribution({
+            val Supplier<IntDistribution> result = [IntMixture::distribution({
               if (pi < 0.0 || pi > 1.0) invalidParameter
               fixedSimplex(#[pi, 1.0 - pi])
             }, #[ 
                 YuleSimon::distribution(rho1), 
                 YuleSimon::distribution(rho2)
               ]
-            )
+            )]
             
             // register visible clone number monitors
             visibleCloneNumbers.get(target, DistributionSummary::modelIndex).init[
-              val p0 = Math.exp(result.logDensity(0))
+              val p0 = Math.exp(result.get.logDensity(0))
               return (1.0 - p0) * initialPopCount * lambda
             ]
             val observedHist = data.histograms.get(target, experiment)
@@ -57,14 +58,14 @@ model MixYS {
             
             // register truncated mean monitors
             truncatedMeans.get(target, DistributionSummary::modelIndex).init[
-              DistributionSummary::mean(DistributionSummary::truncatedNormalizedCounter(result))
+              DistributionSummary::mean(DistributionSummary::truncatedNormalizedCounter(result.get))
             ]
             val dataCloneTM = DistributionSummary::mean(DistributionSummary::truncatedNormalizedCounter(observedHist))
             truncatedMeans.get(target, DistributionSummary::dataIndex).init[ dataCloneTM ]
             
             return result
           }
-        ~ CensoredExchangeableCounts(dist, initialPopCount * lambda)   
+        ~ CensoredExchangeableCounts(dist.get, initialPopCount * lambda)   
       }   
     }
   }
