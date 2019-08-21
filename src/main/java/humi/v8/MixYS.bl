@@ -7,8 +7,7 @@ import humi.Monitor
 model MixYS { 
   param HumiData data
   param Plated<IntVar> initialPopCounts
-  random Plated<RealVar> rho1s, rho2s
-  random Plated<DenseSimplex> pis ?: Plated::latent("pis", [latentSimplex(2)])
+  random Plated<RealVar> rs, alphas, betas
     
   random Plated<RealVar> lambdas
     
@@ -24,26 +23,22 @@ model MixYS {
         
     for (Index<Integer> target : data.targets.indices.filter[key == 8]) {
       
-      pis.get(target) ~ SimplexUniform(2)
-      rho1s.get(target) | vagueRate ~ Exponential(vagueRate)
-      rho2s.get(target) | vagueRate ~ Exponential(vagueRate)
+      rs.get(target) | vagueRate ~ Exponential(vagueRate)
+      alphas.get(target) | vagueRate ~ Exponential(vagueRate)
+      betas.get(target) | vagueRate ~ Exponential(vagueRate)
        
       for (Index<String> experiment : data.experiments.indices(target)) {
         data.histograms.get(target, experiment) |
           RealVar lambda = lambdas.get(experiment), 
           IntVar initialPopCount = initialPopCounts.get(target),
           IntDistribution dist = {
-            val pi = pis.get(target)
-            val rho1 = rho1s.get(target)
-            val rho2 = rho2s.get(target)
+            val r = rs.get(target)
+            val alpha = alphas.get(target)
+            val beta = betas.get(target)
             val lambda = lambdas.get(experiment)
             val initialPopCount = initialPopCounts.get(target)
-            val result = IntMixture::distribution(pi, #[ 
-                YuleSimon::distribution(rho1), 
-                YuleSimon::distribution(rho2)
-              ]
-            )
-            
+            val result = BetaNegativeBinomial::distribution(r, alpha, beta)
+
             // register visible clone number monitors
             visibleCloneNumbers.get(target, DistributionSummary::modelIndex).init[
               val p0 = Math.exp(result.logDensity(0))
