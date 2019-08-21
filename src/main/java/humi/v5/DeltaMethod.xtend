@@ -19,8 +19,8 @@ class DeltaMethod extends Experiment {
   @Arg HumiData data
   @Arg Plated<Integer> initialPopCounts
   
-  @Arg                  @DefaultValue("0.95")
-  public double winsorizedTailCutoff = 0.95
+  @Arg                  @DefaultValue("0.99")
+  public double winsorizedTailCutoff = 0.99
 
   @Arg           @DefaultValue("1.96")
   public double criticalValue = 1.96  

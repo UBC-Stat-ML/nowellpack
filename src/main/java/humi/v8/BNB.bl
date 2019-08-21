@@ -9,7 +9,7 @@ model BNB {
   random Plated<RealVar> rs, alphas, betas
   random Plated<RealVar> lambdas
   random RealVar shape ?: latentReal, rate ?: latentReal
-  random Plated<Monitor> visibleCloneNumbers, truncatedMeans, winsorizedMeans
+  random Plated<Monitor> visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans
   param RealVar vagueRate ?: 0.01
   
   laws {
@@ -33,7 +33,7 @@ model BNB {
             val Supplier<IntDistribution> result = [BetaNegativeBinomial::distribution(r, alpha, beta)]
             val lambda = lambdas.get(target)
             DistributionSummary::registerMonitors(
-              visibleCloneNumbers, truncatedMeans, winsorizedMeans, target, result, 
+              visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans, target, result, 
               initialPopCounts, lambda, data, experiment
             )
             return result

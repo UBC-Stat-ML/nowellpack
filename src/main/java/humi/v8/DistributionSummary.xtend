@@ -30,6 +30,7 @@ class DistributionSummary {
     Plated<Monitor> visibleCloneNumbers, 
     Plated<Monitor> truncatedMeans, 
     Plated<Monitor> winsorizedMeans,
+    Plated<Monitor> conditionalWinsorizedMeans,
     Index<Integer> target,
     Supplier<IntDistribution> dist,
     Plated<IntVar> initialPopCounts,
@@ -65,6 +66,34 @@ class DistributionSummary {
         return winsorizedMean(dist.get, winsorizationP)
       }
     })
+    
+    // conditional version 
+    conditionalWinsorizedMeans.get(target).init(new RealVar() {
+      override doubleValue() {
+        return conditionalWinsorizedMean(dist.get, winsorizationP)
+      }
+    })
+  }
+  
+  def static double conditionalWinsorizedMean(IntDistribution distribution, double p) {
+    if (p < 0.5 || p > 1.0) throw new RuntimeException
+    var sum = 0.0
+    var x = 0
+    val normalization = 1.0 - Math::exp(distribution.logDensity(0))
+    while (sum/normalization < p) {
+      x++  
+      sum += Math::exp(distribution.logDensity(x))
+    }
+    val cutOff = x
+    var result = 0.0
+    var mass = 0.0
+    for (y : 0 ..< cutOff) {
+      val currentMass = Math::exp(distribution.logDensity(y))
+      mass += currentMass
+      result += y * currentMass
+    }
+    result += cutOff * (1.0 - mass)
+    return result
   }
   
   def static double winsorizedMean(IntDistribution distribution, double p) {

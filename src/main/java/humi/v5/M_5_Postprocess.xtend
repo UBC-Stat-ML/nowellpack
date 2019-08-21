@@ -21,6 +21,7 @@ import briefj.BriefIO
 import blang.distributions.YuleSimon
 import humi.HumiStaticUtils
 import blang.inits.parsing.Posix
+import humi.v8.DistributionSummary
 
 class M_5_Postprocess extends Experiment {
   
@@ -115,7 +116,7 @@ class M_5_Postprocess extends Experiment {
           }
         }
       }
-      result.add(conditionalWinsorizedMean(mix(dists), winsorizedTailCutoff))
+      result.add(DistributionSummary::conditionalWinsorizedMean(mix(dists), winsorizedTailCutoff))
     }
     return result
   }
@@ -130,31 +131,12 @@ class M_5_Postprocess extends Experiment {
     for (i : 0 ..< nIterations) {
       val key = i -> sgRNA
       val dist = samples.get(key)
-      result.add(conditionalWinsorizedMean(dist, winsorizedTailCutoff))
+      result.add(DistributionSummary::conditionalWinsorizedMean(dist, winsorizedTailCutoff))
     }
     return result
   }
   
-  def double conditionalWinsorizedMean(IntDistribution distribution, double p) {
-    if (p < 0.5 || p > 1.0) throw new RuntimeException
-    var sum = 0.0
-    var x = 0
-    val normalization = 1.0 - Math::exp(distribution.logDensity(0))
-    while (sum/normalization < p) {
-      x++  
-      sum += Math::exp(distribution.logDensity(x))
-    }
-    val cutOff = x
-    var result = 0.0
-    var mass = 0.0
-    for (y : 0 ..< cutOff) {
-      val currentMass = Math::exp(distribution.logDensity(y))
-      mass += currentMass
-      result += y * currentMass
-    }
-    result += cutOff * (1.0 - mass)
-    return result
-  }
+  
   
   override run() {
     load
