@@ -30,6 +30,7 @@ class DistributionSummary {
     Plated<Monitor> visibleCloneNumbers, 
     Plated<Monitor> truncatedMeans, 
     Plated<Monitor> winsorizedMeans,
+    Plated<Monitor> medians,
     Index<Integer> target,
     Supplier<IntDistribution> dist,
     Plated<IntVar> initialPopCounts,
@@ -65,6 +66,23 @@ class DistributionSummary {
         return winsorizedMean(dist.get, winsorizationP)
       }
     })
+    
+    // median
+    medians.get(target).init(new RealVar() {
+      override doubleValue() {
+        return median(dist.get)
+      }
+    })
+  }
+  
+  def static double median(IntDistribution distribution) {
+    var c = 0
+    var mass = 0.0
+    while (mass < 0.5) {
+      mass += Math::exp(distribution.logDensity(c))
+      c++
+    }
+    return c
   }
   
   def static double winsorizedMean(IntDistribution distribution, double p) {

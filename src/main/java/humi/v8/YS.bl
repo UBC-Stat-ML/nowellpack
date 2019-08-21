@@ -9,7 +9,7 @@ model YS {
   random Plated<RealVar> rhos
   random Plated<RealVar> lambdas
   random RealVar shape ?: latentReal, rate ?: latentReal
-  random Plated<Monitor> visibleCloneNumbers, truncatedMeans, winsorizedMeans
+  random Plated<Monitor> visibleCloneNumbers, truncatedMeans, winsorizedMeans, medians
   param RealVar vagueRate ?: 0.01
   
   laws {
@@ -29,7 +29,7 @@ model YS {
             val Supplier<IntDistribution> result = [YuleSimon::distribution(rho)]
             val lambda = lambdas.get(target)
             DistributionSummary::registerMonitors(
-              visibleCloneNumbers, truncatedMeans, winsorizedMeans, target, result, 
+              visibleCloneNumbers, truncatedMeans, winsorizedMeans, medians, target, result, 
               initialPopCounts, lambda, data, experiment
             )
             return result

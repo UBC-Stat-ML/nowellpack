@@ -10,7 +10,7 @@ model MixYS {
   random Plated<RealVar> rho1s, rho2s, pis
   random Plated<RealVar> lambdas
   random RealVar shape ?: latentReal, rate ?: latentReal
-  random Plated<Monitor> visibleCloneNumbers, truncatedMeans, winsorizedMeans
+  random Plated<Monitor> visibleCloneNumbers, truncatedMeans, winsorizedMeans, medians
   param RealVar vagueRate ?: 0.01
   
   laws {
@@ -42,7 +42,7 @@ model MixYS {
             )]
             val lambda = lambdas.get(target)
             DistributionSummary::registerMonitors(
-              visibleCloneNumbers, truncatedMeans, winsorizedMeans, target, result, 
+              visibleCloneNumbers, truncatedMeans, winsorizedMeans, medians, target, result, 
               initialPopCounts, lambda, data, experiment
             )
             return result
