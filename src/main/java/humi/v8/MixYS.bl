@@ -8,7 +8,6 @@ import java.util.function.Supplier
 model MixYS { 
   param HumiData data
   param Plated<IntVar> initialPopCounts
-  param Double epsilon ?: 0.0
   random Plated<RealVar> rho1s, rho2s, pis
     
   random Plated<RealVar> lambdas
@@ -29,7 +28,7 @@ model MixYS {
         
     for (Index<Integer> target : data.targets.indices) {
       
-      pis.get(target) | epsilon ~ ContinuousUniform(0.0 + epsilon, 1.0 - epsilon)
+      pis.get(target) ~ ContinuousUniform(0.0, 1.0)
       rho1s.get(target) | vagueRate ~ Exponential(vagueRate)
       rho2s.get(target) | vagueRate ~ Exponential(vagueRate)
        
