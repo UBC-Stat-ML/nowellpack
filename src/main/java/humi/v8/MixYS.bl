@@ -18,8 +18,10 @@ model MixYS {
   
   laws {
     
-    for (Index<String> experiment : data.experiments.indices) {
-      lambdas.get(experiment) | vagueRate ~ Exponential(vagueRate)
+    for (Index<Integer> target : data.targets.indices) {
+      for (Index<String> experiment : data.experiments.indices) {
+        lambdas.get(experiment, target) | vagueRate ~ Exponential(vagueRate)
+      }
     }
         
     for (Index<Integer> target : data.targets.indices) {
@@ -30,13 +32,13 @@ model MixYS {
        
       for (Index<String> experiment : data.experiments.indices(target)) {
         data.histograms.get(target, experiment) |
-          RealVar lambda = lambdas.get(experiment), 
+          RealVar lambda = lambdas.get(experiment, target), 
           IntVar initialPopCount = initialPopCounts.get(target),
           IntDistribution dist = {
             val pi = pis.get(target)
             val rho1 = rho1s.get(target)
             val rho2 = rho2s.get(target)
-            val lambda = lambdas.get(experiment)
+            val lambda = lambdas.get(experiment, target)
             val initialPopCount = initialPopCounts.get(target)
             val result = IntMixture::distribution(pi, #[ 
                 YuleSimon::distribution(rho1), 
