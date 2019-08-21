@@ -24,7 +24,7 @@ class DistributionSummary {
   public static Index<String> modelIndex = new Index(description, modelString)
   
   static val cutoff = 20
-  static val winsorizationP = 0.95
+  static val winsorizationP = 0.99
   
   def static registerMonitors(
     Plated<Monitor> visibleCloneNumbers, 
