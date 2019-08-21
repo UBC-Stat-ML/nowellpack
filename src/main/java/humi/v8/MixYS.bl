@@ -21,7 +21,7 @@ model MixYS {
       lambdas.get(experiment) | vagueRate ~ Exponential(vagueRate)
     }
         
-    for (Index<Integer> target : data.targets.indices.filter[key == 8]) {
+    for (Index<Integer> target : data.targets.indices) {
       
       pis.get(target) ~ ContinuousUniform(0.2, 0.8)
       rho1s.get(target) | vagueRate ~ Exponential(vagueRate)
