@@ -10,7 +10,7 @@ model MixBNB {
   random Plated<RealVar> r1s, alpha1s, beta1s, r2s, alpha2s, beta2s, pis
   random Plated<RealVar> lambdas
   random RealVar shape ?: latentReal, rate ?: latentReal
-  random Plated<Monitor> visibleCloneNumbers, truncatedMeans, winsorizedMeans, medians
+  random Plated<Monitor> visibleCloneNumbers, truncatedMeans, winsorizedMeans
   param RealVar vagueRate ?: 0.01
   
   laws {
@@ -50,7 +50,7 @@ model MixBNB {
             )]
             val lambda = lambdas.get(target)
             DistributionSummary::registerMonitors(
-              visibleCloneNumbers, truncatedMeans, winsorizedMeans, medians, target, result, 
+              visibleCloneNumbers, truncatedMeans, winsorizedMeans, target, result, 
               initialPopCounts, lambda, data, experiment
             )
             return result
