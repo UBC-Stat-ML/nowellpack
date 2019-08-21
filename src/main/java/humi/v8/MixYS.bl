@@ -24,7 +24,7 @@ model MixYS {
         
     for (Index<Integer> target : data.targets.indices) {
       
-      pis.get(target) ~ ContinuousUniform(0.0, 1.0)
+      pis.get(target) ~ ContinuousUniform(0.1, 0.9)
       rho1s.get(target) | vagueRate ~ Exponential(vagueRate)
       rho2s.get(target) | vagueRate ~ Exponential(vagueRate)
        
