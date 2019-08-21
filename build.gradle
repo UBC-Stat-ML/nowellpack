@@ -7,9 +7,9 @@ plugins {
 }
 
 dependencies {
-  xtextLanguages "ca.ubc.stat.blang:ca.ubc.stat.blang:3.25.2"
+  xtextLanguages "ca.ubc.stat.blang:ca.ubc.stat.blang:4.0.1"
   compile group: 'ca.ubc.stat', name: 'conifer', version: '2.0.4'
-  compile group: 'ca.ubc.stat', name: 'blangSDK', version: '1.31.2'
+  compile group: 'ca.ubc.stat', name: 'blangSDK', version: '2.0.0'
   compile group: 'ca.ubc.stat', name: 'bayonet', version: '4.1.0'
   compile group: 'ca.ubc.stat', name: 'conifer', version: '2.0.4'
   compile group: 'ca.ubc.stat', name: 'pxviz', version: '1.1.0'
@@ -86,14 +86,8 @@ createScript(project, 'corrupt.post.NoiseEstimator',    'corrupt-noise-estimate'
 createScript(project, 'corrupt.post.RankLoci',          'corrupt-rank-loci')
 createScript(project, 'corrupt.GrowTree',               'corrupt-grow')
 
-createScript(project, 'humi.Humi',                      'humi-run')
-createScript(project, 'humi.HumiWithInitialPop',        'humi-withInitPop')
-createScript(project, 'humi.HumiYuleWithInitialPop',    'humi-yuleWithInitPop')
-createScript(project, 'humi.HumiExpYuleWithInitialPop', 'humi-expYuleWithInitPop')
-createScript(project, 'humi.HumiIndicExpYule',          'humi-indicExpYule')
 createScript(project, 'humi.Preprocess',                'humi-preprocess')
 createScript(project, 'humi.v5.DeltaMethod',            'humi-delta')
-createScript(project, 'humi.v5.M_5_Postprocess',        'humi-postprocess')
 createScript(project, 'humi.posets.Intervals2Poset',    'humi-poset')
 createScript(project, 'humi.posets.ComparePosets',      'humi-compare-posets')
 
