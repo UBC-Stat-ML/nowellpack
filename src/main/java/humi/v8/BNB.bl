@@ -4,10 +4,10 @@ import humi.HumiData
 import humi.Monitor
 import java.util.function.Supplier
 
-model NB { 
+model BNB { 
   param HumiData data
   param Plated<IntVar> initialPopCounts
-  random Plated<RealVar> means, ods
+  random Plated<RealVar> rs, alphas, betas
     
   random Plated<RealVar> lambdas
   random RealVar shape ?: latentReal, rate ?: latentReal
@@ -27,19 +27,21 @@ model NB {
         
     for (Index<Integer> target : data.targets.indices) {
       
-      means.get(target) | vagueRate ~ Exponential(vagueRate)
-      ods.get(target) | vagueRate ~ Exponential(vagueRate)
+      rs.get(target) | vagueRate ~ Exponential(vagueRate)
+      alphas.get(target) | vagueRate ~ Exponential(vagueRate)
+      betas.get(target) | vagueRate ~ Exponential(vagueRate)
        
       for (Index<String> experiment : data.experiments.indices(target)) {
         data.histograms.get(target, experiment) |
           RealVar lambda = lambdas.get(target), 
           IntVar initialPopCount = initialPopCounts.get(target),
           Supplier<IntDistribution> dist = {
-            val mean = means.get(target)
-            val od = ods.get(target)
+            val r = rs.get(target)
+            val alpha = alphas.get(target)
+            val beta = betas.get(target)
             val lambda = lambdas.get(target)
             val initialPopCount = initialPopCounts.get(target)
-            val Supplier<IntDistribution> result = [NegativeBinomialMeanParam::distribution(mean, od)]
+            val Supplier<IntDistribution> result = [BetaNegativeBinomial::distribution(r, alpha, beta)]
             
             // register visible clone number monitors
             visibleCloneNumbers.get(target, DistributionSummary::modelIndex).init[
