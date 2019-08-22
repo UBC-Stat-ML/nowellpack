@@ -1,4 +1,4 @@
-package humi.v5
+package humi.freq
 
 import bayonet.smc.ParticlePopulation
 import bayonet.smc.ResamplingScheme

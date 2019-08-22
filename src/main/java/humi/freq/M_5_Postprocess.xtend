@@ -1,4 +1,4 @@
-package humi.v5
+package humi.freq
 
 import blang.core.IntDistribution
 import java.util.Map
@@ -7,7 +7,7 @@ import java.util.List
 import java.util.ArrayList
 import java.util.Collections
 import blang.inits.experiments.Experiment
-import humi.v5.DeltaMethod.Columns
+import humi.freq.DeltaMethod.Columns
 import blang.inits.Arg
 import humi.HumiData
 import blang.types.Index
@@ -21,7 +21,7 @@ import briefj.BriefIO
 import blang.distributions.YuleSimon
 import humi.HumiStaticUtils
 import blang.inits.parsing.Posix
-import humi.v8.DistributionSummary
+import humi.DistributionSummary
 
 class M_5_Postprocess extends Experiment {
   

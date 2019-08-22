@@ -1,13 +1,13 @@
-package humi.v8
+package humi.models
 import humi.HumiData
-import humi.IntMixture
 import humi.Monitor
 import java.util.function.Supplier
+import humi.DistributionSummary
 
-model MixYS { 
+model YS { 
   param HumiData data
   param Plated<IntVar> initialPopCounts
-  random Plated<RealVar> rho1s, rho2s, pis
+  random Plated<RealVar> rhos
   random Plated<RealVar> lambdas
   random RealVar shape ?: latentReal, rate ?: latentReal
   random Plated<Monitor> visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans
@@ -20,26 +20,14 @@ model MixYS {
       lambdas.get(target) | shape, rate ~ Gamma(shape, rate)
     }
     for (Index<Integer> target : data.targets.indices) {
-      pis.get(target) ~ ContinuousUniform(0.0, 1.0)
-      rho1s.get(target) | vagueRate ~ Exponential(vagueRate)
-      rho2s.get(target) | vagueRate ~ Exponential(vagueRate)
+      rhos.get(target) | vagueRate ~ Exponential(vagueRate)
       for (Index<String> experiment : data.experiments.indices(target)) {
         data.histograms.get(target, experiment) |
           RealVar lambda = lambdas.get(target), 
           IntVar initialPopCount = initialPopCounts.get(target),
           Supplier<IntDistribution> dist = {
-            val pi = pis.get(target)
-            val rho1 = rho1s.get(target)
-            val rho2 = rho2s.get(target)
-            val Supplier<IntDistribution> result = 
-            [IntMixture::distribution({
-                if (pi < 0.0 || pi > 1.0) invalidParameter
-                fixedSimplex(#[pi, 1.0 - pi])
-              }, #[ 
-                YuleSimon::distribution(rho1), 
-                YuleSimon::distribution(rho2)
-              ]
-            )]
+            val rho = rhos.get(target)
+            val Supplier<IntDistribution> result = [YuleSimon::distribution(rho)]
             val lambda = lambdas.get(target)
             DistributionSummary::registerMonitors(
               visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans, target, result, 

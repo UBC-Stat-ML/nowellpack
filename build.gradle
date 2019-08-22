@@ -87,7 +87,7 @@ createScript(project, 'corrupt.post.RankLoci',          'corrupt-rank-loci')
 createScript(project, 'corrupt.GrowTree',               'corrupt-grow')
 
 createScript(project, 'humi.Preprocess',                'humi-preprocess')
-createScript(project, 'humi.v5.DeltaMethod',            'humi-delta')
+createScript(project, 'humi.freq.DeltaMethod',          'humi-delta')
 createScript(project, 'humi.posets.Intervals2Poset',    'humi-poset')
 createScript(project, 'humi.posets.ComparePosets',      'humi-compare-posets')
 

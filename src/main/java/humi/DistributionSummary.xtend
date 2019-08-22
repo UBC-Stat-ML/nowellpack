@@ -1,4 +1,4 @@
-package humi.v8
+package humi
 
 import blang.core.IntDistribution
 import blang.types.Index

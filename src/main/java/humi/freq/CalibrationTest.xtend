@@ -1,4 +1,4 @@
-package humi.v5
+package humi.freq
 
 import blang.inits.experiments.Experiment
 import blang.inits.parsing.Posix

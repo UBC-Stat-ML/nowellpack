@@ -6,7 +6,7 @@ import humi.HumiStaticUtils
 import java.io.File
 import java.util.LinkedHashSet
 import briefj.BriefIO
-import humi.v5.DeltaMethod
+import humi.freq.DeltaMethod
 import blang.inits.Arg
 import blang.inits.DefaultValue
 import java.util.LinkedHashMap

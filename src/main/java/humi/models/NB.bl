@@ -1,7 +1,8 @@
-package humi.v8
+package humi.models
 import humi.HumiData
 import humi.Monitor
 import java.util.function.Supplier
+import humi.DistributionSummary
 
 model NB { 
   param HumiData data

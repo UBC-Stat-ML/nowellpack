@@ -1,4 +1,4 @@
-package humi.v5
+package humi.freq
 
 import binc.Command
 import blang.inits.Arg

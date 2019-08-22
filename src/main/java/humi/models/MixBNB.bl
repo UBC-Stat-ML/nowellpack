@@ -1,12 +1,14 @@
-package humi.v8
+package humi.models
 import humi.HumiData
+import humi.IntMixture
 import humi.Monitor
 import java.util.function.Supplier
+import humi.DistributionSummary
 
-model BNB { 
+model MixBNB { 
   param HumiData data
   param Plated<IntVar> initialPopCounts
-  random Plated<RealVar> rs, alphas, betas
+  random Plated<RealVar> r1s, alpha1s, beta1s, r2s, alpha2s, beta2s, pis
   random Plated<RealVar> lambdas
   random RealVar shape ?: latentReal, rate ?: latentReal
   random Plated<Monitor> visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans
@@ -19,18 +21,34 @@ model BNB {
       lambdas.get(target) | shape, rate ~ Gamma(shape, rate)
     }
     for (Index<Integer> target : data.targets.indices) {
-      rs.get(target) | vagueRate ~ Exponential(vagueRate)
-      alphas.get(target) | vagueRate ~ Exponential(vagueRate)
-      betas.get(target) | vagueRate ~ Exponential(vagueRate)
+      pis.get(target) ~ ContinuousUniform(0.0, 1.0)
+      r1s.get(target) | vagueRate ~ Exponential(vagueRate)
+      alpha1s.get(target) | vagueRate ~ Exponential(vagueRate)
+      beta1s.get(target) | vagueRate ~ Exponential(vagueRate)
+      r2s.get(target) | vagueRate ~ Exponential(vagueRate)
+      alpha2s.get(target) | vagueRate ~ Exponential(vagueRate)
+      beta2s.get(target) | vagueRate ~ Exponential(vagueRate)
       for (Index<String> experiment : data.experiments.indices(target)) {
         data.histograms.get(target, experiment) |
           RealVar lambda = lambdas.get(target), 
           IntVar initialPopCount = initialPopCounts.get(target),
           Supplier<IntDistribution> dist = {
-            val r = rs.get(target)
-            val alpha = alphas.get(target)
-            val beta = betas.get(target)
-            val Supplier<IntDistribution> result = [BetaNegativeBinomial::distribution(r, alpha, beta)]
+            val pi = pis.get(target)
+            val r1 = r1s.get(target)
+            val alpha1 = alpha1s.get(target)
+            val beta1 = beta1s.get(target)
+            val r2 = r2s.get(target)
+            val alpha2 = alpha2s.get(target)
+            val beta2 = beta2s.get(target)
+            val Supplier<IntDistribution> result = 
+            [IntMixture::distribution({
+                if (pi < 0.0 || pi > 1.0) invalidParameter
+                fixedSimplex(#[pi, 1.0 - pi])
+              }, #[ 
+                BetaNegativeBinomial::distribution(r1, alpha1, beta1), 
+                BetaNegativeBinomial::distribution(r2, alpha2, beta2)
+              ]
+            )]
             val lambda = lambdas.get(target)
             DistributionSummary::registerMonitors(
               visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans, target, result, 
