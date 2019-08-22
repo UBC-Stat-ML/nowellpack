@@ -11,7 +11,7 @@ model MixYS {
   random Plated<RealVar> rho1s, rho2s, pis
   random Plated<RealVar> lambdas
   random RealVar shape ?: latentReal, rate ?: latentReal
-  random Plated<Monitor> visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans
+  random Plated<Monitor> visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans /* do not change this variable name - see HumiPostProcessor */
   param RealVar vagueRate ?: 0.01
   
   laws {

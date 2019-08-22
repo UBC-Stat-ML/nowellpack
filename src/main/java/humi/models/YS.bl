@@ -10,7 +10,7 @@ model YS {
   random Plated<RealVar> rhos
   random Plated<RealVar> lambdas
   random RealVar shape ?: latentReal, rate ?: latentReal
-  random Plated<Monitor> visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans
+  random Plated<Monitor> visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans /* do not change this variable name - see HumiPostProcessor */
   param RealVar vagueRate ?: 0.01
   
   laws {

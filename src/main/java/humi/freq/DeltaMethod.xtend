@@ -1,19 +1,16 @@
 package humi.freq
 
-import binc.Command
 import blang.inits.Arg
 import blang.inits.DefaultValue
 import blang.inits.experiments.Experiment
 import blang.inits.parsing.Posix
 import blang.types.Index
 import blang.types.Plated
-import briefj.BriefIO
 import humi.CountFrequencies
 import humi.HumiData
 import humi.HumiStaticUtils
 import java.util.ArrayList
 import java.util.Collections
-import blang.inits.experiments.ExperimentResults
 
 class DeltaMethod extends Experiment {
   @Arg HumiData data
@@ -30,7 +27,7 @@ class DeltaMethod extends Experiment {
   
   override run() {
     compute
-    plot(results, data, rCmd, true, "Delta-method intervals")
+    HumiStaticUtils::plotIntervals(results, data, rCmd, true, "Delta-method intervals")
   }
   
   static enum Columns { logRatio, logRatioLeftBound,  logRatioRightBound}
@@ -59,30 +56,6 @@ class DeltaMethod extends Experiment {
         }
     }
     results.flushAll
-  }
-  
-  def static plot(ExperimentResults results, HumiData data, String rCmd, boolean expSpecific, String caption) {
-    val plotResults = results.child("plots")
-    val scriptFile = plotResults.getFileInResultFolder("script.r")
-    BriefIO::write(scriptFile, '''
-      require("ggplot2")
-      data <- read.csv("«results.getFileInResultFolder("estimates.csv").absolutePath»")
-      cols = rainbow(200, s=.6, v=.9)[sample(1:200,200)]
-      p <- ggplot(data, aes(x = factor(«data.genes.name»), y = «Columns::logRatio», colour = factor(«data.targets.name»))) + 
-        coord_flip() + 
-        geom_errorbar(aes(ymin=«Columns::logRatioLeftBound», ymax=«Columns::logRatioRightBound»)) +
-        geom_point() + 
-        «IF expSpecific»facet_grid(. ~ «data.experiments.name») + «ENDIF»
-        theme_bw() + 
-        xlab("Gene") + 
-        ylab("log(ratio)") + 
-        ggtitle("Ratio of clone sizes relative to controls", subtitle = "«caption»") + 
-        scale_colour_manual(values=cols) + 
-        geom_hline(yintercept=0) + 
-        theme(legend.position="none") 
-      ggsave("«plotResults.getFileInResultFolder("intevals.pdf").absolutePath»", height = 10)
-    ''')
-    Command.call(Command.cmd(rCmd).appendArg(scriptFile.getAbsolutePath()))
   }
   
   def controlFGRatio(Index<String> experiment) {

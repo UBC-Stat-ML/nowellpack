@@ -1,57 +1,42 @@
 package humi
 
-import blang.types.Plated
-import blang.types.Index
-import blang.types.StaticUtils
-import blang.core.RealVar
-import java.util.List
-import java.util.ArrayList
-import blang.distributions.NegativeBinomialMeanParam
-import blang.core.IntDistribution
-import blang.core.IntVar
-
 import blang.inits.Creator
 import blang.inits.Creators
 import blang.inits.providers.CoreProviders
 import blang.io.Parsers
 import blang.io.internals.GlobalDataSourceStore
 import blang.inits.experiments.ParsingConfigs
+import blang.inits.experiments.ExperimentResults
+import briefj.BriefIO
+import humi.freq.DeltaMethod.Columns
+import binc.Command
 
 class HumiStaticUtils {
   
-  def static List<IntVar> controlIndicatorsList(HumiData data, Plated<IntVar> controlIndicators) {
-    // extract indicators for the controls
-    val indicators = new ArrayList<IntVar>
-    for (Index<String> gene : data.genes.indices.filter[data.isControl(it)]) {
-      for (Index<Integer> target : data.targets.indices(gene)) {
-        indicators.add(controlIndicators.get(target))
-      }
-    }
-    return indicators
+  def static plotIntervals(ExperimentResults results, HumiData data, String rCmd, boolean expSpecific, String caption) {
+    val plotResults = results.child("plots")
+    val scriptFile = plotResults.getFileInResultFolder("script.r")
+    BriefIO::write(scriptFile, '''
+      require("ggplot2")
+      data <- read.csv("«results.getFileInResultFolder("estimates.csv").absolutePath»")
+      cols = rainbow(200, s=.6, v=.9)[sample(1:200,200)]
+      p <- ggplot(data, aes(x = factor(«data.genes.name»), y = «Columns::logRatio», colour = factor(«data.targets.name»))) + 
+        coord_flip() + 
+        geom_errorbar(aes(ymin=«Columns::logRatioLeftBound», ymax=«Columns::logRatioRightBound»)) +
+        geom_point() + 
+        «IF expSpecific»facet_grid(. ~ «data.experiments.name») + «ENDIF»
+        theme_bw() + 
+        xlab("Gene") + 
+        ylab("log(ratio)") + 
+        ggtitle("Ratio of clone sizes relative to controls", subtitle = "«caption»") + 
+        scale_colour_manual(values=cols) + 
+        geom_hline(yintercept=0) + 
+        theme(legend.position="none") 
+      ggsave("«plotResults.getFileInResultFolder("intevals.pdf").absolutePath»", height = 10)
+    ''')
+    Command.call(Command.cmd(rCmd).appendArg(scriptFile.getAbsolutePath()))
   }
-  
-  def static double logPoissonCensoringFormula(double poissonRate, int numberGreaterThanZero, double probabilityForOneZero) {
-    return 
-        numberGreaterThanZero * Math::log(poissonRate) 
-      + (probabilityForOneZero - 1.0) * poissonRate 
-      - StaticUtils::logFactorial(numberGreaterThanZero)
-  }
-  
-  def static RealVar orOneIfControl(Plated<RealVar> targets, String controlPrefix, Index<String> gene, Index<Integer> target) {
-    val geneName = gene.key
-    if (geneName.startsWith(controlPrefix))
-      return StaticUtils::fixedReal(1.0)
-    else
-      return targets.get(gene, target)
-  }
-  
-  def static nbMix(RealVar rate, List<RealVar> means, List<RealVar> overds) {
-    val result = new ArrayList<IntDistribution>
-    for (i : 0 ..< means.size)
-      result.add(NegativeBinomialMeanParam::distribution([means.get(i).doubleValue * rate.doubleValue], overds.get(i)))
-    return result
-  }
-  
+
   // TODO: move to Blang SDK
   def static parsingConfigs() {
     val Creator creator = Creators::empty()
