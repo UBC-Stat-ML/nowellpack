@@ -15,10 +15,16 @@ import org.apache.commons.math3.stat.descriptive.SummaryStatistics
 import blang.types.Index
 import humi.freq.DeltaMethod.Columns
 import java.util.Collections
+import blang.inits.DefaultValue
+import blang.inits.experiments.Experiment
+import blang.inits.parsing.Posix
 
 class HumiPostProcessor extends DefaultPostProcessor {
   
-  @Arg HumiData data
+  @Arg public HumiData data
+  
+  @Arg                @DefaultValue("0.9")
+  public double credibleIntervalPr = 0.9
   
   var nIterations = 0
   
@@ -47,9 +53,12 @@ class HumiPostProcessor extends DefaultPostProcessor {
   
   def credibleIntervals(Index<Integer> sgRNA, Index<String> gene, List<Double> values) {
     Collections.sort(values)
-    val int left = (0.025 * values.size) as int
+    if (credibleIntervalPr < 0.0 || credibleIntervalPr > 1.0) 
+      throw new RuntimeException
+    val a = 1.0 - credibleIntervalPr
+    val int left = ((a/2.0) * values.size) as int
     val int middle = (0.5 * values.size) as int
-    val int right = (0.975 * values.size) as int
+    val int right = ((1.0 - (a/2)) * values.size) as int
     results.getTabularWriter("estimates").write(
       sgRNA.plate.name -> sgRNA.key,
       gene.plate.name -> gene.key,
@@ -93,5 +102,7 @@ class HumiPostProcessor extends DefaultPostProcessor {
     return result
   }
   
-  
+  def static void main(String [] args) {
+    Experiment::start(args, Posix::parse(args), HumiStaticUtils::parsingConfigs)
+  }
 }
