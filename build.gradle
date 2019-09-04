@@ -91,6 +91,12 @@ createScript(project, 'humi.freq.DeltaMethod',          'humi-delta')
 createScript(project, 'humi.posets.Intervals2Poset',    'humi-poset')
 createScript(project, 'humi.posets.ComparePosets',      'humi-compare-posets')
 
+createScript(project, 'humi.models.BNB',      'humi-bnb')
+createScript(project, 'humi.models.MixBNB',   'humi-mixbnb')
+createScript(project, 'humi.models.MixYS',    'humi-mixys')
+createScript(project, 'humi.models.NB',       'humi-nb')
+createScript(project, 'humi.models.YS',       'humi-ys')
+
 uploadArchives {
   repositories {
     mavenDeployer {
