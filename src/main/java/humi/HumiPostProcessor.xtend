@@ -32,7 +32,15 @@ class HumiPostProcessor extends DefaultPostProcessor {
     super.run
     computeIntervals
     results.flushAll
+    // GoF diagnostic summary
+    gofSummary
+    // intervals
     HumiStaticUtils::plotIntervals(results, data, rCmd, false, "Bayesian hierarchical model credible intervals")
+    // TODO: poset
+  }
+  
+  def void gofSummary() {
+    
   }
   
   def void computeIntervals() {
