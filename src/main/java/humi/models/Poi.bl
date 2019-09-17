@@ -1,0 +1,42 @@
+package humi.models
+import humi.HumiData
+import humi.Monitor
+import java.util.function.Supplier
+import humi.DistributionSummary
+
+model Poi { 
+  param HumiData data
+  param Plated<IntVar> initialPopCounts
+  random Plated<RealVar> means
+  random Plated<RealVar> lambdas
+  random RealVar shape ?: latentReal, rate ?: latentReal
+  random Plated<Monitor> visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans /* do not change this variable name - see HumiPostProcessor */
+  param RealVar vagueRate ?: 0.01
+  
+  laws {
+    shape | vagueRate ~ Exponential(vagueRate)
+    rate | vagueRate ~ Exponential(vagueRate)
+    for (Index<Integer> target : data.targets.indices) {
+      lambdas.get(target) | shape, rate ~ Gamma(shape, rate)
+    }
+    for (Index<Integer> target : data.targets.indices) {
+      means.get(target) | vagueRate ~ Exponential(vagueRate)
+      for (Index<String> experiment : data.experiments.indices(target)) {
+        data.histograms.get(target, experiment) |
+          RealVar lambda = lambdas.get(target), 
+          IntVar initialPopCount = initialPopCounts.get(target), 
+          Supplier<IntDistribution> dist = {
+            val mean = means.get(target)
+            val Supplier<IntDistribution> result = DistributionSummary::poi(mean)
+            val lambda = lambdas.get(target)
+            DistributionSummary::registerMonitors(
+              visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans, target, result, 
+              initialPopCounts, lambda, data, experiment
+            )
+            return result
+          }
+        ~ CensoredExchangeableCounts(dist.get, initialPopCount * lambda)   
+      }   
+    }
+  }
+}

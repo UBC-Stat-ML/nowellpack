@@ -18,6 +18,7 @@ import blang.distributions.BetaNegativeBinomial
 import blang.types.StaticUtils
 import blang.distributions.YuleSimon
 import blang.distributions.NegativeBinomialMeanParam
+import blang.distributions.Poisson
 
 class DistributionSummary {
   
@@ -175,6 +176,14 @@ class DistributionSummary {
     new Supplier<IntDistribution>() {
       override IntDistribution get() {
         return YuleSimon::distribution(rho)
+      }
+    }
+  }
+  
+  def static Supplier<IntDistribution> poi(RealVar mean) {
+    new Supplier<IntDistribution>() {
+      override IntDistribution get() {
+        return Poisson::distribution(mean)
       }
     }
   }
