@@ -1,5 +1,5 @@
 language: java
 script:
-   - gradle check -i
+   - ./gradlew check -i
 jdk:
   - openjdk8
