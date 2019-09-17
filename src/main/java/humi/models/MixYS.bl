@@ -32,15 +32,7 @@ model MixYS {
             val pi = pis.get(target)
             val rho1 = rho1s.get(target)
             val rho2 = rho2s.get(target)
-            val Supplier<IntDistribution> result = 
-            [IntMixture::distribution({
-                if (pi < 0.0 || pi > 1.0) invalidParameter
-                fixedSimplex(#[pi, 1.0 - pi])
-              }, #[ 
-                YuleSimon::distribution(rho1), 
-                YuleSimon::distribution(rho2)
-              ]
-            )]
+            val Supplier<IntDistribution> result = DistributionSummary::mixYs(pi, rho1, rho2)
             val lambda = lambdas.get(target)
             DistributionSummary::registerMonitors(
               visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans, target, result, 

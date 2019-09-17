@@ -31,7 +31,7 @@ model BNB {
             val r = rs.get(target)
             val alpha = alphas.get(target)
             val beta = betas.get(target)
-            val Supplier<IntDistribution> result = [BetaNegativeBinomial::distribution(r, alpha, beta)]
+            val Supplier<IntDistribution> result = DistributionSummary.bnb(r, alpha, beta)
             val lambda = lambdas.get(target)
             DistributionSummary::registerMonitors(
               visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans, target, result, 

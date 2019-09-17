@@ -40,7 +40,37 @@ class HumiPostProcessor extends DefaultPostProcessor {
   }
   
   def void gofSummary() {
+    val samplesDir = new File(blangExecutionDirectory.get, Runner::SAMPLES_FOLDER)
+    val truncMeansFile = new File(samplesDir, "truncatedMeans.csv")
+    val samples = new LinkedHashMap<Integer,List<Double>>
+    val references = new LinkedHashMap<Integer,Double>
+    for (line : BriefIO::readLines(truncMeansFile).indexCSV) {
+      val sgRNAName = data.targets.name.toString 
+      val sgRNAIdString = line.get(sgRNAName)
+      val sgRNA = Integer::parseInt(sgRNAIdString) 
+      val value = Double::parseDouble(line.get(TidySerializer::VALUE))
+      val type = line.get("description")
+      if (type == "model")
+        BriefMaps::getOrPutList(samples, sgRNA).add(value)
+      else
+        references.put(sgRNA, value)
+    }
     
+    val summary = new SummaryStatistics
+    for (Integer sgRNA : samples.keySet) {
+      val values = samples.get(sgRNA)
+      Collections.sort(values)
+      val a = 1.0 - credibleIntervalPr
+      val leftBound = values.get(((a/2.0) * values.size) as int)
+      val rightBound = values.get(((1.0 - (a/2)) * values.size) as int)
+      val reference = references.get(sgRNA)
+      val contains = leftBound <= reference && reference <= rightBound
+      summary.addValue(if (contains) 1.0 else 0.0)
+    }
+    results.getTabularWriter("gof").write(
+      "theoreticalCoverage" -> credibleIntervalPr,
+      "actualCoverage" -> summary.mean
+    )
   }
   
   def void computeIntervals() {

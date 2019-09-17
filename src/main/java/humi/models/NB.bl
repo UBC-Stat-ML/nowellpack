@@ -29,7 +29,7 @@ model NB {
           Supplier<IntDistribution> dist = {
             val mean = means.get(target)
             val od = ods.get(target)
-            val Supplier<IntDistribution> result = [NegativeBinomialMeanParam::distribution(mean, od)]
+            val Supplier<IntDistribution> result = DistributionSummary::nb(mean, od)
             val lambda = lambdas.get(target)
             DistributionSummary::registerMonitors(
               visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans, target, result, 

@@ -14,6 +14,10 @@ import blang.core.IntVar
 import blang.core.RealVar
 import humi.HumiData
 import blang.core.RealConstant
+import blang.distributions.BetaNegativeBinomial
+import blang.types.StaticUtils
+import blang.distributions.YuleSimon
+import blang.distributions.NegativeBinomialMeanParam
 
 class DistributionSummary {
   
@@ -24,7 +28,8 @@ class DistributionSummary {
   public static Index<String> modelIndex = new Index(description, modelString)
   
   static val cutoff = 20
-  static val winsorizationP = 0.99
+  static val winsorizationP = 0.9 // 0.99 seems to lead to long tail which gets computationally costy
+  static val guard = 10_000
   
   def static registerMonitors(
     Plated<Monitor> visibleCloneNumbers, 
@@ -81,6 +86,7 @@ class DistributionSummary {
     var x = 0
     val normalization = 1.0 - Math::exp(distribution.logDensity(0))
     while (sum/normalization < p) {
+      if (x > guard) return Double.NaN
       x++  
       sum += Math::exp(distribution.logDensity(x))
     }
@@ -97,7 +103,9 @@ class DistributionSummary {
   }
   
   def static double winsorizedMean(IntDistribution distribution, double p) {
-    return mean(truncate(distribution, p))
+    val Counter<Integer> truncated = truncate(distribution, p)
+    if (truncated === null) return Double.NaN
+    return mean(truncated)
   }
   
   def private static Counter<Integer> truncate(IntDistribution distribution, double p) {
@@ -105,6 +113,8 @@ class DistributionSummary {
     var mass = 0.0
     var c = 0
     while (true) {
+      if (c > guard) return null
+      
       val cur =  Math::exp(distribution.logDensity(c))
       
       if (mass + cur < p) {
@@ -143,5 +153,59 @@ class DistributionSummary {
     for (c : counter.keySet)
       sum += c * counter.getCount(c)
     return sum
+  }
+  
+  def static Supplier<IntDistribution> bnb(RealVar r, RealVar alpha, RealVar beta) {
+    new Supplier<IntDistribution>() {
+      override IntDistribution get() {
+        return BetaNegativeBinomial::distribution(r, alpha, beta)
+      }
+    }
+  }
+  
+  def static Supplier<IntDistribution> nb(RealVar mean, RealVar od) {
+    new Supplier<IntDistribution>() {
+      override IntDistribution get() {
+        return NegativeBinomialMeanParam::distribution(mean, od)
+      }
+    }
+  }
+  
+  def static Supplier<IntDistribution> ys(RealVar rho) {
+    new Supplier<IntDistribution>() {
+      override IntDistribution get() {
+        return YuleSimon::distribution(rho)
+      }
+    }
+  }
+  
+  def static Supplier<IntDistribution> mixBnb(RealVar pi, RealVar r1, RealVar alpha1, RealVar beta1, RealVar r2, RealVar alpha2, RealVar beta2) {
+    new Supplier<IntDistribution>() {
+      override IntDistribution get() {
+        return IntMixture::distribution({
+                if (pi.doubleValue < 0.0 || pi.doubleValue > 1.0) StaticUtils::invalidParameter
+                StaticUtils::fixedSimplex(#[pi.doubleValue, 1.0 - pi.doubleValue])
+              }, #[ 
+                BetaNegativeBinomial::distribution(r1, alpha1, beta1), 
+                BetaNegativeBinomial::distribution(r2, alpha2, beta2)
+              ]
+            )
+      }
+    }
+  }
+  
+  def static Supplier<IntDistribution> mixYs(RealVar pi, RealVar rho1, RealVar rho2) {
+    new Supplier<IntDistribution>() {
+      override IntDistribution get() {
+        return IntMixture::distribution({
+                if (pi.doubleValue < 0.0 || pi.doubleValue > 1.0) StaticUtils::invalidParameter
+                StaticUtils::fixedSimplex(#[pi.doubleValue, 1.0 - pi.doubleValue])
+              }, #[ 
+                YuleSimon::distribution(rho1), 
+                YuleSimon::distribution(rho2)
+              ]
+            )
+      }
+    }
   }
 }

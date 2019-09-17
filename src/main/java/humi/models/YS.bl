@@ -27,7 +27,7 @@ model YS {
           IntVar initialPopCount = initialPopCounts.get(target),
           Supplier<IntDistribution> dist = {
             val rho = rhos.get(target)
-            val Supplier<IntDistribution> result = [YuleSimon::distribution(rho)]
+            val Supplier<IntDistribution> result = DistributionSummary::ys(rho)
             val lambda = lambdas.get(target)
             DistributionSummary::registerMonitors(
               visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans, target, result, 
