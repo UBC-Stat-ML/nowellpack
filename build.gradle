@@ -95,6 +95,8 @@ createScript(project, 'humi.models.MixBNB',   'humi-mixbnb')
 createScript(project, 'humi.models.MixYS',    'humi-mixys')
 createScript(project, 'humi.models.NB',       'humi-nb')
 createScript(project, 'humi.models.YS',       'humi-ys')
+createScript(project, 'humi.models.MixNB',    'humi-mixnb')
+createScript(project, 'humi.models.Poi',      'humi-poi')
 
 uploadArchives {
   repositories {

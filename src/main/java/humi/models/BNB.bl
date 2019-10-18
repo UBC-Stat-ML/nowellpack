@@ -7,35 +7,37 @@ import humi.DistributionSummary
 model BNB { 
   param HumiData data
   param Plated<IntVar> initialPopCounts
-  random Plated<RealVar> rs, alphas, betas
+  random Plated<RealVar> rs, alphas, betas, shapes, rates
   random Plated<RealVar> lambdas
-  random RealVar shape ?: latentReal, rate ?: latentReal
   random Plated<Monitor> visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans /* do not change this variable name - see HumiPostProcessor */
   param RealVar vagueRate ?: 0.01
   
   laws {
-    shape | vagueRate ~ Exponential(vagueRate)
-    rate | vagueRate ~ Exponential(vagueRate)
-    for (Index<Integer> target : data.targets.indices) {
-      lambdas.get(target) | shape, rate ~ Gamma(shape, rate)
+    for (Index<String> experiment : data.experiments.indices) {
+      shapes.get(experiment) | vagueRate ~ Exponential(vagueRate)
+      rates.get(experiment) | vagueRate ~ Exponential(vagueRate)
+      for (Index<Integer> target : data.targets.indices) {
+        lambdas.get(target, experiment) | RealVar shape = shapes.get(experiment), RealVar rate = rates.get(experiment) ~ Gamma(shape, rate)
+      }
     }
+    
     for (Index<Integer> target : data.targets.indices) {
       rs.get(target) | vagueRate ~ Exponential(vagueRate)
       alphas.get(target) | vagueRate ~ Exponential(vagueRate)
       betas.get(target) | vagueRate ~ Exponential(vagueRate)
       for (Index<String> experiment : data.experiments.indices(target)) {
         data.histograms.get(target, experiment) |
-          RealVar lambda = lambdas.get(target), 
+          RealVar lambda = lambdas.get(target, experiment), 
           IntVar initialPopCount = initialPopCounts.get(target),
           Supplier<IntDistribution> dist = {
             val r = rs.get(target)
             val alpha = alphas.get(target)
             val beta = betas.get(target)
             val Supplier<IntDistribution> result = DistributionSummary.bnb(r, alpha, beta)
-            val lambda = lambdas.get(target)
+            val lambda = lambdas.get(target, experiment)
             DistributionSummary::registerMonitors(
               visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans, target, result, 
-              initialPopCounts, lambda, data, experiment
+              initialPopCounts, lambda
             )
             return result
           }

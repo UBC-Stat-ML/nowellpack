@@ -4,10 +4,10 @@ import humi.Monitor
 import java.util.function.Supplier
 import humi.DistributionSummary
 
-model MixYS { 
+model MixNB { 
   param HumiData data
   param Plated<IntVar> initialPopCounts
-  random Plated<RealVar> rho1s, rho2s, pis, shapes, rates
+  random Plated<RealVar> mean1s, od1s, mean2s, od2s, pis, shapes, rates
   random Plated<RealVar> lambdas
   random Plated<Monitor> visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans /* do not change this variable name - see HumiPostProcessor */
   param RealVar vagueRate ?: 0.01
@@ -20,19 +20,24 @@ model MixYS {
         lambdas.get(target, experiment) | RealVar shape = shapes.get(experiment), RealVar rate = rates.get(experiment) ~ Gamma(shape, rate)
       }
     }
+    
     for (Index<Integer> target : data.targets.indices) {
       pis.get(target) ~ ContinuousUniform(0.0, 0.5)
-      rho1s.get(target) | vagueRate ~ Exponential(vagueRate)
-      rho2s.get(target) | vagueRate ~ Exponential(vagueRate)
+      mean1s.get(target) | vagueRate ~ Exponential(vagueRate)
+      od1s.get(target) | vagueRate ~ Exponential(vagueRate)
+      mean2s.get(target) | vagueRate ~ Exponential(vagueRate)
+      od2s.get(target) | vagueRate ~ Exponential(vagueRate)
       for (Index<String> experiment : data.experiments.indices(target)) {
         data.histograms.get(target, experiment) |
           RealVar lambda = lambdas.get(target, experiment), 
           IntVar initialPopCount = initialPopCounts.get(target),
           Supplier<IntDistribution> dist = {
             val pi = pis.get(target)
-            val rho1 = rho1s.get(target)
-            val rho2 = rho2s.get(target)
-            val Supplier<IntDistribution> result = DistributionSummary::mixYs(pi, rho1, rho2)
+            val mean1 = mean1s.get(target)
+            val od1 = od1s.get(target)
+            val mean2 = mean2s.get(target)
+            val od2 = od2s.get(target)
+            val Supplier<IntDistribution> result = DistributionSummary::mixNb(pi, mean1, od1, mean2, od2)
             val lambda = lambdas.get(target, experiment)
             DistributionSummary::registerMonitors(
               visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans, target, result, 

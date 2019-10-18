@@ -33,44 +33,58 @@ class HumiPostProcessor extends DefaultPostProcessor {
     computeIntervals
     results.flushAll
     // GoF diagnostic summary
-    gofSummary
+    for (stat : GofStat.values)
+      gofSummary(stat)
     // intervals
     HumiStaticUtils::plotIntervals(results, data, rCmd, false, "Bayesian hierarchical model credible intervals")
     // TODO: poset
   }
   
-  def void gofSummary() {
+  static enum GofStat { truncatedMeans, visibleCloneNumbers }
+  
+  def void gofSummary(GofStat stat) {
     val samplesDir = new File(blangExecutionDirectory.get, Runner::SAMPLES_FOLDER)
-    val truncMeansFile = new File(samplesDir, "truncatedMeans.csv")
+    
+    val truncMeansFile = new File(samplesDir, stat.toString + ".csv")
     val samples = new LinkedHashMap<Integer,List<Double>>
-    val references = new LinkedHashMap<Integer,Double>
     for (line : BriefIO::readLines(truncMeansFile).indexCSV) {
       val sgRNAName = data.targets.name.toString 
       val sgRNAIdString = line.get(sgRNAName)
       val sgRNA = Integer::parseInt(sgRNAIdString) 
       val value = Double::parseDouble(line.get(TidySerializer::VALUE))
-      val type = line.get("description")
-      if (type == "model")
-        BriefMaps::getOrPutList(samples, sgRNA).add(value)
-      else
-        references.put(sgRNA, value)
+      BriefMaps::getOrPutList(samples, sgRNA).add(value)
     }
     
-    val summary = new SummaryStatistics
-    for (Integer sgRNA : samples.keySet) {
-      val values = samples.get(sgRNA)
-      Collections.sort(values)
-      val a = 1.0 - credibleIntervalPr
-      val leftBound = values.get(((a/2.0) * values.size) as int)
-      val rightBound = values.get(((1.0 - (a/2)) * values.size) as int)
-      val reference = references.get(sgRNA)
-      val contains = leftBound <= reference && reference <= rightBound
-      summary.addValue(if (contains) 1.0 else 0.0)
+    
+    
+    for (Index<String> experiment : data.experiments.indices) {
+      val coverageSummary = new SummaryStatistics
+      val widthSummary = new SummaryStatistics
+      for (Index<Integer> target : data.targets.indices) {
+        val values = samples.get(target.key)
+        if (values !== null) { // can be null when inference was performed on a subset
+          Collections.sort(values)
+          val a = 1.0 - credibleIntervalPr
+          val leftBound = values.get(((a/2.0) * values.size) as int)
+          val rightBound = values.get(((1.0 - (a/2)) * values.size) as int)
+          
+          val observedHist = data.histograms.get(target, experiment)
+          val observed = 
+            if (stat == GofStat.truncatedMeans) DistributionSummary::mean(DistributionSummary::truncatedNormalizedCounter(observedHist))
+            else if (stat == GofStat.visibleCloneNumbers) observedHist.nDataPoints
+          val contains = leftBound <= observed && observed <= rightBound
+          coverageSummary.addValue(if (contains) 1.0 else 0.0)
+          widthSummary.addValue(rightBound - leftBound)
+        }
+      }
+      results.getTabularWriter("gof").write(
+        "referenceDataset" -> experiment.key,
+        "gofStatistic" -> stat.toString,
+        "width" -> widthSummary.mean,
+        "theoreticalCoverage" -> credibleIntervalPr,
+        "actualCoverage" -> coverageSummary.mean
+      )
     }
-    results.getTabularWriter("gof").write(
-      "theoreticalCoverage" -> credibleIntervalPr,
-      "actualCoverage" -> summary.mean
-    )
   }
   
   def void computeIntervals() {
