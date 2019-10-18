@@ -7,3 +7,5 @@ results
 data
 full.dot
 hasse.dot
+src/main/xtend-gen
+src/test/xtend-gen
