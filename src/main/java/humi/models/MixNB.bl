@@ -22,10 +22,10 @@ model MixNB {
     }
     
     for (Index<Integer> target : data.targets.indices) {
-      pis.get(target) ~ ContinuousUniform(0.0, 0.5)
+      pis.get(target) ~ ContinuousUniform(0.0, 1.0) // not using 0.5: see NB below
       mean1s.get(target) | vagueRate ~ Exponential(vagueRate)
       od1s.get(target) | vagueRate ~ Exponential(vagueRate)
-      mean2s.get(target) | vagueRate ~ Exponential(vagueRate)
+      mean2s.get(target)  ~ Exponential(1) // NB: if putting vague rate here, cannot find positive probab init...
       od2s.get(target) | vagueRate ~ Exponential(vagueRate)
       for (Index<String> experiment : data.experiments.indices(target)) {
         data.histograms.get(target, experiment) |
