@@ -1,0 +1,22 @@
+package humi
+
+// Used for testing purpose
+model MarginalizedSingleGuide {
+  random CountFrequencies frequencies ?: new SimpleCountFrequencies
+  random RealVar 
+    mean ?: latentReal, 
+    overdispersion ?: latentReal, 
+    shape ?: latentReal,
+    rate ?: latentReal
+    
+  laws { 
+    mean ~ Exponential(0.1)
+    overdispersion ~ Exponential(0.1)
+    shape ~ Exponential(1)
+    rate ~ Exponential(1)
+    frequencies | shape, rate, mean, overdispersion 
+      ~ MarginalizedGammaCensoredCounts(
+          NegativeBinomialMeanParam::distribution(mean, overdispersion), shape, rate, 2
+      )
+  }
+}

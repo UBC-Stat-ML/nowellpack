@@ -10,6 +10,7 @@ import blang.inits.experiments.ExperimentResults
 import briefj.BriefIO
 import humi.freq.DeltaMethod.Columns
 import binc.Command
+import blang.core.IntDistribution
 
 class HumiStaticUtils {
   
@@ -35,6 +36,26 @@ class HumiStaticUtils {
       ggsave("«plotResults.getFileInResultFolder("intevals.pdf").absolutePath»", height = 10)
     ''')
     Command.call(Command.cmd(rCmd).appendArg(scriptFile.getAbsolutePath()))
+  }
+  
+  def static double censoringLogProductTerm(CountFrequencies countFrequencies, IntDistribution pmf) {
+    val p0 = Math.exp(pmf.logDensity(0))
+    if (!(p0 > 0.0 && p0 < 1))
+      return Double.NEGATIVE_INFINITY
+    val logRenorm = Math.log1p(-p0)
+    var result = 0.0
+    for (count : countFrequencies.distinctCounts) {
+      val frequency = countFrequencies.frequency(count)
+      if (count == 0) throw new RuntimeException  
+      if (frequency < 0) return Double.NEGATIVE_INFINITY
+      if (frequency !== 0) {
+        val curlogPMF = pmf.logDensity(count)
+        if (curlogPMF == Double.NEGATIVE_INFINITY)
+          return Double.NEGATIVE_INFINITY
+        result += frequency * (curlogPMF - logRenorm)
+      }
+    }
+    return result
   }
 
   // TODO: move to Blang SDK

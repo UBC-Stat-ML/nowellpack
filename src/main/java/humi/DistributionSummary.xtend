@@ -15,6 +15,8 @@ import blang.types.StaticUtils
 import blang.distributions.YuleSimon
 import blang.distributions.NegativeBinomialMeanParam
 import blang.distributions.Poisson
+import bayonet.distributions.Random
+import blang.distributions.Generators
 
 class DistributionSummary {
   
@@ -31,8 +33,11 @@ class DistributionSummary {
     Index<String> experiment,
     Supplier<IntDistribution> dist,
     Plated<IntVar> initialPopCounts,
-    RealVar lambda
+    RealVar shape,
+    RealVar rate
   ) {
+    
+    val rand = new Random(1)
     
     if (visibleCloneNumbers.get(target, experiment).initialized)
       return
@@ -43,7 +48,8 @@ class DistributionSummary {
     visibleCloneNumbers.get(target, experiment).init(new RealVar() {
       override doubleValue() {
         val p0 = Math.exp(dist.get.logDensity(0))
-        return (1.0 - p0) * initialPopCount.intValue * lambda.doubleValue
+        val lambda = Generators::gamma(rand, shape.doubleValue, rate.doubleValue) 
+        return (1.0 - p0) * initialPopCount.intValue * lambda
       }
     })
     

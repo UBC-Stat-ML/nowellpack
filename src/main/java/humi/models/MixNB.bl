@@ -8,7 +8,6 @@ model MixNB {
   param HumiData data
   param Plated<IntVar> initialPopCounts
   random Plated<RealVar> mean1s, od1s, mean2s, od2s, pis, shapes, rates
-  random Plated<RealVar> lambdas
   random Plated<Monitor> visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans /* do not change this variable name - see HumiPostProcessor */
   param RealVar vagueRate ?: 0.01
   
@@ -16,9 +15,6 @@ model MixNB {
     for (Index<String> experiment : data.experiments.indices) {
       shapes.get(experiment) | vagueRate ~ Exponential(vagueRate)
       rates.get(experiment) | vagueRate ~ Exponential(vagueRate)
-      for (Index<Integer> target : data.targets.indices) {
-        lambdas.get(target, experiment) | RealVar shape = shapes.get(experiment), RealVar rate = rates.get(experiment) ~ Gamma(shape, rate)
-      }
     }
     
     for (Index<Integer> target : data.targets.indices) {
@@ -29,7 +25,8 @@ model MixNB {
       od2s.get(target) | vagueRate ~ Exponential(vagueRate)
       for (Index<String> experiment : data.experiments.indices(target)) {
         data.histograms.get(target, experiment) |
-          RealVar lambda = lambdas.get(target, experiment), 
+          RealVar shape = shapes.get(experiment), 
+          RealVar rate = rates.get(experiment), 
           IntVar initialPopCount = initialPopCounts.get(target),
           Supplier<IntDistribution> dist = {
             val pi = pis.get(target)
@@ -38,14 +35,13 @@ model MixNB {
             val mean2 = mean2s.get(target)
             val od2 = od2s.get(target)
             val Supplier<IntDistribution> result = DistributionSummary::mixNb(pi, mean1, od1, mean2, od2)
-            val lambda = lambdas.get(target, experiment)
             DistributionSummary::registerMonitors(
               visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans, target, experiment, result, 
-              initialPopCounts, lambda
+              initialPopCounts, shapes.get(experiment), rates.get(experiment)
             )
             return result
           }
-        ~ CensoredExchangeableCounts(dist.get, initialPopCount * lambda)   
+        ~ MarginalizedGammaCensoredCounts(dist.get, shape, rate, initialPopCount)
       }   
     }
   }

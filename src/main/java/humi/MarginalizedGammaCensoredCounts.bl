@@ -1,0 +1,37 @@
+package humi
+
+model MarginalizedGammaCensoredCounts {
+  param IntDistribution pmf
+  param RealVar shape
+  param RealVar rate
+  param IntVar initialCount
+  random CountFrequencies countFrequencies 
+  
+  laws {
+    logf(pmf, countFrequencies) {
+      HumiStaticUtils::censoringLogProductTerm(countFrequencies, pmf)
+    }
+    logf(pmf, shape, rate, initialCount, countFrequencies) {
+     if (shape <= 0.0 || rate <= 0 || initialCount < 0) return NEGATIVE_INFINITY
+     val nObserved = countFrequencies.nDataPoints
+     val p0 = Math.exp(pmf.logDensity(0))
+     return
+       nObserved * (log(initialCount) + log1p(-p0)) + shape * log(rate) + logGamma(shape + nObserved) - logGamma(shape) - logFactorial(nObserved) - (shape + nObserved) * log(rate + (1 - p0) * initialCount)
+    }
+  }
+  
+  generate (rand) {
+    if (countFrequencies instanceof SimpleCountFrequencies) {
+      countFrequencies.data.clear
+      val poissonRate = rand.gamma(shape, rate)
+      val n = Poisson::distribution(poissonRate * initialCount).sample(rand)
+      for (i : 0 ..< n) {
+        val count = pmf.sample(rand)
+        if (count > 0) {
+          val oldFreq = countFrequencies.data.getOrDefault(count, 0)
+          countFrequencies.data.put(count, oldFreq + 1)
+        }
+      }
+    } else throw new RuntimeException
+  }
+}
