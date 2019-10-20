@@ -36,7 +36,7 @@ model BNB {
             val Supplier<IntDistribution> result = DistributionSummary.bnb(r, alpha, beta)
             val lambda = lambdas.get(target, experiment)
             DistributionSummary::registerMonitors(
-              visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans, target, result, 
+              visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans, target, experiment, result, 
               initialPopCounts, lambda
             )
             return result

@@ -45,23 +45,24 @@ class HumiPostProcessor extends DefaultPostProcessor {
   def void gofSummary(GofStat stat) {
     val samplesDir = new File(blangExecutionDirectory.get, Runner::SAMPLES_FOLDER)
     
-    val truncMeansFile = new File(samplesDir, stat.toString + ".csv")
-    val samples = new LinkedHashMap<Integer,List<Double>>
-    for (line : BriefIO::readLines(truncMeansFile).indexCSV) {
+    val sampleFile = new File(samplesDir, stat.toString + ".csv")
+    val samples = new LinkedHashMap<Pair<Integer,String>,List<Double>>  // sgrna, experiment -> samples
+    for (line : BriefIO::readLines(sampleFile).indexCSV) {
       val sgRNAName = data.targets.name.toString 
       val sgRNAIdString = line.get(sgRNAName)
       val sgRNA = Integer::parseInt(sgRNAIdString) 
+      val expString = line.get(data.experiments.name.toString)
+      val key = Pair.of(sgRNA, expString)
       val value = Double::parseDouble(line.get(TidySerializer::VALUE))
-      BriefMaps::getOrPutList(samples, sgRNA).add(value)
+      BriefMaps::getOrPutList(samples, key).add(value)
     }
-    
-    
     
     for (Index<String> experiment : data.experiments.indices) {
       val coverageSummary = new SummaryStatistics
       val widthSummary = new SummaryStatistics
       for (Index<Integer> target : data.targets.indices) {
-        val values = samples.get(target.key)
+        val key = Pair.of(target.key, experiment.key)
+        val values = samples.get(key)
         if (values !== null) { // can be null when inference was performed on a subset
           Collections.sort(values)
           val a = 1.0 - credibleIntervalPr

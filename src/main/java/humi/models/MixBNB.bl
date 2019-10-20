@@ -44,7 +44,7 @@ model MixBNB {
             val Supplier<IntDistribution> result = DistributionSummary::mixBnb(pi, r1, alpha1, beta1, r2, alpha2, beta2)
             val lambda = lambdas.get(target, experiment)
             DistributionSummary::registerMonitors(
-              visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans, target, result, 
+              visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans, target, experiment, result, 
               initialPopCounts, lambda
             )
             return result

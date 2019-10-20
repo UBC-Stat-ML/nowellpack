@@ -28,18 +28,19 @@ class DistributionSummary {
     Plated<Monitor> winsorizedMeans,
     Plated<Monitor> conditionalWinsorizedMeans,
     Index<Integer> target,
+    Index<String> experiment,
     Supplier<IntDistribution> dist,
     Plated<IntVar> initialPopCounts,
     RealVar lambda
   ) {
     
-    if (visibleCloneNumbers.get(target).initialized)
+    if (visibleCloneNumbers.get(target, experiment).initialized)
       return
     
     val initialPopCount = initialPopCounts.get(target)
     
     // register visible clone number monitors
-    visibleCloneNumbers.get(target).init(new RealVar() {
+    visibleCloneNumbers.get(target, experiment).init(new RealVar() {
       override doubleValue() {
         val p0 = Math.exp(dist.get.logDensity(0))
         return (1.0 - p0) * initialPopCount.intValue * lambda.doubleValue
@@ -47,21 +48,21 @@ class DistributionSummary {
     })
     
     // register truncated mean monitors
-    truncatedMeans.get(target).init(new RealVar() {
+    truncatedMeans.get(target, experiment).init(new RealVar() {
       override doubleValue() {
         DistributionSummary::mean(DistributionSummary::truncatedNormalizedCounter(dist.get))
       }
     })
     
     // winsorized mean
-    winsorizedMeans.get(target).init(new RealVar() {
+    winsorizedMeans.get(target, experiment).init(new RealVar() {
       override doubleValue() {
         return winsorizedMean(dist.get, winsorizationP)
       }
     })
     
     // conditional version 
-    conditionalWinsorizedMeans.get(target).init(new RealVar() {
+    conditionalWinsorizedMeans.get(target, experiment).init(new RealVar() {
       override doubleValue() {
         return conditionalWinsorizedMean(dist.get, winsorizationP)
       }

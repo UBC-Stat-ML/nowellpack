@@ -31,7 +31,7 @@ model YS {
             val Supplier<IntDistribution> result = DistributionSummary::ys(rho)
             val lambda = lambdas.get(target, experiment)
             DistributionSummary::registerMonitors(
-              visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans, target, result, 
+              visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans, target, experiment, result, 
               initialPopCounts, lambda
             )
             return result

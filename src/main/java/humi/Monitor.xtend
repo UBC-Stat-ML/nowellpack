@@ -30,7 +30,8 @@ class Monitor implements RealVar {
   }
   
   override doubleValue() {
-    if (monitored === null) throw new RuntimeException
+    if (monitored === null) 
+      throw new RuntimeException
     return monitored.doubleValue
   }
   
