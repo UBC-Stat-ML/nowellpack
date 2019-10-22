@@ -20,7 +20,7 @@ import blang.distributions.Generators
 
 class DistributionSummary {
   
-  static val cutoff = 20
+  static val cutoff = 40
   static val winsorizationP = 0.9 // 0.99 seems to lead to long tail which gets computationally costy
   static val guard = 10_000
   
