@@ -24,6 +24,8 @@ class DistributionSummary {
   static val winsorizationP = 0.9 // 0.99 seems to lead to long tail which gets computationally costy
   static val guard = 10_000
   
+  val static rand = new Random(1)
+  
   def static registerMonitors(
     Plated<Monitor> visibleCloneNumbers, 
     Plated<Monitor> truncatedMeans, 
@@ -37,11 +39,6 @@ class DistributionSummary {
     RealVar rate
   ) {
     
-    val rand = new Random(1)
-    
-    if (visibleCloneNumbers.get(target, experiment).initialized)
-      return
-    
     val initialPopCount = initialPopCounts.get(target)
     
     // register visible clone number monitors
@@ -54,25 +51,28 @@ class DistributionSummary {
     })
     
     // register truncated mean monitors
-    truncatedMeans.get(target, experiment).init(new RealVar() {
-      override doubleValue() {
-        DistributionSummary::mean(DistributionSummary::truncatedNormalizedCounter(dist.get))
-      }
-    })
+    if (!truncatedMeans.get(target).initialized)
+      truncatedMeans.get(target).init(new RealVar() {
+        override doubleValue() {
+          DistributionSummary::mean(DistributionSummary::truncatedNormalizedCounter(dist.get))
+        }
+      })
     
     // winsorized mean
-    winsorizedMeans.get(target, experiment).init(new RealVar() {
-      override doubleValue() {
-        return winsorizedMean(dist.get, winsorizationP)
-      }
-    })
+    if (!winsorizedMeans.get(target).initialized)
+      winsorizedMeans.get(target).init(new RealVar() {
+        override doubleValue() {
+          return winsorizedMean(dist.get, winsorizationP)
+        }
+      })
     
-    // conditional version 
-    conditionalWinsorizedMeans.get(target, experiment).init(new RealVar() {
-      override doubleValue() {
-        return conditionalWinsorizedMean(dist.get, winsorizationP)
-      }
-    })
+    // conditional version
+    if (!conditionalWinsorizedMeans.get(target).initialized) 
+      conditionalWinsorizedMeans.get(target).init(new RealVar() {
+        override doubleValue() {
+          return conditionalWinsorizedMean(dist.get, winsorizationP)
+        }
+      })
   }
   
   def static double conditionalWinsorizedMean(IntDistribution distribution, double p) {

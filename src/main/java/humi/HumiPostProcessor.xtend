@@ -46,13 +46,13 @@ class HumiPostProcessor extends DefaultPostProcessor {
     val samplesDir = new File(blangExecutionDirectory.get, Runner::SAMPLES_FOLDER)
     
     val sampleFile = new File(samplesDir, stat.toString + ".csv")
-    val samples = new LinkedHashMap<Pair<Integer,String>,List<Double>>  // sgrna, experiment -> samples
+    val samples = new LinkedHashMap<Object,List<Double>>  // sgrna, experiment -> samples
     for (line : BriefIO::readLines(sampleFile).indexCSV) {
       val sgRNAName = data.targets.name.toString 
       val sgRNAIdString = line.get(sgRNAName)
       val sgRNA = Integer::parseInt(sgRNAIdString) 
       val expString = line.get(data.experiments.name.toString)
-      val key = Pair.of(sgRNA, expString)
+      val key = if (stat == GofStat.truncatedMeans) sgRNA else Pair.of(sgRNA, expString)
       val value = Double::parseDouble(line.get(TidySerializer::VALUE))
       BriefMaps::getOrPutList(samples, key).add(value)
     }
@@ -61,9 +61,9 @@ class HumiPostProcessor extends DefaultPostProcessor {
       val coverageSummary = new SummaryStatistics
       val widthSummary = new SummaryStatistics
       for (Index<Integer> target : data.targets.indices) {
-        val key = Pair.of(target.key, experiment.key)
+        val key = if (stat == GofStat.truncatedMeans) target.key else Pair.of(target.key, experiment.key)
         val values = samples.get(key)
-        if (values !== null) { // can be null when inference was performed on a subset
+        if (values !== null) { // can be null when inference was performed on a subset and looking at visibleCloneNumbers
           Collections.sort(values)
           val a = 1.0 - credibleIntervalPr
           val leftBound = values.get(((a/2.0) * values.size) as int)
