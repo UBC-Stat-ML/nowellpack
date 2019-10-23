@@ -26,30 +26,45 @@ class DistributionSummary {
   
   val static rand = new Random(1)
   
+  
   def static registerMonitors(
     Plated<Monitor> visibleCloneNumbers, 
     Plated<Monitor> truncatedMeans,
-     Plated<Monitor> truncatedSqMeans,
+    Plated<Monitor> truncatedSqMeans,
     Plated<Monitor> winsorizedMeans,
     Plated<Monitor> conditionalWinsorizedMeans,
     Index<Integer> target,
     Index<String> experiment,
     Supplier<IntDistribution> dist,
     Plated<IntVar> initialPopCounts,
-    RealVar shape,
-    RealVar rate
+    RealVar p1,
+    RealVar p2
   ) {
     
     val initialPopCount = initialPopCounts.get(target)
     
     // register visible clone number monitors
-    visibleCloneNumbers.get(target, experiment).init(new RealVar() {
-      override doubleValue() {
-        val p0 = Math.exp(dist.get.logDensity(0))
-        val lambda = Generators::gamma(rand, shape.doubleValue, rate.doubleValue) 
-        return (1.0 - p0) * initialPopCount.intValue * lambda
+    visibleCloneNumbers.get(target, experiment).init(
+      if (p2 === null) {
+        val RealVar lambda = p1
+        new RealVar() {
+          override doubleValue() {
+            val p0 = Math.exp(dist.get.logDensity(0))
+            return (1.0 - p0) * initialPopCount.intValue * lambda.doubleValue
+          }
+        }
+      } else {
+        val RealVar shape = p1
+        val RealVar rate = p2
+        new RealVar() {
+          override doubleValue() {
+            val p0 = Math.exp(dist.get.logDensity(0))
+            val lambda = Generators::gamma(rand, shape.doubleValue, rate.doubleValue) 
+            return (1.0 - p0) * initialPopCount.intValue * lambda
+          }
+        }
       }
-    })
+    )
     
     // register truncated mean monitors
     if (!truncatedMeans.get(target).initialized)
