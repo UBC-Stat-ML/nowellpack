@@ -28,7 +28,8 @@ class DistributionSummary {
   
   def static registerMonitors(
     Plated<Monitor> visibleCloneNumbers, 
-    Plated<Monitor> truncatedMeans, 
+    Plated<Monitor> truncatedMeans,
+     Plated<Monitor> truncatedSqMeans,
     Plated<Monitor> winsorizedMeans,
     Plated<Monitor> conditionalWinsorizedMeans,
     Index<Integer> target,
@@ -55,6 +56,13 @@ class DistributionSummary {
       truncatedMeans.get(target).init(new RealVar() {
         override doubleValue() {
           DistributionSummary::mean(DistributionSummary::truncatedNormalizedCounter(dist.get))
+        }
+      })
+      
+    if (!truncatedSqMeans.get(target).initialized)
+      truncatedSqMeans.get(target).init(new RealVar() {
+        override doubleValue() {
+          DistributionSummary::meanSq(DistributionSummary::truncatedNormalizedCounter(dist.get))
         }
       })
     
@@ -142,13 +150,16 @@ class DistributionSummary {
   }
   
   // input: a normalized int valued dist, stored in a counter
-  def static double mean(Counter<Integer> counter) {
+  def static double mean(Counter<Integer> counter, int degree) {
     NumericalUtils::checkIsClose(1.0, counter.totalCount) 
     var sum = 0.0
     for (c : counter.keySet)
-      sum += c * counter.getCount(c)
+      sum += (c ** degree) * counter.getCount(c)
     return sum
   }
+  
+  def static double mean(Counter<Integer> counter) { mean(counter, 1) }
+  def static double meanSq(Counter<Integer> counter) { mean(counter, 2) }
   
   def static Supplier<IntDistribution> bnb(RealVar r, RealVar alpha, RealVar beta) {
     new Supplier<IntDistribution>() {

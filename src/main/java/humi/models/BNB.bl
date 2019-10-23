@@ -8,7 +8,7 @@ model BNB {
   param HumiData data
   param Plated<IntVar> initialPopCounts
   random Plated<RealVar> rs, alphas, betas, shapes, rates
-  random Plated<Monitor> visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans /* do not change this variable name - see HumiPostProcessor */
+  random Plated<Monitor> visibleCloneNumbers, truncatedMeans, truncatedSqMeans, winsorizedMeans, conditionalWinsorizedMeans /* do not change this variable name - see HumiPostProcessor */
   param RealVar vagueRate ?: 0.01
   
   laws {
@@ -32,7 +32,7 @@ model BNB {
             val beta = betas.get(target)
             val Supplier<IntDistribution> result = DistributionSummary.bnb(r, alpha, beta)
             DistributionSummary::registerMonitors(
-              visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans, target, experiment, result, 
+              visibleCloneNumbers, truncatedMeans, winsorizedMeans, truncatedSqMeans, conditionalWinsorizedMeans, target, experiment, result, 
               initialPopCounts, shapes.get(experiment), rates.get(experiment)
             )
             return result

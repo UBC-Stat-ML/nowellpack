@@ -40,7 +40,8 @@ class HumiPostProcessor extends DefaultPostProcessor {
     // TODO: poset
   }
   
-  static enum GofStat { truncatedMeans, visibleCloneNumbers }
+  // Note: currently assuming by default it is non-experiment-specific, except for hard coded exception for visibleCloneNumbers (*)
+  static enum GofStat { truncatedMeans, truncatedSqMeans, visibleCloneNumbers }
   
   def void gofSummary(GofStat stat) {
     val samplesDir = new File(blangExecutionDirectory.get, Runner::SAMPLES_FOLDER)
@@ -52,7 +53,7 @@ class HumiPostProcessor extends DefaultPostProcessor {
       val sgRNAIdString = line.get(sgRNAName)
       val sgRNA = Integer::parseInt(sgRNAIdString) 
       val expString = line.get(data.experiments.name.toString)
-      val key = if (stat == GofStat.truncatedMeans) sgRNA else Pair.of(sgRNA, expString)
+      val key = if (stat == GofStat.visibleCloneNumbers) Pair.of(sgRNA, expString) else sgRNA  
       val value = Double::parseDouble(line.get(TidySerializer::VALUE))
       BriefMaps::getOrPutList(samples, key).add(value)
     }
@@ -61,7 +62,7 @@ class HumiPostProcessor extends DefaultPostProcessor {
       val coverageSummary = new SummaryStatistics
       val widthSummary = new SummaryStatistics
       for (Index<Integer> target : data.targets.indices) {
-        val key = if (stat == GofStat.truncatedMeans) target.key else Pair.of(target.key, experiment.key)
+        val key = if (stat == GofStat.visibleCloneNumbers) Pair.of(target.key, experiment.key) else target.key
         val values = samples.get(key)
         if (values !== null) { // can be null when inference was performed on a subset and looking at visibleCloneNumbers
           Collections.sort(values)
@@ -72,19 +73,22 @@ class HumiPostProcessor extends DefaultPostProcessor {
           val observedHist = data.histograms.get(target, experiment)
           val observed = 
             if (stat == GofStat.truncatedMeans) DistributionSummary::mean(DistributionSummary::truncatedNormalizedCounter(observedHist))
+            else if (stat == GofStat.truncatedSqMeans) DistributionSummary::meanSq(DistributionSummary::truncatedNormalizedCounter(observedHist))
             else if (stat == GofStat.visibleCloneNumbers) observedHist.nDataPoints
+            else throw new RuntimeException // see (*) above too
           val contains = leftBound <= observed && observed <= rightBound
           coverageSummary.addValue(if (contains) 1.0 else 0.0)
           widthSummary.addValue(rightBound - leftBound)
         }
       }
-      results.getTabularWriter("gof").write(
-        "referenceDataset" -> experiment.key,
-        "gofStatistic" -> stat.toString,
-        "width" -> widthSummary.mean,
-        "theoreticalCoverage" -> credibleIntervalPr,
-        "actualCoverage" -> coverageSummary.mean
-      )
+      if (coverageSummary.n > 0)
+        results.getTabularWriter("gof").write(
+          "referenceDataset" -> experiment.key,
+          "gofStatistic" -> stat.toString,
+          "width" -> widthSummary.mean,
+          "theoreticalCoverage" -> credibleIntervalPr,
+          "actualCoverage" -> coverageSummary.mean
+        )
     }
   }
   

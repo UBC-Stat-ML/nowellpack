@@ -8,7 +8,7 @@ model MixBNB {
   param HumiData data
   param Plated<IntVar> initialPopCounts
   random Plated<RealVar> r1s, alpha1s, beta1s, r2s, alpha2s, beta2s, pis, shapes, rates
-  random Plated<Monitor> visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans /* do not change this variable name - see HumiPostProcessor */
+  random Plated<Monitor> visibleCloneNumbers, truncatedMeans, truncatedSqMeans, winsorizedMeans, conditionalWinsorizedMeans /* do not change this variable name - see HumiPostProcessor */
   param RealVar vagueRate ?: 0.01
   
   laws {
@@ -40,7 +40,7 @@ model MixBNB {
             val beta2 = beta2s.get(target)
             val Supplier<IntDistribution> result = DistributionSummary::mixBnb(pi, r1, alpha1, beta1, r2, alpha2, beta2)
             DistributionSummary::registerMonitors(
-              visibleCloneNumbers, truncatedMeans, winsorizedMeans, conditionalWinsorizedMeans, target, experiment, result, 
+              visibleCloneNumbers, truncatedMeans, truncatedSqMeans, winsorizedMeans, conditionalWinsorizedMeans, target, experiment, result, 
               initialPopCounts, shapes.get(experiment), rates.get(experiment)
             )
             return result
