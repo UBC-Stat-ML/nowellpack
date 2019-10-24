@@ -252,4 +252,19 @@ class DistributionSummary {
       }
     }
   }
+  
+  def static Supplier<IntDistribution> mixPoi(RealVar pi, RealVar m1, RealVar m2) {
+    new Supplier<IntDistribution>() {
+      override IntDistribution get() {
+        return IntMixture::distribution({
+                if (pi.doubleValue < 0.0 || pi.doubleValue > 1.0) StaticUtils::invalidParameter
+                StaticUtils::fixedSimplex(#[pi.doubleValue, 1.0 - pi.doubleValue])
+              }, #[ 
+                Poisson::distribution(m1), 
+                Poisson::distribution(m2)
+              ]
+            )
+      }
+    }
+  }
 }
