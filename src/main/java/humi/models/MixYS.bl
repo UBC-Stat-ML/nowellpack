@@ -7,14 +7,13 @@ import humi.DistributionSummary
 model MixYS { 
   param HumiData data
   param Plated<IntVar> initialPopCounts
-  random Plated<RealVar> rho1s, rho2s, pis, shapes, rates
+  random Plated<RealVar> rho1s, rho2s, pis, lambdas
   random Plated<Monitor> visibleCloneNumbers, truncatedMeans, truncatedSqMeans, winsorizedMeans, conditionalWinsorizedMeans /* do not change this variable name - see HumiPostProcessor */
   param RealVar vagueRate ?: 0.01
   
   laws {
     for (Index<String> experiment : data.experiments.indices) {
-      shapes.get(experiment) | vagueRate ~ Exponential(vagueRate)
-      rates.get(experiment) | vagueRate ~ Exponential(vagueRate)
+      lambdas.get(experiment) | vagueRate ~ Exponential(vagueRate)
     }
     for (Index<Integer> target : data.targets.indices) {
       pis.get(target) ~ ContinuousUniform(0.0, 0.5)
@@ -22,8 +21,7 @@ model MixYS {
       rho2s.get(target) | vagueRate ~ Exponential(vagueRate)
       for (Index<String> experiment : data.experiments.indices(target)) {
         data.histograms.get(target, experiment) |
-          RealVar shape = shapes.get(experiment), 
-          RealVar rate = rates.get(experiment), 
+          RealVar lambda = lambdas.get(experiment), 
           IntVar initialPopCount = initialPopCounts.get(target),
           Supplier<IntDistribution> dist = {
             val pi = pis.get(target)
@@ -32,11 +30,11 @@ model MixYS {
             val Supplier<IntDistribution> result = DistributionSummary::mixYs(pi, rho1, rho2)
             DistributionSummary::registerMonitors(
               visibleCloneNumbers, truncatedMeans, truncatedSqMeans, winsorizedMeans, conditionalWinsorizedMeans, target, experiment, result, 
-              initialPopCounts, shapes.get(experiment), rates.get(experiment)
+              initialPopCounts, lambdas.get(experiment), null
             )
             return result
           }
-        ~ MarginalizedGammaCensoredCounts(dist.get, shape, rate, initialPopCount)   
+        ~ CensoredExchangeableCounts(dist.get, lambda * initialPopCount)
       }   
     }
   }
