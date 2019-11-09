@@ -92,6 +92,7 @@ createScript(project, 'humi.posets.ComparePosets',      'humi-compare-posets')
 
 createScript(project, 'humi.models.BNB',      'humi-bnb')
 createScript(project, 'humi.models.MixBNB',   'humi-mixbnb')
+createScript(project, 'humi.models.MixGNB',   'humi-mixgnb')
 createScript(project, 'humi.models.MixYS',    'humi-mixys')
 createScript(project, 'humi.models.NB',       'humi-nb')
 createScript(project, 'humi.models.YS',       'humi-ys')

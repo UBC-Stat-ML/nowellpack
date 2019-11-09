@@ -1,0 +1,47 @@
+package humi.models
+import humi.HumiData
+import humi.Monitor
+import java.util.function.Supplier
+import humi.DistributionSummary
+
+model MixGNB { 
+  param HumiData data
+  param Plated<IntVar> initialPopCounts
+  param RealVar vagueRate ?: 0.01
+  
+  random RealVar globalMean ?: latentReal, globalOverdisp ?: latentReal
+  random Plated<RealVar> means, ods, pis, lambdas
+  random Plated<Monitor> visibleCloneNumbers, truncatedMeans, truncatedSqMeans, winsorizedMeans, conditionalWinsorizedMeans /* do not change this variable name - see HumiPostProcessor */
+  
+  laws {
+    for (Index<String> experiment : data.experiments.indices) {
+      lambdas.get(experiment) | vagueRate ~ Exponential(vagueRate)
+    }
+    
+    globalMean | vagueRate ~ Exponential(vagueRate)
+    globalOverdisp | vagueRate ~ Exponential(vagueRate)
+    
+    for (Index<Integer> target : data.targets.indices) {
+      pis.get(target) ~ ContinuousUniform(0.0, 1.0) // not using 0.5: see NB below
+      means.get(target) | vagueRate ~ Exponential(vagueRate)
+      ods.get(target) | vagueRate ~ Exponential(vagueRate)
+      for (Index<String> experiment : data.experiments.indices(target)) {
+        data.histograms.get(target, experiment) |
+          RealVar lambda = lambdas.get(experiment), 
+          IntVar initialPopCount = initialPopCounts.get(target),
+          Supplier<IntDistribution> dist = {
+            val pi = pis.get(target)
+            val mean = means.get(target)
+            val od = ods.get(target)
+            val Supplier<IntDistribution> result = DistributionSummary::mixNb(pi, mean, od, globalMean, globalOverdisp)
+            DistributionSummary::registerMonitors(
+              visibleCloneNumbers, truncatedMeans, truncatedSqMeans, winsorizedMeans, conditionalWinsorizedMeans, target, experiment, result, 
+              initialPopCounts, lambdas.get(experiment), null
+            )
+            return result
+          }
+        ~ CensoredExchangeableCounts(dist.get, lambda * initialPopCount)
+      }   
+    }
+  }
+}
