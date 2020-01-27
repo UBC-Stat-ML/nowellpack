@@ -2,13 +2,17 @@ package chromobreak
 
 import org.eclipse.xtend.lib.annotations.Data
 import blang.core.RealVar
+import blang.inits.experiments.tabwriters.TidilySerializable
+import blang.inits.experiments.tabwriters.TidySerializer.Context
+import java.util.LinkedHashMap
 
 @Data
-class ReadCountModel {
+class ReadCountModel implements TidilySerializable {
   
-  val RealVar a
-  val RealVar h 
-  val RealVar k 
+  val static double x0 = -1.0
+  val RealVar f0
+  val RealVar f1
+  val RealVar f2 
   val RealVar sd 
   val RealVar sdSlope 
   
@@ -38,10 +42,24 @@ class ReadCountModel {
   val static LOG_SQRT_2_PI = Math::log(Math::sqrt(2.0 * Math::PI))
   
   def double mean(double logGC, int state) {
-    a.doubleValue * Math::pow(logGC - h.doubleValue, 2.0) + k.doubleValue + Math::log(state)
+    val a = f2.doubleValue / 2.0
+    val b = f1.doubleValue - 2 * a * x0
+    val c = f0.doubleValue - a * x0 * x0 - b * x0
+    a * logGC * logGC + b * logGC + c + Math::log(state)
   }
   
   def double sd(double logGC, int state) { 
     sd.doubleValue + sdSlope.doubleValue * state
   }
+  
+  
+  override serialize(Context context) {
+    for (state : 1 .. 6) {
+      val evaluations = new LinkedHashMap<Double, Double>
+      for (var double lgc = -1.1; lgc < -0.5; lgc += 0.05)
+        evaluations.put(lgc, mean(lgc, state))
+      context.recurse(evaluations, "state", state)
+    }
+  }
+  
 }

@@ -11,9 +11,9 @@ import blang.runtime.internals.objectgraph.SkipDependency
 
 class SingleCellHMM implements HMM {
   
-  val int nStates = 5
+  val int nStates = 6
   
-  val int thinning = 20
+  val int thinning = 10
     
   @SkipDependency(isMutable = false)
   val double [] logReads
@@ -39,6 +39,7 @@ class SingleCellHMM implements HMM {
       logReads.set(position.key / thinning, Math::log(data.readCounts.get(chromosome, position).intValue))
       logGCs.set(position.key / thinning, Math::log(data.gcContents.get(chromosome, position).doubleValue))
     }
+    ChromoPostProcessor::addToPlot(logReads, logGCs) 
   }
   
   TransitionMatrix transition = null

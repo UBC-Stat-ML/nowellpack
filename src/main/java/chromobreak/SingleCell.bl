@@ -5,26 +5,26 @@ model SingleCell {
   param SingleCellData data
   
   random RealVar switchProbability ?: latentReal
-  random RealVar a ?: latentReal
-  random RealVar h ?: latentReal
-  random RealVar k ?: latentReal
+  random RealVar f0 ?: latentReal
+  random RealVar f1 ?: latentReal
+  random RealVar f2 ?: latentReal
   random RealVar sd ?: latentReal
   random RealVar sdSlope ?: latentReal
    
-  param ReadCountModel readCountModel ?: new ReadCountModel(a, h, k, sd, sdSlope)
+  random ReadCountModel readCountModel ?: new ReadCountModel(f0, f1, f2, sd, sdSlope)
     
   laws {
     
     switchProbability ~ ContinuousUniform(0.0, 1.0)
     
-    a ~ Normal(0.0, 10*10)
-    h ~ Normal(0.0, 10*10)
-    k ~ Normal(0.0, 10*10)
+    f0 ~ Normal(6, 2*2)
+    f1 ~ Normal(1.0, 0.5 * 0.5)
+    f2 ~ Normal(-1.0, 1.0)
     
     sd ~ Exponential(0.1)
     sdSlope ~ Normal(0.0, 10*10)
     
-    for (Index<String> chromosome : data.chromosomes.indices) { //.filter[key == "1"]) {
+    for (Index<String> chromosome : data.chromosomes.indices) { //.filter[key == "1"]) { 
       | SingleCellHMM hmm = new SingleCellHMM(data, chromosome, readCountModel, switchProbability)  ~ LogPotential(hmm.logMarginal) 
     }
   }
