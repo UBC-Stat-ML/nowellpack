@@ -20,7 +20,7 @@ class Intervals2Poset extends Experiment {
   public String geneAField = "gene"
   
   @Arg @DefaultValue("0.5")
-  public double threshold = 0.5
+  public Optional<Double> threshold = Optional.of(0.5)
   
   @Arg public File intervalsCSVFile
   

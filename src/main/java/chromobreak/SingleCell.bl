@@ -1,0 +1,31 @@
+package chromobreak
+
+model SingleCell {
+  
+  param SingleCellData data
+  
+  random RealVar switchProbability ?: latentReal
+  random RealVar a ?: latentReal
+  random RealVar h ?: latentReal
+  random RealVar k ?: latentReal
+  random RealVar sd ?: latentReal
+  random RealVar sdSlope ?: latentReal
+   
+  param ReadCountModel readCountModel ?: new ReadCountModel(a, h, k, sd, sdSlope)
+    
+  laws {
+    
+    switchProbability ~ ContinuousUniform(0.0, 1.0)
+    
+    a ~ Normal(0.0, 10*10)
+    h ~ Normal(0.0, 10*10)
+    k ~ Normal(0.0, 10*10)
+    
+    sd ~ Exponential(0.1)
+    sdSlope ~ Normal(0.0, 10*10)
+    
+    for (Index<String> chromosome : data.chromosomes.indices) { //.filter[key == "1"]) {
+      | SingleCellHMM hmm = new SingleCellHMM(data, chromosome, readCountModel, switchProbability)  ~ LogPotential(hmm.logMarginal) 
+    }
+  }
+}

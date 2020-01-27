@@ -1,0 +1,54 @@
+package chromobreak
+
+model Flat {
+  
+  param GlobalDataSource data
+  
+  param Integer leftBound, rightBound
+  param String chr
+  
+  param Plate<Integer> cells
+  param Plate<String> chromosomes
+  param Plate<Integer> positions
+  
+  random RealVar lociSD ?: latentReal
+  random RealVar rate ?: latentReal, shape ?: latentReal
+  
+  param Index<String> chrIndex ?: new Index(chromosomes, chr)
+  
+  param Plated<RealVar> cellMeans
+  random Plated<RealVar> lociRandomEffects
+  random Plated<RealVar> cellRandomEffects
+  random Plated<IntVar> readCounts
+  
+  laws {
+    
+    lociSD ~ ContinuousUniform(0.0, 1.0)
+    
+    rate ~ Exponential(0.01)
+    shape ~ Exponential(0.01)
+    
+    for (Index<Integer> position : positions.indices(chrIndex).filter[key > leftBound && key < rightBound]) {
+      if (position.key == leftBound + 1) {
+        lociRandomEffects.get(position) | lociSD ~ Normal(0.0, lociSD * lociSD)
+      } else {
+        lociRandomEffects.get(position) | lociSD, RealVar prev = lociRandomEffects.get(new Index(positions, position.key - 1))
+          ~ Normal(prev, lociSD * lociSD)
+      }
+    }
+    
+    for (Index<Integer> cell : cells.indices) {
+      cellRandomEffects.get(cell) | rate, shape ~ Gamma(shape, rate)
+    }
+    
+    for (Index<Integer> position : positions.indices(chrIndex).filter[key >= leftBound && key < rightBound]) {
+      for (Index<Integer> cell : cells.indices) {
+        readCounts.get(position, cell) | 
+          RealVar locusEffect = if (position.key > leftBound) lociRandomEffects.get(position) else 0.0,
+          RealVar cellEffect = cellRandomEffects.get(cell),
+          RealVar cellMean = cellMeans.get(cell)
+          ~ Poisson(cellMean * cellEffect * pow(2.0, locusEffect))
+      }
+    }
+  }
+}

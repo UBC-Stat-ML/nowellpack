@@ -1,0 +1,51 @@
+package chromobreak
+
+model FlatMarg {
+  
+  param GlobalDataSource data
+  
+  param Integer leftBound, rightBound
+  param String chr
+  
+  param Plate<Integer> cells
+  param Plate<String> chromosomes
+  param Plate<Integer> positions
+  
+  random RealVar lociSD ?: latentReal
+  random RealVar rate ?: latentReal, shape ?: latentReal
+  
+  param Index<String> chrIndex ?: new Index(chromosomes, chr)
+  
+  param Plated<RealVar> cellMeans
+  random PlatedMatrix lociRandomEffects
+  random Plated<IntVar> readCounts
+  
+  laws {
+    
+//    lociSD ~ ContinuousUniform(0.0, 1.0)
+//    
+//    rate ~ Exponential(0.01)
+//    shape ~ Exponential(0.01)
+//    
+//    for (Index<Integer> position : positions.indices(chrIndex).filter[key > leftBound && key < rightBound]) {
+//      if (position.key == leftBound + 1) {
+//        lociRandomEffects.getDenseVectorEntry(position) | lociSD ~ Normal(0.0, lociSD * lociSD)
+//      } else {
+//        lociRandomEffects.getDenseVectorEntry(position) | lociSD, RealVar prev = lociRandomEffects.get(new Index(positions, position.key - 1))
+//          ~ Normal(prev, lociSD * lociSD)
+//      }
+//    }
+//
+//    
+//    for (Index<Integer> cell : cells.indices) {
+//      | 
+//        List<Integer> 
+//        Matrix locusEffect = lociRandomEffects.getDenseVector(positions),
+//        RealVar cellMean = cellMeans.get(cell)
+//        ~ LogPotential({
+//          val integrator = new PoissonGamma()
+//        })
+//         //Poisson(cellMean * cellEffect * pow(2.0, locusEffect))
+//    }
+  }
+}

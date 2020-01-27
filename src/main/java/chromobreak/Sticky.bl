@@ -1,0 +1,29 @@
+package chromobreak
+
+model Sticky {
+  param RealVar stickPr
+  param IntVar prev
+  param Integer maxState // inclusive
+  random IntVar next
+  
+  laws {
+    logf(prev, next, maxState, stickPr) {
+      if (prev < 0 || prev > maxState) return NEGATIVE_INFINITY
+      if (next < 0 || next > maxState) return NEGATIVE_INFINITY
+      if (stickPr < 0 || stickPr > 1.0) return NEGATIVE_INFINITY
+      if (prev == next) return log(stickPr)
+      else return log(1.0 - stickPr) - log(maxState)
+    }
+  }
+  
+  generate(rand) {
+    if (rand.bernoulli(stickPr)) return prev
+    else {
+      val unif = rand.discreteUniform(0, maxState)
+      if (unif >= prev)
+        return unif + 1
+      else
+        return unif
+    }
+  }
+}

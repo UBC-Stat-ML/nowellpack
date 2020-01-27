@@ -60,16 +60,20 @@ class GenomeMap {
     val int rightOneIndexedIncl
     new (Locus locus) {
       val parsed = locus.toString.split("_")
-      val chrStr = parsed.get(1).toUpperCase
-      if (chrStr == "X")
-        chr = 23
-      else if (chrStr == "Y")
-        chr = 24
-      else
-        chr = Integer.parseInt(chrStr)
+      chr = chromosomeIndex(parsed.get(1))
       leftOneIndexedIncl = Integer.parseInt(parsed.get(2))
       rightOneIndexedIncl = Integer.parseInt(parsed.get(3))
     }
+  }
+  
+  def static int chromosomeIndex(String str) {
+    val chrStr = str.toUpperCase
+    if (chrStr == "X")
+      return 23
+    else if (chrStr == "Y")
+      return 24
+    else
+      return Integer.parseInt(chrStr)
   }
   
   def ArrayList<Locus> neighbors(Locus locus, int neighborhoodSize) {

@@ -1,0 +1,17 @@
+package chromobreak
+
+model Vertical {
+  
+  param GlobalDataSource data
+  
+  param Plate<String> chromosomes
+  param Plate<Integer> positions
+  
+  random Plated<RealVar> readCounts
+  
+  laws {
+    
+    
+    
+  }
+}
