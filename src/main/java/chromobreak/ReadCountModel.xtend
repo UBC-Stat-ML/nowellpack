@@ -21,22 +21,19 @@ class ReadCountModel implements TidilySerializable {
     if (sd.doubleValue <= 0.0) blang.types.StaticUtils::invalidParameter
     
     if (Double.isNaN(logGC) || Double.isNaN(logReadCount))
-      return 0.0 // skip missing observations 
+      return 0.0 // treat as missing 
+    
+    if (state === 0) // loss + garbage state (TODO: separate these!)
+      return -Math::log(10.0)
     
     if (logReadCount == Double.NEGATIVE_INFINITY) {
-      if (state === 0) return 0.0 else return Double.NEGATIVE_INFINITY
+      return Double.NEGATIVE_INFINITY
     }
     
-    val lowerCutoff = mean(logGC, 0) - 3.0 * sd(logGC, 0)
-    if (logReadCount < lowerCutoff && state === 0) {
-      return Math.log(1.0/lowerCutoff)
-    }
     val mean = mean(logGC, state)
     val sd = sd(logGC, state)
     if (sd <= 0.0) blang.types.StaticUtils::invalidParameter
-    val result = (-0.5 * Math::pow( (logReadCount - mean) / sd, 2)) - Math.log(sd) -  LOG_SQRT_2_PI
-
-    return result  
+    return (-0.5 * Math::pow( (logReadCount - mean) / sd, 2)) - Math.log(sd) -  LOG_SQRT_2_PI
   }
   
   val static LOG_SQRT_2_PI = Math::log(Math::sqrt(2.0 * Math::PI))
