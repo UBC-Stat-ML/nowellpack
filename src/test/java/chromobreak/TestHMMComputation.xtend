@@ -2,7 +2,6 @@ package chromobreak
 
 import org.junit.Test
 import hmm.HMM
-import hmm.HMMComputation
 import org.junit.Assert
 
 import static extension xlinear.MatrixExtensions.*
@@ -10,6 +9,7 @@ import static xlinear.MatrixOperations.*
 import blang.distributions.Normal
 import com.google.common.base.Stopwatch
 import java.util.concurrent.TimeUnit
+import hmm.HMMComputations
 
 class TestHMMComputation {
   
@@ -63,7 +63,7 @@ class TestHMMComputation {
               return Math::log(#[e0, e1, e2].get(t).get(state, #[o0, o1, o2].get(t)))
             }
           }
-          sum += Math.exp(HMMComputation::logMarginalProbability(hmm))
+          sum += Math.exp(hmm.HMMComputations::logMarginalProbability(hmm))
         }
      Assert.assertEquals(1.0, sum, 1e-10)
   }
@@ -96,7 +96,7 @@ class TestHMMComputation {
           return Math::log(e0.get(state, o))
         }
       }
-      sum += println(Math.exp(HMMComputation::logMarginalProbability(hmm)))
+      sum += println(Math.exp(HMMComputations::logMarginalProbability(hmm)))
     }
      Assert.assertEquals(1.0, sum, 1e-10)
   }
@@ -129,10 +129,10 @@ class TestHMMComputation {
       
     }
     println("started")
-    HMMComputation::logMarginalProbability(hmm)
+    HMMComputations::logMarginalProbability(hmm)
     val watch = Stopwatch.createStarted
     for (i : 0 .. 100)
-      HMMComputation::logMarginalProbability(hmm)
+      HMMComputations::logMarginalProbability(hmm)
     val elapsed = watch.elapsed(TimeUnit.MILLISECONDS)
     println("done in " + elapsed)
     Assert.assertTrue(elapsed < 6000)

@@ -1,17 +1,22 @@
 package chromobreak
 
+import blang.types.internals.RealScalar
+
 model SingleCell {
   
   param SingleCellData data
+  param Boolean useDataAnneal ?: true
   
-  random RealVar switchProbability ?: latentReal
-  random RealVar f0 ?: latentReal
-  random RealVar f1 ?: latentReal
-  random RealVar f2 ?: latentReal
-  random RealVar sd ?: latentReal
-  random RealVar sdSlope ?: latentReal
+  random RealVar switchProbability ?: latentReal //new RealScalar(0.1)
+  random RealVar f0 ?: new RealScalar(5.38)
+  random RealVar f1 ?: new RealScalar(2.2)
+  random RealVar f2 ?: new RealScalar(-5.0) 
+  random RealVar sd ?: latentReal //new RealScalar(0.1)
+  random RealVar sdSlope ?: latentReal //new RealScalar(0.0)
    
   random ReadCountModel readCountModel ?: new ReadCountModel(f0, f1, f2, sd, sdSlope)
+  
+  random Map<String, SingleCellHMM> hmms ?: new LinkedHashMap
     
   laws {
     
@@ -21,11 +26,26 @@ model SingleCell {
     f1 ~ Normal(1.0, 0.5 * 0.5)
     f2 ~ Normal(-1.0, 1.0)
     
+//    f0 ~ Normal(5.38, 0.01 * 0.01) //Normal(6, 2*2)
+//    f1 ~ Normal(2.2, 0.1 * 0.1)    //Normal(1.0, 0.5 * 0.5)
+//    f2 ~ Normal(-5.0, 1.0)        //Normal(-1.0, 1.0)
+//    
     sd ~ Exponential(0.1)
     sdSlope ~ Normal(0.0, 10*10)
     
-    for (Index<String> chromosome : data.chromosomes.indices) { //.filter[key == "1"]) { 
-      | SingleCellHMM hmm = new SingleCellHMM(data, chromosome, readCountModel, switchProbability)  ~ LogPotential(hmm.logMarginal) 
+    for (Index<String> chromosome : data.chromosomes.indices) { 
+      | SingleCellHMM hmm = {
+          val current = new SingleCellHMM(
+            data, 
+            chromosome, 
+            readCountModel, 
+            switchProbability, 
+            if (useDataAnneal) Optional.of(new AnnealingParameter) else Optional.empty
+          )
+          hmms.put(chromosome.key, current)
+          current
+      } 
+      ~ LogPotential(hmm.logMarginal) 
     }
   }
 }

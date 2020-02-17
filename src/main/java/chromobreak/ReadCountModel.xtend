@@ -9,7 +9,7 @@ import java.util.LinkedHashMap
 @Data
 class ReadCountModel implements TidilySerializable {
   
-  val static double x0 = -1.0
+  public val static double x0 = -1.0
   val RealVar f0
   val RealVar f1
   val RealVar f2 
@@ -39,16 +39,19 @@ class ReadCountModel implements TidilySerializable {
   val static LOG_SQRT_2_PI = Math::log(Math::sqrt(2.0 * Math::PI))
   
   def double mean(double logGC, int state) {
-    val a = f2.doubleValue / 2.0
-    val b = f1.doubleValue - 2 * a * x0
-    val c = f0.doubleValue - a * x0 * x0 - b * x0
+    mean(logGC, state, f0.doubleValue, f1.doubleValue, f2.doubleValue)
+  }
+  
+  def static double mean(double logGC, int state, double f0, double f1, double f2) {
+    val a = f2 / 2.0
+    val b = f1 - 2 * a * x0
+    val c = f0 - a * x0 * x0 - b * x0
     a * logGC * logGC + b * logGC + c + Math::log(state)
   }
   
   def double sd(double logGC, int state) { 
     sd.doubleValue + sdSlope.doubleValue * state
   }
-  
   
   override serialize(Context context) {
     for (state : 1 .. 6) {
@@ -57,6 +60,18 @@ class ReadCountModel implements TidilySerializable {
         evaluations.put(lgc, mean(lgc, state))
       context.recurse(evaluations, "state", state)
     }
+  }
+  
+  def static void main(String [] args) {
+    val f0 = Double.parseDouble(args.get(0))
+    val f1 = Double.parseDouble(args.get(1))
+    val f2 = Double.parseDouble(args.get(2))
+    val a = f2 / 2.0
+    val b = f1 - 2 * a * x0
+    val c = f0 - a * x0 * x0 - b * x0
+    println(a)
+    println(b)
+    println(c)
   }
   
 }

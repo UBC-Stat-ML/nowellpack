@@ -3,17 +3,24 @@ package chromobreak
 import hmm.HMM
 import blang.core.RealVar
 import blang.types.TransitionMatrix
-import hmm.HMMComputation
 
 import static xlinear.MatrixOperations.*
 import blang.types.Index
 import blang.runtime.internals.objectgraph.SkipDependency
+import hmm.HMMComputations
+import blang.inits.experiments.tabwriters.TidilySerializable
+import blang.inits.experiments.tabwriters.TidySerializer.Context
+import bayonet.distributions.Random
+import blang.types.AnnealingParameter
+import java.util.Optional
 
-class SingleCellHMM implements HMM {
+class SingleCellHMM implements HMM, TidilySerializable {
   
-  val int nStates = 6
+  public static val int nStates = 8
   
-  val int thinning = 10
+  val int thinning = 20
+  
+  val Optional<AnnealingParameter> anneal
     
   @SkipDependency(isMutable = false)
   val double [] logReads
@@ -21,10 +28,14 @@ class SingleCellHMM implements HMM {
   @SkipDependency(isMutable = false)
   val double [] logGCs
   
+  @SkipDependency(isMutable = false)
+  val Random random = new Random(1)
+  
   val ReadCountModel readCountModel
   val RealVar switchProbability
   
-  new(SingleCellData data, Index<String> chromosome, ReadCountModel readCountModel, RealVar switchProbability) {
+  new(SingleCellData data, Index<String> chromosome, ReadCountModel readCountModel, RealVar switchProbability, Optional<AnnealingParameter> anneal) {
+    this.anneal = anneal
     this.readCountModel = readCountModel
     this.switchProbability = switchProbability
     
@@ -71,7 +82,13 @@ class SingleCellHMM implements HMM {
     
   def double logMarginal() {
     preprocess()
-    return HMMComputation::logMarginalProbability(this)
+    return HMMComputations::logMarginalProbability(this, anneal)
+  }
+  
+  override serialize(Context context) {
+    val samples = HMMComputations::sample(random, this)
+    for (t : 0 ..< samples.size)
+      context.recurse(samples.get(t), "positions", t)
   }
   
 }
