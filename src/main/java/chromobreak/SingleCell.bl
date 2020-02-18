@@ -13,8 +13,9 @@ model SingleCell {
   random RealVar f2 ?: new RealScalar(-5.0) 
   random RealVar sd ?: new RealScalar(0.1)
   random RealVar sdSlope ?: new RealScalar(0.0)
+  random RealVar nu ?: new RealScalar(10.0)
    
-  random ReadCountModel readCountModel ?: new ReadCountModel(f0, f1, f2, sd, sdSlope)
+  random ReadCountModel readCountModel ?: new ReadCountModel(f0, f1, f2, sd, sdSlope, [nu + 100])
   
   random Map<String, SingleCellHMM> hmms ?: new LinkedHashMap
     
@@ -31,7 +32,8 @@ model SingleCell {
 //    f2 ~ Normal(-5.0, 1.0)        //Normal(-1.0, 1.0)
 //    
     sd ~ Exponential(0.1)
-    sdSlope ~ Normal(0.0, 10*10)
+    sdSlope ~ Exponential(0.01) //Normal(0.0, 10*10)
+    nu ~ Exponential(0.1)
     
     for (Index<String> chromosome : data.chromosomes.indices) { 
       | SingleCellHMM hmm = {
