@@ -10,6 +10,10 @@ import blang.types.AnnealingParameter
 
 class HMMComputations {
   
+  def static double logMarginalProbability(HMM hmm) {
+    return logMarginalProbability(hmm, Optional.empty)
+  }
+  
   /**
    * Log probability of observations summing over latent states
    */

@@ -13,12 +13,14 @@ import blang.inits.experiments.tabwriters.TidySerializer.Context
 import bayonet.distributions.Random
 import blang.types.AnnealingParameter
 import java.util.Optional
+import blang.runtime.Runner
+import java.nio.file.Files
 
 class SingleCellHMM implements HMM, TidilySerializable {
   
   public static val int nStates = 8
   
-  val int thinning = 20
+  //val int thinning = 20
   
   val Optional<AnnealingParameter> anneal
     
@@ -32,23 +34,19 @@ class SingleCellHMM implements HMM, TidilySerializable {
   val Random random = new Random(1)
   
   val ReadCountModel readCountModel
-  val RealVar switchProbability
+  val RealVar switchRate
   
-  new(SingleCellData data, Index<String> chromosome, ReadCountModel readCountModel, RealVar switchProbability, Optional<AnnealingParameter> anneal) {
+  new(SingleCellData data, Index<String> chromosome, ReadCountModel readCountModel, RealVar switchRate, Optional<AnnealingParameter> anneal) {
     this.anneal = anneal
     this.readCountModel = readCountModel
-    this.switchProbability = switchProbability
+    this.switchRate = switchRate
     
-    var int len = 0 
-    for (Index<Integer> position : data.positions.indices(chromosome).filter[key % thinning == 0]) {
-      len++
-    }
-    
+    var int len = data.positions.indices(chromosome).size 
     logReads = newDoubleArrayOfSize(len)
     logGCs = newDoubleArrayOfSize(len)
-    for (Index<Integer> position : data.positions.indices(chromosome).filter[key % thinning == 0]) {
-      logReads.set(position.key / thinning, Math::log(data.readCounts.get(chromosome, position).intValue))
-      logGCs.set(position.key / thinning, Math::log(data.gcContents.get(chromosome, position).doubleValue))
+    for (Index<Integer> position : data.positions.indices(chromosome)) {
+      logReads.set(position.key, Math::log(data.readCounts.get(chromosome, position).intValue))
+      logGCs.set(position.key, Math::log(data.gcContents.get(chromosome, position).doubleValue))
     }
     ChromoPostProcessor::addToPlot(logReads, logGCs) 
   }
@@ -73,10 +71,10 @@ class SingleCellHMM implements HMM, TidilySerializable {
   
   private def preprocess() {
     val matrix = dense(nStates, nStates)
-    val switchPr = switchProbability.doubleValue
+    val switchPr = switchRate.doubleValue // TODO: change this to continuous time to have nice interpol
     if (switchPr < 0.0 || switchPr > 1.0) blang.types.StaticUtils::invalidParameter
     val offDiagonal = switchPr / (nStates - 1.0)
-    matrix.editInPlace[x, y, v| if (x === y) 1.0 - switchProbability.doubleValue else offDiagonal]
+    matrix.editInPlace[x, y, v| if (x === y) 1.0 - switchRate.doubleValue else offDiagonal]
     transition = blang.types.StaticUtils::fixedTransitionMatrix(matrix)
   }
     
@@ -90,5 +88,22 @@ class SingleCellHMM implements HMM, TidilySerializable {
     for (t : 0 ..< samples.size)
       context.recurse(samples.get(t), "positions", t)
   }
+  
+  def static void main(String [] args) {
+    val tempDirWithPrefix = Files.createTempDirectory("SingleCellHMM")
+    val runner = Runner::create(tempDirWithPrefix.toFile,
+      "--model", "chromobreak.SingleCell",
+      "--model.data.source", "data/SA922_uncor_gc_simplified.csv",
+      "--model.data.gcContents.name", "value",
+      "--model.data.readCounts.name", "value" ,
+      "--model.data.readCounts.dataSource", "data/SA922_uncor_reads_split/5.csv",
+      "--model.useDataAnneal", "true"
+    )
+    val model = runner.model as SingleCell
+    model.components
+    for (hmm : model.hmms.values)
+      println(hmm.logMarginal)
+  }
+  
   
 }
