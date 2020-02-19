@@ -9,13 +9,13 @@ model SingleCell {
   
   random RealVar switchRate ?: new RealScalar(0.1)
   random RealVar f0 ?: new RealScalar(5.38)
-  random RealVar f1 ?: new RealScalar(2.2)
-  random RealVar f2 ?: new RealScalar(-5.0) 
-  random RealVar sd ?: new RealScalar(0.1)
-  random RealVar sdSlope ?: new RealScalar(0.0)
-  random RealVar nu ?: new RealScalar(10.0)
+  random RealVar f1 ?: new RealScalar(2.3)
+  random RealVar f2 ?: new RealScalar(-6.7) 
+  random RealVar sd ?: new RealScalar(0.09)
+  random RealVar sdSlope ?: new RealScalar(0.29)
+  random RealVar nu ?: new RealScalar(8.0)
    
-  random ReadCountModel readCountModel ?: new ReadCountModel(f0, f1, f2, sd, sdSlope, [nu + 100])
+  random ReadCountModel readCountModel ?: new ReadCountModel(f0, f1, f2, sd, sdSlope, nu)
   
   random Map<String, SingleCellHMM> hmms ?: new LinkedHashMap
     
