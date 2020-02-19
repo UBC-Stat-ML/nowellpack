@@ -52,7 +52,7 @@ class HMMComputations {
     val boolean saveVectors = savedBackwardVectors !== null
     
     val lengthToConsider = Math.ceil(beta * hmm.length) as int
-    val partialAnneal = lengthToConsider - hmm.length
+    val partialAnneal = lengthToConsider - beta * hmm.length
     val indexToAnneal = lengthToConsider - 1
     if (lengthToConsider == 0) return 0.0
     var initial = hmm.initialProbabilities
