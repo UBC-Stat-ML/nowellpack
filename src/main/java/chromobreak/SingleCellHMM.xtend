@@ -16,6 +16,7 @@ import java.util.Optional
 import blang.runtime.Runner
 import java.nio.file.Files
 import blang.mcmc.internals.ExponentiatedFactor
+//import static extension com.google.common.collect.Iterables.*
 
 class SingleCellHMM implements HMM, TidilySerializable {
   
@@ -40,10 +41,11 @@ class SingleCellHMM implements HMM, TidilySerializable {
     this.readCountModel = readCountModel
     this.switchProbability = switchProbability
     
-    var int len = data.positions.indices(chromosome).size 
+    val indices = data.positions.indices(chromosome) //.limit(100)
+    var int len = indices.size 
     logReads = newDoubleArrayOfSize(len)
     logGCs = newDoubleArrayOfSize(len)
-    for (Index<Integer> position : data.positions.indices(chromosome)) {
+    for (Index<Integer> position : indices) {
       logReads.set(position.key, Math::log(data.readCounts.get(chromosome, position).intValue))
       logGCs.set(position.key, Math::log(data.gcContents.get(chromosome, position).doubleValue))
     }
