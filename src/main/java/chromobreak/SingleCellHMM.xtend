@@ -15,6 +15,7 @@ import blang.types.AnnealingParameter
 import java.util.Optional
 import blang.runtime.Runner
 import java.nio.file.Files
+import blang.mcmc.internals.ExponentiatedFactor
 
 class SingleCellHMM implements HMM, TidilySerializable {
   
@@ -78,7 +79,12 @@ class SingleCellHMM implements HMM, TidilySerializable {
     
   def double logMarginal() {
     preprocess()
-    return HMMComputations::logMarginalProbability(this, anneal)
+    val result = HMMComputations::logMarginalProbability(this, anneal)
+    if (!anneal.present) return result
+    return if (result == Double.NEGATIVE_INFINITY)
+      ExponentiatedFactor::annealedMinusInfinity(anneal.get.doubleValue)
+    else
+      result
   }
   
   override serialize(Context context) {

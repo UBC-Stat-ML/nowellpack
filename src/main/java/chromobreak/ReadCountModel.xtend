@@ -35,7 +35,7 @@ class ReadCountModel implements TidilySerializable {
     val sd = sd(logGC, state)
     if (sd <= 0.0) 
       blang.types.StaticUtils::invalidParameter
-    return (-0.5 * Math::pow( (logReadCount - mean) / sd, 2)) - Math.log(sd) - CONSTANT
+    return -0.5 * Math::pow( (logReadCount - mean) / sd, 2) - Math.log(sd) - CONSTANT
   }
   
   val static double CONSTANT = Math::log(Math::sqrt(2.0 * Math::PI))
