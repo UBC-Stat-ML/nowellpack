@@ -16,9 +16,9 @@ import java.util.Optional
 import blang.runtime.Runner
 import java.nio.file.Files
 import blang.mcmc.internals.ExponentiatedFactor
-//import static extension com.google.common.collect.Iterables.*
+import org.eclipse.xtend.lib.annotations.Data
 
-class SingleCellHMM implements HMM, TidilySerializable {
+class SingleCellHMM implements TidilySerializable {
   
   public static val int nStates = 8
   
@@ -41,7 +41,7 @@ class SingleCellHMM implements HMM, TidilySerializable {
     this.readCountModel = readCountModel
     this.switchProbability = switchProbability
     
-    val indices = data.positions.indices(chromosome) //.limit(100)
+    val indices = data.positions.indices(chromosome) 
     var int len = indices.size 
     logReads = newDoubleArrayOfSize(len)
     logGCs = newDoubleArrayOfSize(len)
@@ -52,36 +52,45 @@ class SingleCellHMM implements HMM, TidilySerializable {
     ChromoPostProcessor::addToPlot(logReads, logGCs) 
   }
   
-  TransitionMatrix transition = null
-  
-  override transitionProbabilities(int t) {
-    transition
+  @Data
+  static abstract class Base implements HMM {    
+    protected val SingleCellHMM hmm
+    protected val TransitionMatrix transition
+    
+    override transitionProbabilities(int t) {
+      transition
+    }
+    
+    override initialProbabilities() {
+      blang.types.StaticUtils::fixedSimplex(ones(nStates) / nStates)
+    }
+    
+    override length() {
+      hmm.logReads.length
+    } 
+  }
+
+  static class Standard extends Base { 
+    new(SingleCellHMM hmm) {
+      super(hmm, hmm.transitionMatrix)
+    }
+    override observationLogDensity(int t, int state) {
+      hmm.readCountModel.logDensity(hmm.logGCs.get(t), hmm.logReads.get(t), state) 
+    }
   }
   
-  override initialProbabilities() {
-    blang.types.StaticUtils::fixedSimplex(ones(nStates) / nStates)
-  }
-  
-  override length() {
-    logReads.length
-  }
-  
-  override observationLogDensity(int t, int state) {
-    readCountModel.logDensity(logGCs.get(t), logReads.get(t), state) 
-  }
-  
-  private def preprocess() {
+  private def transitionMatrix() {
     val matrix = dense(nStates, nStates)
     val switchPr = switchProbability.doubleValue // TODO: change this to continuous time to have nice interpol
     if (switchPr < 0.0 || switchPr > 1.0) blang.types.StaticUtils::invalidParameter
     val offDiagonal = switchPr / (nStates - 1.0)
     matrix.editInPlace[x, y, v| if (x === y) 1.0 - switchProbability.doubleValue else offDiagonal]
-    transition = blang.types.StaticUtils::fixedTransitionMatrix(matrix)
+    return blang.types.StaticUtils::fixedTransitionMatrix(matrix)
   }
     
   def double logMarginal() {
-    preprocess()
-    val result = HMMComputations::logMarginalProbability(this, anneal)
+    val hmm = new Standard(this)
+    val result = HMMComputations::logMarginalProbability(hmm, anneal)
     if (!anneal.present) return result
     return if (result == Double.NEGATIVE_INFINITY)
       ExponentiatedFactor::annealedMinusInfinity(anneal.get.doubleValue)
@@ -90,7 +99,8 @@ class SingleCellHMM implements HMM, TidilySerializable {
   }
   
   override serialize(Context context) {
-    val samples = HMMComputations::sample(random, this)
+    val hmm = new Standard(this)
+    val samples = HMMComputations::sample(random, hmm)
     for (t : 0 ..< samples.size)
       context.recurse(samples.get(t), "positions", t)
   }
