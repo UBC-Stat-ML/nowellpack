@@ -20,8 +20,6 @@ class SingleCellHMM implements HMM, TidilySerializable {
   
   public static val int nStates = 8
   
-  //val int thinning = 20
-  
   val Optional<AnnealingParameter> anneal
     
   @SkipDependency(isMutable = false)
@@ -34,12 +32,12 @@ class SingleCellHMM implements HMM, TidilySerializable {
   val Random random = new Random(1)
   
   val ReadCountModel readCountModel
-  val RealVar switchRate
+  val RealVar switchProbability
   
-  new(SingleCellData data, Index<String> chromosome, ReadCountModel readCountModel, RealVar switchRate, Optional<AnnealingParameter> anneal) {
+  new(SingleCellData data, Index<String> chromosome, ReadCountModel readCountModel, RealVar switchProbability, Optional<AnnealingParameter> anneal) {
     this.anneal = anneal
     this.readCountModel = readCountModel
-    this.switchRate = switchRate
+    this.switchProbability = switchProbability
     
     var int len = data.positions.indices(chromosome).size 
     logReads = newDoubleArrayOfSize(len)
@@ -71,10 +69,10 @@ class SingleCellHMM implements HMM, TidilySerializable {
   
   private def preprocess() {
     val matrix = dense(nStates, nStates)
-    val switchPr = switchRate.doubleValue // TODO: change this to continuous time to have nice interpol
+    val switchPr = switchProbability.doubleValue // TODO: change this to continuous time to have nice interpol
     if (switchPr < 0.0 || switchPr > 1.0) blang.types.StaticUtils::invalidParameter
     val offDiagonal = switchPr / (nStates - 1.0)
-    matrix.editInPlace[x, y, v| if (x === y) 1.0 - switchRate.doubleValue else offDiagonal]
+    matrix.editInPlace[x, y, v| if (x === y) 1.0 - switchProbability.doubleValue else offDiagonal]
     transition = blang.types.StaticUtils::fixedTransitionMatrix(matrix)
   }
     
@@ -104,6 +102,4 @@ class SingleCellHMM implements HMM, TidilySerializable {
     for (hmm : model.hmms.values)
       println(hmm.logMarginal)
   }
-  
-  
 }

@@ -5,7 +5,6 @@ import blang.core.RealVar
 import blang.inits.experiments.tabwriters.TidilySerializable
 import blang.inits.experiments.tabwriters.TidySerializer.Context
 import java.util.LinkedHashMap
-import bayonet.math.SpecialFunctions
 
 @Data
 class ReadCountModel implements TidilySerializable {
@@ -16,11 +15,10 @@ class ReadCountModel implements TidilySerializable {
   val RealVar f2 
   val RealVar sd 
   val RealVar sdSlope 
-  val RealVar nu
   
   def double logDensity(double logGC, double logReadCount, int state) {
     
-    if (sd.doubleValue <= 0.0 || nu.doubleValue <= 0.0) 
+    if (sd.doubleValue <= 0.0) 
       blang.types.StaticUtils::invalidParameter
     
     if (Double.isNaN(logGC) || Double.isNaN(logReadCount))
@@ -37,14 +35,10 @@ class ReadCountModel implements TidilySerializable {
     val sd = sd(logGC, state)
     if (sd <= 0.0) 
       blang.types.StaticUtils::invalidParameter
-    val t1 = -Math::log(sd)
-    val t2 = SpecialFunctions::lnGamma((nu.doubleValue + 1.0) / 2.0) - 0.5 * Math::log(nu.doubleValue) - SpecialFunctions::lnGamma(nu.doubleValue / 2.0) 
-    val t3 = - ((nu.doubleValue + 1.0) / 2.0) * Math::log(1.0 + (1.0 / nu.doubleValue) * ( 1.0 / (Math::pow(sd, 2)) ) * Math::pow((logReadCount - mean), 2))
-    return CONSTANT + t1 + t2 + t3
-//    return (-0.5 * Math::pow( (logReadCount - mean) / sd, 2)) - Math.log(sd) -  LOG_SQRT_2_PI
+    return (-0.5 * Math::pow( (logReadCount - mean) / sd, 2)) - Math.log(sd) - CONSTANT
   }
   
-  val static double CONSTANT = - 0.5 * Math::log(Math::PI)
+  val static double CONSTANT = Math::log(Math::sqrt(2.0 * Math::PI))
   
   def double mean(double logGC, int state) {
     mean(logGC, state, f0.doubleValue, f1.doubleValue, f2.doubleValue)
