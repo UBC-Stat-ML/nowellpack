@@ -38,9 +38,11 @@ class ChromoPostProcessor extends DefaultPostProcessor {
     fitHistogram(rawData)
   }
   
+  public static Integer nStates = null
+  
   def fitHistogram(File rawData) {
     
-    val verticalLines = '''geom_vline(xintercept = c(«(1..SingleCellHMM::nStates).map[Math::log(it)].join(",")»))'''
+    val verticalLines = '''geom_vline(xintercept = c(«(1..nStates).map[Math::log(it)].join(",")»))'''
     
     val f0s = getFs(0)
     val f1s = getFs(1)
