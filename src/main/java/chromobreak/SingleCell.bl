@@ -6,6 +6,7 @@ import chromobreak.SingleCellHMMs.Configs
 model SingleCell {
   param SingleCellData data
   param Configs configs
+  param Double vagueness ?: 10.0
     
   random RealVar switchRate ?: latentReal
   random RealVar f0 ?: latentReal
@@ -23,9 +24,9 @@ model SingleCell {
     
     switchRate ~ Exponential(1.0)
     
-    f0 ~ Normal(0, 10*10) 
-    f1 ~ Normal(0, 10*10) 
-    f2 ~ Normal(0, 10*10) 
+    f0 | vagueness ~ Normal(0, vagueness*vagueness) 
+    f1 | vagueness ~ Normal(0, vagueness*vagueness)  
+    f2 | vagueness ~ Normal(0, vagueness*vagueness)  
     
     sd ~ Exponential(0.1)
     sdSlope ~ Exponential(0.1)
