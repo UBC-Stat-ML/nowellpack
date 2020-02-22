@@ -10,10 +10,33 @@ import blang.distributions.Normal
 import com.google.common.base.Stopwatch
 import java.util.concurrent.TimeUnit
 import hmm.HMMComputations
+import blang.validation.ExactInvarianceTest
+import hmm.SimpleHMM
 
 class TestHMMComputation {
   
-  
+  @Test
+  def void testSampler() {
+    val test = new ExactInvarianceTest()
+    
+    val builder = (new SimpleHMM.Builder)
+      .setDynamics(blang.types.StaticUtils::fixedTransitionMatrix(
+      #[
+        #[0.3, 0.7],
+        #[0.8, 0.2]
+      ]
+      ))
+      .setEmissions(blang.types.StaticUtils::fixedTransitionMatrix(
+      #[
+        #[0.6, 0.4],
+        #[0.8, 0.2]
+      ]
+      ))
+      .setLength(4)
+      .setInitial(blang.types.StaticUtils::fixedSimplex(0.4, 0.6))
+    test.add(builder.build, [latents.get(0).intValue as double], [latents.get(1).intValue as double])
+    test.check
+  }
   
   @Test
   def void testLogPr() {
