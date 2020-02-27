@@ -29,7 +29,7 @@ class HMMComputations {
     if (backward(hmm, savedBackwardVectors, Optional.empty) == Double.NEGATIVE_INFINITY) return null
     val result = new ArrayList<Integer>
     for (t : 0 ..< savedBackwardVectors.size) {
-      val currentVector = savedBackwardVectors.get(t)
+      val currentVector = savedBackwardVectors.get(savedBackwardVectors.size-t-1)
       if (t === 0) {
         val init = hmm.initialProbabilities
         for (s : 0 ..< currentVector.nEntries)

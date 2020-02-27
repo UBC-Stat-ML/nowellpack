@@ -66,18 +66,20 @@ class SingleCellHMMs implements TidilySerializable {
   }
   
   static class MultiLevel implements AnnealingStrategy {
-    @Arg @DefaultValue("4")
-    public      int b = 4
-    @Arg @DefaultValue("3")
-    public      int n = 3
+    @Arg @DefaultValue("10")
+    public      int b = 10
+    @Arg @DefaultValue("2")
+    public      int n = 2
+    @Arg            @DefaultValue("1")
+    public      int baseThinning = 1
     override logMarginal(SingleCellHMMs enclosing) {
       val beta = enclosing.configs.annealingParameter.get.doubleValue
       if (beta == 0.0) return 0.0
-      if (beta == 1.0) return HMMComputations::logMarginalProbability(enclosing.getHMM(1))
+      if (beta == 1.0) return HMMComputations::logMarginalProbability(enclosing.getHMM(baseThinning))
       val int l = Math.floor(beta * n) as int
       val int u = l+1
-      val log_pi_l = if (l == 0) 0.0 else HMMComputations::logMarginalProbability(enclosing.getHMM(thinning(l)))
-      val log_pi_u = HMMComputations::logMarginalProbability(enclosing.getHMM(thinning(u)))
+      val log_pi_l = if (l == 0) 0.0 else HMMComputations::logMarginalProbability(enclosing.getHMM(baseThinning*thinning(l)))
+      val log_pi_u = HMMComputations::logMarginalProbability(enclosing.getHMM(baseThinning*thinning(u)))
       val double lambda = n * beta - l
       return (1.0 - lambda) * log_pi_l + lambda * log_pi_u
     }

@@ -36,6 +36,16 @@ class ChromoPostProcessor extends DefaultPostProcessor {
     
     // fit histogram
     fitHistogram(rawData)
+    
+    // state paths
+    val hmms = new File(sampleDir, "hmms.csv")
+    if (hmms.exists) {
+      val types2 = TidySerializer::types(hmms)
+      createPlot(
+        new PathPlot(hmms, types2, this), 
+        blangExecutionDirectory.get
+      )
+    }
   }
   
   public static Integer nStates = null
@@ -86,8 +96,24 @@ class ChromoPostProcessor extends DefaultPostProcessor {
     BriefIO::readLines(file).indexCSV.map[Double.parseDouble(get("value"))].toList
   }
   
-  
-  
+  static class PathPlot extends GgPlot {
+    new(File posteriorSamples, Map<String, Class<?>> types, DefaultPostProcessor processor) {
+      super(posteriorSamples, types, processor)
+    }
+    override ggCommand() {
+      return '''
+        «removeBurnIn»
+        p <- ggplot(data, aes(x = positions, y = value, colour = factor(«Runner::sampleColumn»))) +
+                geom_line(alpha = 0.1) + 
+                theme_bw() +
+                facet_grid(. ~ map_key_0) + 
+                theme(legend.position = "none") +
+                ylab("states") +
+                xlab("positions") 
+      '''
+    }
+  }
+    
   static class FitPlot extends GgPlot {
     val File rawData
     new(File posteriorSamples, Map<String, Class<?>> types, DefaultPostProcessor processor, File rawData) {
