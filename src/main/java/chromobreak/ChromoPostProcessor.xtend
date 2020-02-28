@@ -12,9 +12,7 @@ import java.util.ArrayList
 class ChromoPostProcessor extends DefaultPostProcessor {
     
   
-  override run() {
-    super.run
-    
+  override run() {    
     val readCountModelName = "readCountModel"
     val sampleDir = new File(blangExecutionDirectory.get, Runner::SAMPLES_FOLDER)
     val readCountModelCsvFile = new File(sampleDir, readCountModelName + ".csv")
@@ -38,14 +36,20 @@ class ChromoPostProcessor extends DefaultPostProcessor {
     fitHistogram(rawData)
     
     // state paths
-    val hmms = new File(sampleDir, "hmms.csv")
-    if (hmms.exists) {
-      val types2 = TidySerializer::types(hmms)
+    val _hmms = new File(sampleDir, "hmms.csv")
+    if (_hmms.exists) {
+      // workaround: if we leave this in samples, this will create huge facet plots, 
+      // which are not most useful representation; we move them up to avoid this
+      val types2 = TidySerializer::types(_hmms)
+      val hmms = new File(_hmms.parentFile.parentFile, _hmms.name)
+      _hmms.renameTo(hmms)
       createPlot(
         new PathPlot(hmms, types2, this), 
         blangExecutionDirectory.get
       )
     }
+    
+    super.run
   }
   
   public static Integer nStates = null
