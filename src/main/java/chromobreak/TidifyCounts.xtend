@@ -1,4 +1,4 @@
-package corrupt
+package chromobreak
 
 import briefj.BriefIO
 import java.io.File
