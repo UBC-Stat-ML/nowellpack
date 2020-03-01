@@ -22,6 +22,7 @@ import blang.inits.DefaultValue
 import blang.inits.DesignatedConstructor
 import blang.inits.ConstructorArg
 import blang.inits.Implementations
+import blang.core.IntVar
 
 /**
  * Creates various multi-resolution HMMs for efficient custom tempering
@@ -29,9 +30,6 @@ import blang.inits.Implementations
 class SingleCellHMMs implements TidilySerializable {
   
   static class Configs {
-    @Arg  @DefaultValue("8")
-    public int nStates = 8
-    
     @Arg                                @DefaultValue("1")
     public Random demarginalizationRandom = new Random(1)
     
@@ -97,12 +95,20 @@ class SingleCellHMMs implements TidilySerializable {
   @SkipDependency(isMutable = false)
   val double [] logGCs
   
+  val IntVar _nStates
+  
+  def int nStates() {
+    val result = _nStates.intValue
+    if (result < 1 || result > 20) blang.types.StaticUtils::invalidParameter
+    return result
+  }
+  
   val ReadCountModel readCountModel
   val RealVar switchRate
   
-  new(SingleCellData data, Index<String> chromosome, ReadCountModel readCountModel, RealVar switchRate, Configs configs) {
-    ChromoPostProcessor::nStates = configs.nStates // hack    
+  new(SingleCellData data, Index<String> chromosome, ReadCountModel readCountModel, RealVar switchRate, Configs configs, IntVar nStates) {
     this.configs = configs
+    this._nStates = nStates
     this.readCountModel = readCountModel
     this.switchRate = switchRate
     
@@ -128,7 +134,8 @@ class SingleCellHMMs implements TidilySerializable {
     }
     
     override initialProbabilities() {
-      blang.types.StaticUtils::fixedSimplex(ones(hmm.configs.nStates) / hmm.configs.nStates)
+      
+      blang.types.StaticUtils::fixedSimplex(ones(hmm.nStates) / hmm.nStates)
     }
     
     override length() {
@@ -141,7 +148,7 @@ class SingleCellHMMs implements TidilySerializable {
   }
   
   def getHMM(int thinning) {
-    new SingleCellHMM(this, jcTransitionMatrix(configs.nStates, deltaTimeMu(thinning)), thinning)
+    new SingleCellHMM(this, jcTransitionMatrix(nStates, deltaTimeMu(thinning)), thinning)
   }
   
   def double deltaTimeMu(int thinning) {

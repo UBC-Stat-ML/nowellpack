@@ -2,18 +2,23 @@ package chromobreak
 
 import chromobreak.SingleCellHMMs
 import chromobreak.SingleCellHMMs.Configs
+import blang.types.internals.RealScalar
 
 model SingleCell {
   param SingleCellData data
   param Configs configs
+  param Integer maxState ?: 20
+  
   param Double vagueness ?: 10.0
-    
+  
+  random Plated<IntVar> nStates 
   random RealVar switchRate ?: latentReal
   random RealVar f0 ?: latentReal
   random RealVar f1 ?: latentReal 
   random RealVar f2 ?: latentReal  
   random RealVar sd ?: latentReal 
   random RealVar sdSlope ?: latentReal 
+  random RealVar p ?: new RealScalar(0.5) 
    
   random ReadCountModel readCountModel ?: new ReadCountModel(f0, f1, f2, sd, sdSlope)
   
@@ -31,14 +36,18 @@ model SingleCell {
     sd ~ Exponential(0.1)
     sdSlope ~ Exponential(0.1)
     
+    p ~ ContinuousUniform(0.0, 1.0)
+    
     for (Index<String> chromosome : data.chromosomes.indices) { 
+      nStates.get(chromosome) | p, maxState ~ Categorical(StaticUtils::truncatedGeometric(p, maxState))
       | SingleCellHMMs hmm = {
           val current = new SingleCellHMMs(
             data, 
             chromosome, 
             readCountModel, 
             switchRate, 
-            configs
+            configs,
+            nStates.get(chromosome)
           )
           hmms.put(chromosome.key, current)
           current

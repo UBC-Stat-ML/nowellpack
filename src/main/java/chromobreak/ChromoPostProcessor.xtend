@@ -52,7 +52,7 @@ class ChromoPostProcessor extends DefaultPostProcessor {
     super.run
   }
   
-  public static Integer nStates = null
+  public static int nStates = 10
   
   def fitHistogram(File rawData) {
     
