@@ -120,7 +120,6 @@ class SingleCellHMMs implements TidilySerializable {
       logReads.set(position.key, Math::log(data.readCounts.get(chromosome, position).intValue))
       logGCs.set(position.key, Math::log(data.gcContents.get(chromosome, position).doubleValue))
     }
-    ChromoPostProcessor::addToPlot(logReads, logGCs) 
   }
   
   @Data

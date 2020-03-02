@@ -56,24 +56,11 @@ class ReadCountModel implements TidilySerializable {
   }
   
   override serialize(Context context) {
-    for (state : 1 .. 6) {
+    for (state : 1 .. ChromoPostProcessor::nStates) {
       val evaluations = new LinkedHashMap<Double, Double>
       for (var double lgc = -1.1; lgc < -0.5; lgc += 0.05)
         evaluations.put(lgc, mean(lgc, state))
       context.recurse(evaluations, "state", state)
     }
-  }
-  
-  def static void main(String [] args) {
-    val f0 = Double.parseDouble(args.get(0))
-    val f1 = Double.parseDouble(args.get(1))
-    val f2 = Double.parseDouble(args.get(2))
-    val a = f2 / 2.0
-    val b = f1 - 2 * a * x0
-    val c = f0 - a * x0 * x0 - b * x0
-    println(a)
-    println(b)
-    println(c)
-  }
-  
+  } 
 }

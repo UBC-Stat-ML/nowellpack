@@ -7,24 +7,30 @@ import java.util.Map
 import blang.inits.experiments.tabwriters.TidySerializer
 import briefj.BriefIO
 import java.util.List
-import java.util.ArrayList
+import java.util.Optional
+import blang.inits.Arg
 
 class ChromoPostProcessor extends DefaultPostProcessor {
-    
+  
+  public static SingleCellData data = null // auto-set the above from SingleCell if ran as postprocessor
   
   override run() {    
     val readCountModelName = "readCountModel"
     val sampleDir = new File(blangExecutionDirectory.get, Runner::SAMPLES_FOLDER)
-    val readCountModelCsvFile = new File(sampleDir, readCountModelName + ".csv")
+    val readCountModelCsvFile = new File(sampleDir, readCountModelName + ".csv") 
     val types = TidySerializer::types(readCountModelCsvFile)
     types.remove("map_key_1") // don't auto-facet this
     
     val rawData = new File(blangExecutionDirectory.get, ".raw.csv")
     val output = BriefIO::output(rawData)
-    output.println("map_key_1,value,sample") // log gc , log count, then need to add dummy sample column to make FitPlot r code work
-    for (i : 0 ..< logReads.size)
-      if (!Double.isNaN(logGCs.get(i)) && !Double.isNaN(logReads.get(i)) )
-        output.println("" + logGCs.get(i) + "," + logReads.get(i) + ",0")
+    output.println("chromosomes,positions,logGC,logReads,sample") // log gc , log count, then need to add dummy sample column to make FitPlot r code work
+    for (chr : data.chromosomes.indices)
+      for (pos : data.positions.indices(chr)) {
+        val logRead = Math::log(data.readCounts.get(chr, pos).intValue)
+        val logGC = Math::log(data.gcContents.get(chr, pos).doubleValue)
+        if (!Double.isNaN(logGC) && !Double.isNaN(logRead))
+         output.println("" + chr.key + "," + pos.key + "," + logGC + "," + logRead + ",0")
+      }
     output.close
     
     createPlot(
@@ -80,8 +86,6 @@ class ChromoPostProcessor extends DefaultPostProcessor {
         require("dplyr")
         
         data <- read.csv("«rawData»")
-        names(data)[names(data) == 'map_key_1'] <- 'logGC'
-        names(data)[names(data) == 'value'] <- 'logReads'
         
         data <- data %>% mutate(transformed = logReads - «a»*logGC^2 - «b»*logGC - «c»)
         
@@ -128,6 +132,8 @@ class ChromoPostProcessor extends DefaultPostProcessor {
       return '''
       «removeBurnIn»
       df2 <- read.csv("«rawData.absolutePath»")
+      names(df2)[names(df2) == 'logGC'] <- 'map_key_1'
+      names(df2)[names(df2) == 'logReads'] <- 'value'
       p <- ggplot(data, aes(x = map_key_1, y = value, colour = factor(«Runner::sampleColumn»))) +
         geom_line(data = data, alpha = 0.1) + «facetString»
         geom_point(data = df2, alpha = 0.1) +
@@ -138,11 +144,5 @@ class ChromoPostProcessor extends DefaultPostProcessor {
       '''
     }
   }
-  
-  static List<Double> logReads = new ArrayList
-  static List<Double> logGCs = new ArrayList
-  def static void addToPlot(double[] _logReads, double[] _logGCs) {
-    logReads.addAll(_logReads)
-    logGCs.addAll(_logGCs)
-  }
+
 }

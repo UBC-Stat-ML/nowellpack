@@ -6,6 +6,9 @@ import blang.types.internals.RealScalar
 
 model SingleCell {
   param SingleCellData data
+  param Object initBlock ?: {
+    ChromoPostProcessor.data = data
+  }
   param Configs configs
   param Integer maxState ?: 20
   
