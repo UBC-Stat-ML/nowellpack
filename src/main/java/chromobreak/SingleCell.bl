@@ -6,11 +6,7 @@ import blang.types.internals.RealScalar
 
 model SingleCell {
   param SingleCellData data
-  param Object initBlock ?: {
-    ChromoPostProcessor.data = data
-  }
   param Configs configs
-  param Integer maxState ?: 20
   
   param Double vagueness ?: 10.0
   
@@ -42,7 +38,7 @@ model SingleCell {
     p ~ ContinuousUniform(0.0, 1.0)
     
     for (Index<String> chromosome : data.chromosomes.indices) { 
-      nStates.get(chromosome) | p, maxState ~ Categorical(StaticUtils::truncatedGeometric(p, maxState))
+      nStates.get(chromosome) | p, int maxState = configs.maxStates ~ Categorical(StaticUtils::truncatedGeometric(p, maxState))
       | SingleCellHMMs hmm = {
           val current = new SingleCellHMMs(
             data, 

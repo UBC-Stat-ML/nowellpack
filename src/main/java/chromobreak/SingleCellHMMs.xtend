@@ -23,6 +23,7 @@ import blang.inits.DesignatedConstructor
 import blang.inits.ConstructorArg
 import blang.inits.Implementations
 import blang.core.IntVar
+import hmm.SparseTransitionMatrix
 
 /**
  * Creates various multi-resolution HMMs for efficient custom tempering
@@ -30,8 +31,15 @@ import blang.core.IntVar
 class SingleCellHMMs implements TidilySerializable {
   
   static class Configs {
+    @Arg          @DefaultValue("true")
+    public boolean bufferState = true
+    
     @Arg                                @DefaultValue("1")
     public Random demarginalizationRandom = new Random(1)
+    
+    @Arg(description = "Can be set to infinity but useful to set finite max to control resource usage")          
+            @DefaultValue("20")
+    public int maxStates = 20
     
     val Optional<AnnealingParameter> annealingParameter
     
@@ -99,8 +107,8 @@ class SingleCellHMMs implements TidilySerializable {
   
   def int nStates() {
     val result = _nStates.intValue
-    if (result < 1 || result > 20) blang.types.StaticUtils::invalidParameter
-    return result
+    if (result < 2 || result > configs.maxStates) blang.types.StaticUtils::invalidParameter
+    return result + if (configs.bufferState) 1 else 0
   }
   
   val ReadCountModel readCountModel
@@ -133,7 +141,6 @@ class SingleCellHMMs implements TidilySerializable {
     }
     
     override initialProbabilities() {
-      
       blang.types.StaticUtils::fixedSimplex(ones(hmm.nStates) / hmm.nStates)
     }
     
@@ -142,18 +149,40 @@ class SingleCellHMMs implements TidilySerializable {
     } 
     
     override observationLogDensity(int t, int state) {
+      if (hmm.configs.bufferState) {
+        if (state === hmm.nStates - 1)
+          return -Math.log(10)
+      }
       hmm.readCountModel.logDensity(hmm.logGCs.get(t * thinning), hmm.logReads.get(t * thinning), state) 
     }
   }
   
   def getHMM(int thinning) {
-    new SingleCellHMM(this, jcTransitionMatrix(nStates, deltaTimeMu(thinning)), thinning)
+    val deltaTimeMu = deltaTimeMu(thinning)
+    return new SingleCellHMM(
+      this, 
+      (if (configs.bufferState) bufferedTransitionMatrix(nStates, deltaTimeMu) else jcTransitionMatrix(nStates, deltaTimeMu)), 
+      thinning
+    )
   }
   
   def double deltaTimeMu(int thinning) {
     val rate = switchRate.doubleValue
     if (rate < 0.0) blang.types.StaticUtils::invalidParameter
     return rate * thinning
+  }
+  
+  static def bufferedTransitionMatrix(int size, double deltaTimeMu) {
+    val matrix = sparse(size, size)
+    if (deltaTimeMu < 0) throw new RuntimeException
+    val prNoChange = Math::exp(-deltaTimeMu)
+    val bufferState = size - 1
+    for (s : 0 .. bufferState-1) {
+      matrix.set(s, s, prNoChange)
+      matrix.set(s, bufferState, 1.0 - prNoChange)
+      matrix.set(bufferState, s, 1.0 / (size-1))
+    }
+    return new SparseTransitionMatrix(matrix)
   }
 
   static def jcTransitionMatrix(int size, double deltaTimeMu) {
@@ -176,8 +205,14 @@ class SingleCellHMMs implements TidilySerializable {
   
   override serialize(Context context) {
     val samples = HMMComputations::sample(configs.demarginalizationRandom, getHMM(1))
+    val bufferState = if (configs.bufferState) nStates-1 else -1
     for (t : 0 ..< samples.size)
-      context.recurse(samples.get(t), "positions", t)
+      context.recurse(processState(samples.get(t), bufferState), "positions", t)
+  }
+  
+  def static processState(int value, int bufferState) {
+    if (value === bufferState) "NA"
+    else "" + value
   }
   
   def static void main(String [] args) {

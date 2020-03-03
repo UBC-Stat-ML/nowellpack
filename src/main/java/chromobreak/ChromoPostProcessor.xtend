@@ -174,7 +174,7 @@ class ChromoPostProcessor extends DefaultPostProcessor {
     n_samples <- max(data$«Runner.sampleColumn»)
     cut_off <- n_samples * «burnInFraction»
     data <- subset(data, «Runner.sampleColumn» > cut_off)
-    p <- ggplot(data, aes(x = positions, y = value, colour = factor(«Runner::sampleColumn»))) +
+    p <- ggplot(data[!is.na(data$value),], aes(x = positions, y = value, colour = factor(«Runner::sampleColumn»))) +
                     geom_line(alpha = 0.1) + 
                     theme_bw() +
                     facet_grid(. ~ map_key_0) + 

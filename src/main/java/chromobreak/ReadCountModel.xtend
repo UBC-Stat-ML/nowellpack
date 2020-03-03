@@ -24,8 +24,18 @@ class ReadCountModel implements TidilySerializable {
     if (Double.isNaN(logGC) || Double.isNaN(logReadCount))
       return 0.0 // treat as missing 
     
-    if (state === 0) // loss + garbage state (TODO: separate these!)
-      return -Math::log(10.0)
+    if (state === 0) { // loss state
+      if (logReadCount === Double.NEGATIVE_INFINITY)
+        return 0.0
+    
+      val bound = mean(logGC, 1)
+      if (!(bound > 0.0))
+        return Double.NEGATIVE_INFINITY
+      if (logReadCount > bound) 
+        return Double.NEGATIVE_INFINITY
+      else
+        return -Math::log(bound)
+    }
     
     if (logReadCount == Double.NEGATIVE_INFINITY) {
       return Double.NEGATIVE_INFINITY

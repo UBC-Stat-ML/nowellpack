@@ -60,11 +60,15 @@ class HMMComputations {
     var vector = ones(lastStepSize)
     var sumLogs = 0.0
     for (t : (lengthToConsider - 1) .. 0) {
+      var foundPossibleState = false
       for (s : 0 ..< vector.nEntries) {
           var obsLogDensity = hmm.observationLogDensity(t, s) 
           
           if (Double.isNaN(obsLogDensity) || obsLogDensity == Double.POSITIVE_INFINITY) 
             throw new RuntimeException
+            
+          if (obsLogDensity !== Double.NEGATIVE_INFINITY)
+            foundPossibleState = true
           
           if (indexToAnneal == t) {
             if (partialAnneal == 0.0)
@@ -79,6 +83,13 @@ class HMMComputations {
           
           vector.set(s, Math::log(vector.get(s)) + obsLogDensity)
         }
+        
+      if (!foundPossibleState) {
+        if (saveVectors) 
+          throw new RuntimeException
+        else 
+          return Double.NEGATIVE_INFINITY
+      }
             
       val logNorm = expNormalize(vector)
       
