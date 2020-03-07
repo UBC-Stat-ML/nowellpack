@@ -4,6 +4,7 @@ import chromobreak.SingleCellHMMs
 import chromobreak.SingleCellHMMs.Configs
 import blang.types.internals.RealScalar
 
+@Samplers(F0Sampler)
 model SingleCell {
   param SingleCellData data
   param Configs configs
