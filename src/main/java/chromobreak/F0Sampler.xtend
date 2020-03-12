@@ -26,7 +26,9 @@ class F0Sampler extends MHSampler {
     val newValue = oldValue + ploidyJump
     f0.set(newValue)
     callback.proposalLogRatio = 0.0
-    if (!callback.sampleAcceptance)
+    if (!callback.sampleAcceptance) 
       f0.set(oldValue)
+    else
+      println("success")
   }
 }

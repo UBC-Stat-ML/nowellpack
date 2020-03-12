@@ -11,7 +11,7 @@ model SingleCell {
   
   param Double vagueness ?: 10.0
   
-  random Plated<IntVar> nStates 
+//  random Plated<IntVar> nStates 
   random RealVar switchRate ?: latentReal
   random RealVar f0 ?: latentReal
   random RealVar f1 ?: latentReal 
@@ -39,7 +39,7 @@ model SingleCell {
     p ~ ContinuousUniform(0.0, 1.0)
     
     for (Index<String> chromosome : data.chromosomes.indices) { 
-      nStates.get(chromosome) | p, int maxState = configs.maxStates ~ Categorical(StaticUtils::truncatedGeometric(p, maxState))
+//      nStates.get(chromosome) | p, int maxState = configs.maxStates ~ Categorical(StaticUtils::truncatedGeometric(p, maxState))
       | SingleCellHMMs hmm = {
           val current = new SingleCellHMMs(
             data, 
@@ -47,7 +47,7 @@ model SingleCell {
             readCountModel, 
             switchRate, 
             configs,
-            nStates.get(chromosome)
+            20 //nStates.get(chromosome)
           )
           hmms.put(chromosome.key, current)
           current
