@@ -52,7 +52,7 @@ class ChromoPostProcessor extends DefaultPostProcessor {
     super.run
   }
     
-  public static int nStates = 8
+  public static int nStates = 12
   
   def String means() {
     (1..nStates).map[Math::log(it)].join(",")

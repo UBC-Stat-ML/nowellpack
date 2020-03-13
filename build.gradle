@@ -1,6 +1,6 @@
 plugins {
-  id 'org.xtext.xtend' version '1.0.21'
-  id 'org.xtext.builder' version '1.0.21'
+  id 'org.xtext.xtend' version '2.0.5'
+  id 'org.xtext.builder' version '2.0.5'
   id 'java'
   id 'eclipse'
   id 'maven'
@@ -9,7 +9,7 @@ plugins {
 dependencies {
   xtextLanguages "ca.ubc.stat.blang:ca.ubc.stat.blang:4.0.1"
   compile group: 'ca.ubc.stat', name: 'conifer', version: '2.0.4'
-  compile group: 'ca.ubc.stat', name: 'blangSDK', version: '2.1.2'
+  compile group: 'ca.ubc.stat', name: 'blangSDK', version: '2.2.0'
   compile group: 'ca.ubc.stat', name: 'conifer', version: '2.0.4'
   compile group: 'ca.ubc.stat', name: 'pxviz', version: '1.1.0'
 }

@@ -9,8 +9,10 @@ model SingleCell {
   param SingleCellData data
   param Configs configs
   
+  param String chromosomeFilter ?: ".*"
   param Double vagueness ?: 10.0
   
+  param Integer nStates ?: 8
 //  random Plated<IntVar> nStates 
   random RealVar switchRate ?: latentReal
   random RealVar f0 ?: latentReal
@@ -18,12 +20,22 @@ model SingleCell {
   random RealVar f2 ?: latentReal  
   random RealVar sd ?: latentReal 
   random RealVar sdSlope ?: latentReal 
-  random RealVar p ?: new RealScalar(0.5) 
+//  random RealVar p ?: new RealScalar(0.5) 
    
   random ReadCountModel readCountModel ?: new ReadCountModel(f0, f1, f2, sd, sdSlope)
   
   // Keeping a copy to easily serialize demarginalized hmms
   random Map<String, SingleCellHMMs> hmms ?: new LinkedHashMap
+  
+//  next steps
+//  - speed things up for quick testing [OK - well check if can reproduce high-ploidity choice]
+//  - better initializations 
+//  - setup appropriate multi-level - optimize schedule by hand
+//  - remove F0 move
+//  - add non-uniform distribution? to make it more costy to assume ploidity change - but that would make it too costy?
+//  - explicit ploidity - with spike and slab prior
+//  - remove random states, just making it hard to change - instead hard set limit
+//  - gof: usage for states
     
   laws {
     
@@ -36,9 +48,9 @@ model SingleCell {
     sd ~ Exponential(0.1)
     sdSlope ~ Exponential(0.1)
     
-    p ~ ContinuousUniform(0.0, 1.0)
+//    p ~ ContinuousUniform(0.0, 1.0)
     
-    for (Index<String> chromosome : data.chromosomes.indices) { 
+    for (Index<String> chromosome : data.chromosomes.indices.filter[key.matches("^" + chromosomeFilter + "$")]) {  
 //      nStates.get(chromosome) | p, int maxState = configs.maxStates ~ Categorical(StaticUtils::truncatedGeometric(p, maxState))
       | SingleCellHMMs hmm = {
           val current = new SingleCellHMMs(
@@ -47,7 +59,7 @@ model SingleCell {
             readCountModel, 
             switchRate, 
             configs,
-            20 //nStates.get(chromosome)
+            nStates //nStates.get(chromosome)
           )
           hmms.put(chromosome.key, current)
           current
