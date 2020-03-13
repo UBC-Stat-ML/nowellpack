@@ -12,15 +12,14 @@ model SingleCell {
   param String chromosomeFilter ?: ".*"
   param Double vagueness ?: 10.0
   
-  param Integer nStates ?: 8
-//  random Plated<IntVar> nStates 
+  random Plated<IntVar> nStates 
   random RealVar switchRate ?: latentReal
   random RealVar f0 ?: latentReal
   random RealVar f1 ?: latentReal 
   random RealVar f2 ?: latentReal  
   random RealVar sd ?: latentReal 
   random RealVar sdSlope ?: latentReal 
-//  random RealVar p ?: new RealScalar(0.5) 
+  random RealVar p ?: new RealScalar(0.5) 
    
   random ReadCountModel readCountModel ?: new ReadCountModel(f0, f1, f2, sd, sdSlope)
   
@@ -50,10 +49,10 @@ model SingleCell {
     sd ~ Exponential(0.1)
     sdSlope ~ Exponential(0.1)
     
-//    p ~ ContinuousUniform(0.0, 1.0)
+    p ~ ContinuousUniform(0.0, 1.0)
     
     for (Index<String> chromosome : data.chromosomes.indices.filter[key.matches("^" + chromosomeFilter + "$")]) {  
-//      nStates.get(chromosome) | p, int maxState = configs.maxStates ~ Categorical(StaticUtils::truncatedGeometric(p, maxState))
+      nStates.get(chromosome) | p, int maxState = configs.maxStates ~ Categorical(StaticUtils::truncatedGeometric(p, maxState))
       | SingleCellHMMs hmm = {
           val current = new SingleCellHMMs(
             data, 
@@ -61,7 +60,7 @@ model SingleCell {
             readCountModel, 
             switchRate, 
             configs,
-            nStates //nStates.get(chromosome)
+            nStates.get(chromosome)
           )
           hmms.put(chromosome.key, current)
           current
