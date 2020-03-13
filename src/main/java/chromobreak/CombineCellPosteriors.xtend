@@ -17,6 +17,7 @@ import briefj.BriefMaps
 import briefj.collections.Counter
 import java.util.Collections
 import com.google.common.collect.Comparators
+import org.eclipse.xtext.xbase.lib.Functions.Function1
 
 class CombineCellPosteriors extends Experiment {
   
@@ -93,14 +94,15 @@ class CombineCellPosteriors extends Experiment {
     new(CombineCellPosteriors cellPost) {
       super(cellPost.directory.name)
       this.cellPost = cellPost
-      documents.add(allPaths)
+      documents.add(gather("Paths", [new File(it, "paths.pdf")]))
+      documents.add(gather("Lambda", [new File(it, "monitoringPlots/lambdaInstantaneous.pdf")]))
     }
     
-    def Document allPaths() {
-      new Document("Paths") [
+    def Document gather(String title, Function1<File,File> fileGrabber) {
+      new Document(title) [
         for (execDir : execDirs) {
           val cellId = cellId(execDir)
-          it += new Embed(new File(execDir.execDir, "paths.pdf").absoluteFile) {
+          it += new Embed(fileGrabber.apply(execDir.execDir).absoluteFile) {
             override height() { "150px" }
             override title() { LINK(execDir.execDir.absolutePath) + "cell " + cellId + ENDLINK }
           }

@@ -36,6 +36,8 @@ model SingleCell {
 //  - explicit ploidity - with spike and slab prior
 //  - remove random states, just making it hard to change - instead hard set limit
 //  - gof: usage for states
+
+// instead: try to crank up compute
     
   laws {
     
