@@ -78,6 +78,10 @@ class SingleCellHMMs implements TidilySerializable {
     public      int n = 2
     @Arg            @DefaultValue("1")
     public      int baseThinning = 1
+    @DesignatedConstructor
+    new () {
+      MultiLevelPT::configs = this
+    }
     override logMarginal(SingleCellHMMs enclosing) {
       val beta = enclosing.configs.annealingParameter.get.doubleValue
       if (beta == 0.0) return 0.0
