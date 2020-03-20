@@ -46,7 +46,7 @@ class SingleCellHMMs implements TidilySerializable {
     val AnnealingStrategy annealingStrategy
     
     @DesignatedConstructor
-    new(@ConstructorArg("annealingStrategy") AnnealingStrategy annealingStrategy) {
+    new(@ConstructorArg("annealingStrategy") @DefaultValue("Exponentiation") AnnealingStrategy annealingStrategy) {
       annealingParameter = if (annealingStrategy instanceof Exponentiation) Optional.empty else Optional.of(new AnnealingParameter)
       this.annealingStrategy = annealingStrategy
     }

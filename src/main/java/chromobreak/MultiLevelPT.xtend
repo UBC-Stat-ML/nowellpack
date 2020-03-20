@@ -60,6 +60,6 @@ class MultiLevelPT extends PT {
         argmin = k
       }
     }
-    return println(argmin)
+    return argmin
   }
 }
