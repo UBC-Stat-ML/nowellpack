@@ -84,6 +84,8 @@ import java.util.Collections
     this.loci = new LinkedHashSet
     this.tree = new DirectedTree(root)
     val Tree<conifer.TreeNode> parseTree = parser.parse
+    if (parse(parseTree.label.toString) != root)
+      throw new RuntimeException("PerfectPhylo newick file should have root called " + root)
     readParseTree(null, parseTree) 
   }
   
