@@ -39,17 +39,9 @@ class CombineCellPosteriors extends Experiment {
   @Arg @DefaultValue("results/latest")
   String execInDirectory = "results/latest"
   
-  @Arg @DefaultValue("0.5")
-  double percentileIslandLengthCutoff = 0.5
-  
-  @Arg @DefaultValue("10")
-  int minGap = 10
-  
-  @Arg @DefaultValue("1.0")
-  double maxMass = 1.0
-  
-  @Arg @DefaultValue("0.9")
-  double minMass = 0.9
+  @Arg(description = "Rank cells per mean island length. Remove this fraction of the long ones.")
+                         @DefaultValue("0.5")
+  double fractionIslandLengthCutoff = 0.5
   
   @Arg @DefaultValue("0.5")
   double burnInFraction = 0.5
@@ -57,6 +49,10 @@ class CombineCellPosteriors extends Experiment {
   @Arg(description = "Mass of change points with delta >= 0 is added at each location. Only mass above that threshold will open or extend 'islands'") 
        @DefaultValue("0.02")
   double  threshold = 0.02
+  
+  @Arg(description = "After an island is created, sum to mass of all positions involved. Exclude if below this cut off'") 
+         @DefaultValue("0.1")
+  double   massCutOff = 0.1 
   
   @Arg   @DefaultValue("Rscript")
   public String rCmd = "Rscript"
@@ -66,6 +62,8 @@ class CombineCellPosteriors extends Experiment {
   
   // this gets populated by loadData()
   var LinkedHashMap<String,Integer> lengths = null // chr -> length
+  
+  val expectedNumberOfEvents = new Counter<String>
   
   @Data
   static class Key {
@@ -77,7 +75,7 @@ class CombineCellPosteriors extends Experiment {
   // create posterior summary across several cell-specific exec directories
   // returns key -> count over different deltas
   // includes ALL change points, no filtering done at this stage
-  def loadData() {
+  def Map<Key,Counter<Integer>> loadData() {
     // key -> counts over different deltas
     val changePoints = new LinkedHashMap<Key,Counter<Integer>>
     for (exec : execDirs) {
@@ -102,10 +100,15 @@ class CombineCellPosteriors extends Experiment {
           val delta = next - prev
           val key = new Key(cellId, nc, Integer.parseInt(lines.get(i).get("positions")))
           BriefMaps.getOrPut(changePoints, key, new Counter).incrementCount(delta, 1.0/nItersUsed)
+          expectedNumberOfEvents.incrementCount(cellId, 1.0/nItersUsed)
         }
       }
     }
-    // keep a record
+    println(expectedNumberOfEvents)
+    return changePoints
+  }
+  
+  def record(Map<Key,Counter<Integer>> changePoints) {
     for (key : changePoints.keySet) {
       val counter = changePoints.get(key)
       for (delta : counter) {
@@ -119,7 +122,6 @@ class CombineCellPosteriors extends Experiment {
           )
       }
     }
-    return changePoints
   }
   
   def loadChromosomeLengths(List<Map<String,String>> lines) {
@@ -133,7 +135,7 @@ class CombineCellPosteriors extends Experiment {
   }
   
   def runChecks() {
-    if (percentileIslandLengthCutoff < 0.0 || percentileIslandLengthCutoff > 1.0) throw new RuntimeException
+    if (fractionIslandLengthCutoff < 0.0 || fractionIslandLengthCutoff > 1.0) throw new RuntimeException
   }
   
   /* 
@@ -142,8 +144,6 @@ class CombineCellPosteriors extends Experiment {
    * - remove cells where intervals are too large
    */
   def Multimap<String,Island> islands(Map<Key,Counter<Integer>> changePoints) {
-    
-    val massCutOff = 0.1 // TODO: do we really need this?
     val Multimap<String,Island> islands = LinkedHashMultimap.create // cellId -> island
     val meanLenStats = new DescriptiveStatistics
     val meanLens = new HashMap<String,Double> // cellId -> mean len
@@ -185,7 +185,7 @@ class CombineCellPosteriors extends Experiment {
     }
     
     // remove cells where islands are too large
-    val cutoff = meanLenStats.getPercentile(percentileIslandLengthCutoff * 100.0)
+    val cutoff = meanLenStats.getPercentile(fractionIslandLengthCutoff * 100.0)
     for (cellId : cellIds) {
       val meanLen = meanLens.get(cellId)
       val keep = meanLen <= cutoff
@@ -206,7 +206,7 @@ class CombineCellPosteriors extends Experiment {
     return islands.keySet.size
   }
   
-  def archipelagoes(Multimap<String,Island> islands) {
+  def Map<String,IntervalTree<Archipelago>> archipelagoes(Multimap<String,Island> islands) {
     val intervalTrees = new LinkedHashMap<String,IntervalTree<Archipelago>> // chr -> tree
     for (island : islands.values) {
       val tree = BriefMaps.getOrPut(intervalTrees, island.chr, new IntervalTree)
@@ -237,18 +237,7 @@ class CombineCellPosteriors extends Experiment {
     return intervalTrees
   }
   
-  override run() {
-    
-    // TODO: exclude locations with no GC contents info?
-    
-    runChecks
-    val changePoints = loadData()
-    val islands = islands(changePoints)
-    val intervalTrees = archipelagoes(islands)
-    
-    // report
-    new Website(this).renderInto(results.getFileInResultFolder("output"))
-    
+  def void record(Map<String,IntervalTree<Archipelago>> intervalTrees, Multimap<String,Island> islands, Map<Key,Counter<Integer>> changePoints) {
     val archiKeptPDF = results.child("archipelagoes")
     val archiRemPDF = results.child("archipelagoes-excluded")
     val archiCSV = results.child("archipelagoes-CSVs")
@@ -263,6 +252,9 @@ class CombineCellPosteriors extends Experiment {
         }
         results.getTabularWriter("archipelagoes").write(
           "id" -> archi.id,
+          "chr" -> archi.chr,
+          "leftBound" -> archi.pos.lowerEndpoint,
+          "rightBound" -> archi.pos.upperEndpoint,
           "leftGrap" -> archi.gaps.get(0),
           "rightGrap" -> archi.gaps.get(1),
           "nIslands" -> archi.islands.size,
@@ -304,49 +296,41 @@ class CombineCellPosteriors extends Experiment {
         ''')
         
         
+
+        
       }
     }
+  }
+  
+  override run() {
+    // TODO: exclude locations with no GC contents info?
+    runChecks
+    val changePoints = loadData()
+    record(changePoints)
+    val islands = islands(changePoints)
+    val archipelagoes = archipelagoes(islands)
+    record(archipelagoes, islands, changePoints)
+    // report
+    new Website(this).renderInto(results.getFileInResultFolder("output"))
     
-    
-    // TODO: filter archipelogos sitting in high event intensity region
-    
-    // TODO: exclude those with mass greater than 1 (keep for later: + epsilon); report how many where excluded in this fashion
-    
-    // TODO: filter by those with too much membership uncertainty (entropy? not quite) actually do entropy on the joint inference output
-    //       note: this should take care of those with all the mass on zero; we do not have a problem with those per se, 
-    
-    // TODO: filter singleton or full achipelogoes at very end (they do not carry phylogenetic signal)
-    
-    //        
-//      }.filter[it.islands.size > 1]) {
-//        val prev = archis.predecessor(archi)
-//        val next = archis.successor(archi)
-//        var gap = Integer.MAX_VALUE
-//        if (prev.present) gap = Math.min(gap, archi.pos.lowerEndpoint - prev.get.pos.upperEndpoint)
-//        if (next.present) gap = Math.min(gap, next.get.pos.lowerEndpoint - archi.pos.upperEndpoint)
-//        println(archi.pos)
-//        println(gap)
-//        println(archi.islands.size as double / nCellsLeft)
-//        println(archi.islands.join(" "))
-//        println("---")
-    
-    // right now some islands have tiny little rocks on either side? maybe better just to reserve mass
-    
-    // TODO compute poison fraction if an island contains two changes of same sign
-    
-    // TODO: remove cells where these islands are too wide or too poisoned
-    
-    // then build archipelagos overlapping signed-islands across cells (use interval tree)
-      // 1- maintain an eq. class relation over positions at first every singleton -> empty
-      // 2- visit islands, use them to merge cc's, adding to their set 
-    
-    // make sure they are not too poisoned
-    // build unions of windows
-    
-    // now hopefully some of these windows are still islands? or group in small cc's
-    // do joint inference on these meta-islands
-    
-    // for each meta-island, split into the two calls, show paths in each group as QC
+    /*
+     * TODO:
+     * - ignore events dominated by 0
+     * - cf with HMM copy
+     * - report total activity per cell [done]
+     * - discard events involving copy number 1
+     * - filtering of cell of wide intervals too aggressive??
+     * 
+     * - check if weird GC relations indeed got filtered out?
+     * 
+     * - go back to delta type approach, but this time with 
+     *   starting to look like event might have "side effects"
+     *   i.e. neightbors sites with higher rate. HMMs might 
+     *   be problematic in this context since it might merge 
+     *   groups of events
+     * - hope is that removing cell-specific random effect makes peeks much more clean (right now they overlap several deltas)  
+     * 
+     */
   }
   
   def static points(Range<Integer> pos) {
@@ -451,7 +435,8 @@ class CombineCellPosteriors extends Experiment {
     override toString() { '''Isl[«cell»,«chr»,«pos»,«posterior.totalCount»,«posterior.entries.entrySet.map[""+key+"="+value].join(",")»]''' }
   }
   
-  def execDirs() {
+  def execDirs() { execDirs(directory, execInDirectory) }
+  def static execDirs(File directory, String execInDirectory) {
     val result = BriefFiles.ls(directory).
       filter[isDirectory].
       map[new File(it, execInDirectory)].
@@ -484,7 +469,7 @@ class CombineCellPosteriors extends Experiment {
           val cellId = cellId(execDir)
           it += new Embed(fileGrabber.apply(execDir.execDir).absoluteFile) {
             override height() { "150px" }
-            override title() { LINK(execDir.execDir.absolutePath) + "cell " + cellId + ENDLINK }
+            override title() { LINK(execDir.execDir.absolutePath) + "" + cellId + "(" + expectedNumberOfEvents.getCount(cellId) + " events)" + ENDLINK }
           }
         }
       ]
