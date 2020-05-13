@@ -45,7 +45,7 @@ class BinaryCLMatrix implements CellLocusMatrix {
   override getLoci()  { lociIdx.objects}
   
   @DesignatedConstructor
-  public static def BinaryCLMatrix create(
+  static def BinaryCLMatrix create(
       @Input String path
   ) { 
     return new BinaryCLMatrix(CLMatrixUtils::fromCSV(new File(path)))    

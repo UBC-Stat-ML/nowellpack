@@ -26,7 +26,7 @@ import java.util.Collections
   val Set<Locus> loci
   val Set<Cell> cells 
   
-  def public Map<Cell,Boolean> getTips(Locus locus) { 
+  def Map<Cell,Boolean> getTips(Locus locus) { 
       val result = new LinkedHashMap
       _getTips(locus, result, tree.root, false)
       return result
