@@ -9,4 +9,5 @@ import org.eclipse.xtend.lib.annotations.Data
   val String id
   
   override toString() { id }
+  def int getIntegerId() { Integer.parseInt(id)}
 }

@@ -61,6 +61,16 @@ import java.util.Collections
     this.loci = loci
     this.tree = tree
   }
+ /*
+  def public PerfectPhylo copyByValue(PerfectPhylo sourcephylo){
+     var PerfectPhylo newphylo = new PerfectPhylo(sourcephylo.cells, sourcephylo.loci)
+     newphylo.cells = sourcephylo.cells
+     newphylo.loci = sourcephylo.loci
+     newphylo.tree = sourcephylo.tree
+     return newphylo
+  }
+ 
+  */
   
   def static PerfectPhylo generateUniform(int nCells, int nLoci, Random rand) {
     val result = new PerfectPhylo(CorruptStaticUtils::syntheticCells(nCells), CorruptStaticUtils::syntheticLoci(nLoci))
@@ -110,6 +120,16 @@ import java.util.Collections
     addSampledLociTopology(lociTopology, loci.size, -1, orderedNodes)
     for (cell : cells)
       tree.addEdge(rand.uniformElement(orderedNodes), cell)
+  }
+  
+  def PerfectPhylo collapseSubset(String pt) {
+  	var PerfectPhylo newphylo = new PerfectPhylo(cells, loci, tree)
+    for (locus : loci){
+      if (locus.getPrintType() == pt){
+      	newphylo.tree.collapseEdge(locus)
+      }
+    }
+    return newphylo
   }
   
   def private void addSampledLociTopology(
@@ -176,6 +196,7 @@ import java.util.Collections
       copy(child, dest)
     }
   }
+  
   
   private def Tree<Set<TreeNode>> collapsedTree(TreeNode node) {
     val recursions = new ArrayList<Tree<Set<TreeNode>>>
