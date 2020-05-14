@@ -20,14 +20,27 @@ class GenomeMap {
     else
       return lociSet
   }
-  
+   
+  def static List<Locus> orderLoci(Collection<Locus> _loci, String pt) {
+    val lociSet = sanitize(_loci)
+    val lociSet_copy = sanitize(_loci)
+    for (locus : lociSet_copy){
+    	  if (locus.getPrintType() != pt){
+    	  	lociSet.remove(locus)
+    	  }
+    }
+    if (genomeMapFormatted(lociSet))
+      return new GenomeMap(lociSet).orderLoci
+    else
+      return lociSet
+  }
+
   static def  <T> List<T> sanitize(Collection<T> items) {
     val asSet = new LinkedHashSet(items)
     val asList = new ArrayList(asSet)
     Collections::sort(asList, Comparator.comparing[it.toString])
     return asList  
   }
-  
   def static boolean genomeMapFormatted(Collection<Locus> loci) {
     for (locus : loci) 
       if (!genomeMapFormatted(locus))

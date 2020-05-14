@@ -18,8 +18,14 @@ import bayonet.math.SpecialFunctions
   val Matrix matrix 
   
   new(Collection<Cell> cells, Collection<Locus> loci) {
-    this.cellsIdx = new Indexer(GenomeMap::sanitize(cells))
     this.lociIdx = new Indexer(GenomeMap::orderLoci(loci))
+    
+    this.cellsIdx = new Indexer(GenomeMap::sanitize(cells))
+    this.matrix = MatrixOperations::dense(cellsIdx.size, lociIdx.size)
+  }
+  new(Collection<Cell> cells, Collection<Locus> loci, String pt) {
+    this.cellsIdx = new Indexer(GenomeMap::sanitize(cells))
+    this.lociIdx = new Indexer(GenomeMap::orderLoci(loci, pt))
     this.matrix = MatrixOperations::dense(cellsIdx.size, lociIdx.size)
   }
   
@@ -46,6 +52,22 @@ import bayonet.math.SpecialFunctions
         increment(cell, locus, another.get(cell, locus))
   }
   
+/*   def void fillPhyloMatrix(PerfectPhylo phylo, String pt) {
+    for (locus : loci) {
+    	  if ((locus.getType() == 'cnv') && (locus.getPrintType() == pt)){
+        val tips = phylo.getTips(locus)
+        for (entry : tips.entrySet) 
+          increment(entry.key, locus, if (entry.value) 1.0 else 0.0)
+      }else{
+        if ((locus.getType() == 'snv') && (Float.parseFloat(locus.getPrintType()) <= Float.parseFloat(pt))){
+          val tips = phylo.getTips(locus)
+          for (entry : tips.entrySet) 
+            increment(entry.key, locus, if (entry.value) 1.0 else 0.0)        	
+        }
+      }
+    }
+  }
+*/  
   def void +=(PerfectPhylo phylo) {
     for (locus : loci) {
       val tips = phylo.getTips(locus)
@@ -63,6 +85,7 @@ import bayonet.math.SpecialFunctions
       for (locus : loci) 
         set(cell, locus, get(cell, locus) / divisor) 
   }
+ 
   
   def logisticTransform() {
     for (var int r = 0; r < matrix.nRows; r++) 

@@ -3,6 +3,7 @@ package corrupt
 import java.util.Map
 import java.util.LinkedHashMap
 import briefj.Indexer
+import java.io.PrintWriter
 
 import bayonet.distributions.Random
 import static java.lang.Math.exp
@@ -13,6 +14,7 @@ import static bayonet.math.NumericalUtils.logAdd
 import java.util.ArrayList
 import static extension corrupt.CorruptExtensionUtils.*
 import org.eclipse.xtend.lib.annotations.Accessors
+
 
 class SplitSampler {
   
@@ -43,20 +45,36 @@ class SplitSampler {
   /**
    * Return log probability of the argmax
    */
+   
+  val DirectedTree<TreeNode> phylogeny 
+  val Map<TreeNode, SubtreeLikelihood> likelihoods = new LinkedHashMap
+  val Map<Cell, Double> SNVLikelihoods = new LinkedHashMap
+   
+   
   def static double maximizeInPlace(
     DirectedTree<TreeNode> phylogeny, 
     Locus locusToAdd, 
-    Map<Cell, SubtreeLikelihood> cellLikelihoods
+    Map<Cell, SubtreeLikelihood> cellLikelihoods,
+    Boolean computeSNV,
+    PrintWriter outFile
   ) {
+  	
     val sampler = new SplitSampler(phylogeny, cellLikelihoods)
     if (sampler.rootLociIndexer.containsObject(locusToAdd))
       throw new RuntimeException
+      
+    if (computeSNV) {
+	    var normalizationFactor = sampler.computeSNVLikelihood(phylogeny.root, null, Double.NEGATIVE_INFINITY)
+	    	for (cell : cellLikelihoods.keySet()) {
+	    		var value = sampler.SNVLikelihoods.get(cell) - normalizationFactor
+	    		outFile.append(cell.toString() + "," + locusToAdd.toString() + "," + Math.exp(value) + "\n") 
+	    }    	    
+	}
+	
     return sampler.maximize(locusToAdd)
   }
   
-  val DirectedTree<TreeNode> phylogeny 
-  val Map<TreeNode, SubtreeLikelihood> likelihoods = new LinkedHashMap
-  
+    
   @Accessors(PUBLIC_GETTER)
   val Indexer<TreeNode> rootLociIndexer = new Indexer
   
@@ -64,7 +82,7 @@ class SplitSampler {
     this.phylogeny = phylogeny
     rootLociIndexer.addAllToIndex(phylogeny.lociAndRoot) 
     likelihoods.putAll(cellLikelihoods) // (1)
-    computeLikelihood(phylogeny.root)
+    computeLikelihood(phylogeny.root)    
   }
   
   /**
@@ -138,7 +156,7 @@ class SplitSampler {
     // step 3: apply the change to the tree
     phylogeny.addEdge(sampledParent, locusToAdd, childrenToMove)
   }
-  
+
   /**
    * This computes, in the paper's notation, "\bar \rho_v" up to a 
    * normalization constant.
@@ -153,9 +171,6 @@ class SplitSampler {
     return recursions.logProductPQ - recursions.exclusionLog
   }
   
-  /**
-   * Last equation of section 4.1 in latex document.
-   */
   def private double inclusionPr(SubtreeLikelihood recursion) {
     return exp(recursion.inclusionLog - logAdd(recursion.inclusionLog, recursion.exclusionLog))
   }
@@ -176,4 +191,39 @@ class SplitSampler {
     likelihoods.put(node, result)
     return result
   }
+
+  def private Double computeSNVLikelihood(TreeNode node, TreeNode parent, double parentSumSNVLikelihood) {
+  	var nodeSNVvalue = Double.NEGATIVE_INFINITY
+  	var nodeLikelihood = likelihoods.get(node)
+  	
+  	
+  	if (!phylogeny.isRoot(node)) {
+	  	var parentLikelihood = likelihoods.get(parent)
+	  	//var nodeLikelihood = likelihoods.get(node)
+	  	nodeSNVvalue = nodeLikelihood.inclusionLog - parentLikelihood.exclusionLog + parentLikelihood.logProductPQ - logAdd(nodeLikelihood.inclusionLog, nodeLikelihood.exclusionLog)
+  	}
+  	
+	var nodeSumSNVLikelihood = logAdd(parentSumSNVLikelihood, nodeSNVvalue)
+	
+	//var subTreeSumSNVLikelihood = nodeSNVvalue - nodeLikelihood.inclusionLog + logAdd(nodeLikelihood.inclusionLog, nodeLikelihood.exclusionLog)
+	var subTreeSumSNVLikelihood = Double.NEGATIVE_INFINITY
+    for (child : phylogeny.children(node)) {
+    		var childSubTreeSumSNVLikelihood = computeSNVLikelihood(child, node, nodeSumSNVLikelihood)
+    		//var childLikelihood = likelihoods.get(child)
+    		//var childSubTreeSumSNVLikelihood  = logAdd(childLikelihood.inclusionLog, childLikelihood.exclusionLog)
+    		subTreeSumSNVLikelihood = logAdd(subTreeSumSNVLikelihood,  childSubTreeSumSNVLikelihood)
+    }
+    if (!phylogeny.isLeaf(node)){
+    		subTreeSumSNVLikelihood = logAdd(subTreeSumSNVLikelihood , (nodeLikelihood.logProductPQ - nodeLikelihood.exclusionLog))
+    		//subTreeSumSNVLikelihood = logAdd(subTreeSumSNVLikelihood , nodeSumSNVLikelihood)
+    		
+    }
+    	
+    if (node instanceof Cell) {
+    	  SNVLikelihoods.put(node, nodeSumSNVLikelihood)
+    }
+
+    return subTreeSumSNVLikelihood
+  }
+   
 }

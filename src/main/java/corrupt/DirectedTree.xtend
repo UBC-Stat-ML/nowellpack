@@ -43,6 +43,10 @@ import org.jgrapht.DirectedGraph
     return graph.outDegreeOf(node) === 0
   }
   
+  def boolean isRoot(T node) {
+    return graph.inDegreeOf(node) === 0
+  }  
+  
   def boolean hasNode(T node) {
     return graph.vertexSet.contains(node)
   }

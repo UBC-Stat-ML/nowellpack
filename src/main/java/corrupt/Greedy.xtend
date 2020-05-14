@@ -39,7 +39,7 @@ class Greedy extends Experiment {
     var iteration = 0
     while (!queue.empty) {
       val popped = queue.pop
-      val logPr = SplitSampler::maximizeInPlace(phylo.reconstruction.tree, popped,  phylo.inclusionLogProbabilities(1.0, popped))
+      val logPr = SplitSampler::maximizeInPlace(phylo.reconstruction.tree, popped,  phylo.inclusionLogProbabilities(1.0, popped), false, null)
       
       if (output)
         println("Processing locus " + (iteration+1) + "/" + tipInclusionProbabilities.loci.size + " logPr=" + logPr)

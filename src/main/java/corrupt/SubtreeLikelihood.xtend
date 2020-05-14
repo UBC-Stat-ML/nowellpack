@@ -7,8 +7,8 @@ import org.eclipse.xtend.lib.annotations.Data
  * stored in log scale. 
  */
 @Data class SubtreeLikelihood {
-  val double inclusionLog  // p; in the notes: p_v^1
-  val double exclusionLog  // q; in the notes: p_v^0
+  val double inclusionLog  // p
+  val double exclusionLog  // q
   val double logProductPQ  // log ( \product_{children c} (p_c + q_c) 
   new (double logP, double logQ, double logProductPQ) {
     inclusionLog = logP
