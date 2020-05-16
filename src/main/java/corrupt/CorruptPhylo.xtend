@@ -25,6 +25,7 @@ class CorruptPhylo {
   @SkipDependency(isMutable = true) // declared in the conditioning of LogPot; otherwise wrong behaviour
   val PerfectPhylo reconstruction 
   
+  @Accessors(PUBLIC_GETTER)
   @SkipDependency(isMutable = true)
   val CellLocusMatrix tipInclPrs
   

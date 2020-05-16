@@ -16,8 +16,8 @@ model ConcatenationModel {
   param Double fprBound ?: 0.2
   param Double fnrBound ?: 0.2
   param BinaryCLMatrix copyNumberMarkers
-  random Matrix fpr ?: initializedLatentErrors(fprBound, copyNumberMarkers.loci.size, globalParameterization)
-  random Matrix fnr ?: initializedLatentErrors(fnrBound, copyNumberMarkers.loci.size, globalParameterization)
+  random Matrix fpr ?: initializedLatentErrors(0.0, fprBound, copyNumberMarkers.loci.size, globalParameterization)
+  random Matrix fnr ?: initializedLatentErrors(0.0, fnrBound, copyNumberMarkers.loci.size, globalParameterization)
   
   // Cached inclusion probabilities (for point mutations)
   param CellLocusMatrix singleNucleotideMarkers

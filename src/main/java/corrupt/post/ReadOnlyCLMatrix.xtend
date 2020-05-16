@@ -26,7 +26,7 @@ import java.io.File
   override getLoci() { enclosed.loci}
   
   @DesignatedConstructor
-  public static def ReadOnlyCLMatrix create(
+  static def ReadOnlyCLMatrix create(
       @Input String path
   ) { 
     return ReadOnlyCLMatrix::readOnly(CLMatrixUtils::fromCSV(new File(path)))    
