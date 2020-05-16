@@ -3,8 +3,11 @@ package corrupt.post
 import blang.runtime.internals.DefaultPostProcessor
 import blang.runtime.Runner
 import java.io.File
+import blang.inits.Arg
 
 class CorruptPostProcessor extends DefaultPostProcessor  {
+  
+  @Arg File binaryObservations
   
   var File sampleDir
   override run() {
@@ -57,6 +60,7 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
       p <- ggplot(reshaped, 
         aes(x = «type», y = value, colour = variable)) +
         geom_boxplot() +
+        ylab("Leave-one-out predictive probability") + 
         theme_bw()
       ggsave("«outputFolder.getFileInResultFolder("predictives_by_" + type + ".pdf")»", p, height = 10, width = 75, limitsize = FALSE)
       
@@ -90,10 +94,44 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
       )
     write.csv(predictives_summary, "«outputFolder.getFileInResultFolder("predictives_summary.csv")»")
     
-    # Calibration viz    
+    # Calibration viz   
     
-    obsPredictivesTrace <- raw %>% filter(predicted == 'observation')
-        
+    data <- read.csv("«binaryObservations»") 
+    names(data)[names(data) == 'cells'] <- 'cell'
+    names(data)[names(data) == 'loci'] <- 'locus'
+    
+    presencePredictivesTrace <- raw %>% filter(predicted == 'presence')
+    
+    presencePosteriors <- presencePredictivesTrace %>%
+          group_by(locus, cell) %>%
+          mutate(weight = 1.0/value) %>%
+          summarise(
+            simplePresence = mean(value),
+            leaveOneOutPresence = 1.0 / mean(weight), # harmonic estimator 
+            leaveOneOutEffectiveSampleSize = (sum(weight))^2 / sum(weight^2)
+          )
+          
+    calibration <- inner_join(data, presencePosteriors, by = c("locus", "cell"))
+          
+    write.csv(calibration, "«outputFolder.getFileInResultFolder("calibration.csv")»")
+    binomial_smooth <- function(...) {
+      geom_smooth(method = "glm", method.args = list(family = "binomial"), ...)
+    }
+    p <- ggplot(calibration, aes(leaveOneOutPresence, tipInclusionProbabilities)) +
+      binomial_smooth(formula=y~x, alpha=0.2, size=2) +
+      geom_abline(intercept = 0) +
+      xlab("Leave-one-out predictive probability") + 
+      ylab("Binomial smoothed coverage") +
+      theme_bw()
+    ggsave("«outputFolder.getFileInResultFolder("calibration.pdf")»", p, height = 10, width = 10, limitsize = FALSE)
+    
+    
+    p <- ggplot(calibration, aes(leaveOneOutPresence)) +
+      xlab("Leave-one-out predictive probability") + 
+      ylab("Proportion of (cell,locus)") +
+      geom_density() +
+      theme_bw()
+    ggsave("«outputFolder.getFileInResultFolder("uncertainties.pdf")»", p, height = 10, width = 10, limitsize = FALSE)
     '''
     callR(outputFolder.getFileInResultFolder(".predictive-script.r"), script)
 
