@@ -3,15 +3,18 @@ package corrupt.post
 import blang.runtime.internals.DefaultPostProcessor
 import blang.runtime.Runner
 import java.io.File
-import blang.inits.Arg
+import blang.inits.parsing.ConfigFile
 
 class CorruptPostProcessor extends DefaultPostProcessor  {
   
-  @Arg File binaryObservations
+  File binaryObservations
   
   var File sampleDir
   override run() {
     sampleDir = new File(blangExecutionDirectory.get, Runner::SAMPLES_FOLDER)
+    val args = ConfigFile::parse(new File(blangExecutionDirectory.get, DETAILED_ARGUMENT_FILE))
+    val binaryObsPath = args.child("model").child("binaryMatrix").argumentValue.get.join
+    binaryObservations = new File(binaryObsPath)
     predictiveResults()
     super.run
   }
