@@ -453,7 +453,7 @@ class CombineCellPosteriors extends Experiment {
   
   static class Website extends BootstrapHTMLRenderer {
     val extension CombineCellPosteriors cellPost
-    override htmlSupportFilesPrefix() { "../../../.html_support" }
+    override htmlSupportFilesPrefix() { "../../.html_support" }
     override container() { "container-fluid" }
     new(CombineCellPosteriors cellPost) {
       super(cellPost.directory.name)
