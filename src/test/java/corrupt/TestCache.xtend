@@ -42,8 +42,8 @@ class TestCache {
       .setGlobalParameterization(globalParameterization)
       .setFprBound(0.2)
       .setFnrBound(0.2)
-      .setFpr(corrupt.CorruptStaticUtils.initializedLatentErrors(0.2, nLoci, globalParameterization))
-      .setFnr(corrupt.CorruptStaticUtils.initializedLatentErrors(0.2, nLoci, globalParameterization))
+      .setFpr(corrupt.CorruptStaticUtils.initializedLatentErrors(0.0, 0.2, nLoci, globalParameterization))
+      .setFnr(corrupt.CorruptStaticUtils.initializedLatentErrors(0.0, 0.2, nLoci, globalParameterization))
     val runner = new Runner(modelBuilder)
     runner.results = new ExperimentResults(folder.newFolder) 
     runner.engine = new SCM => [
