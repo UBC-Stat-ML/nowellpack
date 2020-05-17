@@ -6,6 +6,12 @@ import java.io.File
 import blang.inits.parsing.ConfigFile
 import corrupt.Greedy
 import briefj.BriefIO
+import corrupt.PerfectPhylo
+import xlinear.Matrix
+import static xlinear.MatrixOperations.*
+import static extension xlinear.MatrixExtensions.*
+import corrupt.CorruptPhylo
+import blang.inits.experiments.tabwriters.TabularWriter
 
 class CorruptPostProcessor extends DefaultPostProcessor  {
   
@@ -20,12 +26,50 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
     binaryObservations = new File(binaryObsPath)
     
     // postprocessing steps:
-    decode()
+    val consensus = decode()
     predictiveResults()
+    goodnessOfFit(consensus)
     super.run
   }
   
-  def decode() {
+  def goodnessOfFit(CorruptPhylo consensus) {
+    val dataMatrix = BinaryCLMatrix::create(binaryObservations.absolutePath)
+    val gofResults = results.child("goodnessOfFit")
+    
+    // for the consensus
+    val consensusGof = new GoodnessOfFit(dataMatrix, consensus.reconstruction)
+    val consensusGofWriter = gofResults.getTabularWriter("consensus")
+    consensusGof.logTo(consensusGofWriter)
+    
+    // for the trace
+    val phyloSamples = new File(sampleDir, "phylo.csv")
+    val traceGofWriter = gofResults.getTabularWriter("trace")
+    for (line : BriefIO::readLines(phyloSamples).indexCSV) {
+      val phyloStr = line.get("value")
+      val tree = new PerfectPhylo(phyloStr)
+      val sampleGof = new GoodnessOfFit(dataMatrix, tree)
+      sampleGof.logTo(traceGofWriter.child("sample", line.get("sample"))) 
+    }
+    
+    gofResults.flushAll
+    
+    val script = '''
+    require("ggplot2")
+    require("dplyr")
+    
+    trace <- read.csv("«gofResults.getFileInResultFolder(traceGofWriter.name + ".csv")»")
+    
+    consensus <- read.csv("«gofResults.getFileInResultFolder(consensusGofWriter.name + ".csv")»")
+    
+    «FOR stat : #["gof", "empiricalFN", "empiricalFP"]»
+    p <- ggplot(trace, aes(x = sample, y = «stat»)) + geom_line() + geom_hline(yintercept=consensus$«stat») + theme_bw()
+    ggsave("«gofResults.getFileInResultFolder(stat + ".pdf")»", p)
+    «ENDFOR»
+    '''
+    callR(gofResults.getFileInResultFolder(".script.r"), script)
+  }
+  
+  def CorruptPhylo decode() {
     val child = results.child("averaging")
     val averager = new AverageCLMatrices => [
       csvFile = new File(sampleDir, "phylo.csv")
@@ -38,6 +82,28 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
     ]
     val consensus = greedyDecoder.infer
     BriefIO::write(results.getFileInResultFolder("consensus.newick"), consensus.toString)
+    return consensus
+  }
+  
+  static class GoodnessOfFit {
+    val Matrix counts = dense(2,2)
+    new (BinaryCLMatrix observations, PerfectPhylo reconstruction) {
+      for (locus : observations.loci) {
+        val tips = reconstruction.getTips(locus)
+        for (cell : tips.keySet) 
+          counts.increment(if (tips.get(cell)) 1 else 0, observations.get(cell, locus) as int, 1.0)
+      }
+    }
+    def double gof() { return (counts.get(0,0) + counts.get(1,1)) / counts.sum }
+    def double empiricalFN() { return counts.get(1, 0) / counts.row(1).sum }
+    def double empiricalFP() { return counts.get(0, 1) / counts.row(0).sum }
+    def logTo(TabularWriter writer) {
+      writer.write(
+        "gof" -> gof,
+        "empiricalFN" -> empiricalFN,
+        "empiricalFP" -> empiricalFP
+      )
+    }
   }
   
   def predictiveResults() {
