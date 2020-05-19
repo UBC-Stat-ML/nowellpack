@@ -12,6 +12,7 @@ import static xlinear.MatrixOperations.*
 import static extension xlinear.MatrixExtensions.*
 import corrupt.CorruptPhylo
 import blang.inits.experiments.tabwriters.TabularWriter
+import blang.inits.experiments.Experiment
 
 class CorruptPostProcessor extends DefaultPostProcessor  {
   
@@ -238,6 +239,10 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
     callR(outputFolder.getFileInResultFolder(".predictive-script.r"), script)
 
     // TODO: create matrix with tree
+  }
+  
+  def static void main(String [] args) {
+    Experiment::startAutoExit(args)
   }
   
 }
