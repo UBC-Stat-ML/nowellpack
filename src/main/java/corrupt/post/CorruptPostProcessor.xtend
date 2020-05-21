@@ -13,6 +13,9 @@ import static extension xlinear.MatrixExtensions.*
 import corrupt.CorruptPhylo
 import blang.inits.experiments.tabwriters.TabularWriter
 import blang.inits.experiments.Experiment
+import corrupt.Locus
+import java.util.Map
+import java.util.LinkedHashMap
 
 class CorruptPostProcessor extends DefaultPostProcessor  {
   
@@ -42,6 +45,10 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
     val consensusGofWriter = gofResults.getTabularWriter("consensus")
     consensusGof.logTo(consensusGofWriter)
     
+    // 2D plot for the consensus
+    val consensusGofWriterByLocus = gofResults.getTabularWriter("consensus-by-locus")
+    consensusGof.logToByLocus(consensusGofWriterByLocus)
+    
     // for the trace
     val phyloSamples = new File(sampleDir, "phylo.csv")
     val traceGofWriter = gofResults.getTabularWriter("trace")
@@ -66,6 +73,10 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
     p <- ggplot(trace, aes(x = sample, y = «stat»)) + geom_line() + geom_hline(yintercept=consensus$«stat») + theme_bw()
     ggsave("«gofResults.getFileInResultFolder(stat + ".pdf")»", p)
     «ENDFOR»
+    
+    consensusByLocus <- read.csv("«gofResults.getFileInResultFolder(consensusGofWriterByLocus.name + ".csv")»")
+    p <- ggplot(consensusByLocus, aes(x = empiricalFN, y = empiricalFP)) + geom_point() + theme_bw()
+    ggsave("«gofResults.getFileInResultFolder("consensus-by-locus.pdf")»", p)
     '''
     callR(gofResults.getFileInResultFolder(".script.r"), script)
   }
@@ -88,22 +99,36 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
   
   static class GoodnessOfFit {
     val Matrix counts = dense(2,2)
+    val Map<Locus,Matrix> byLocus = new LinkedHashMap
     new (BinaryCLMatrix observations, PerfectPhylo reconstruction) {
       for (locus : observations.loci) {
+        val locusSpecific = dense(2,2)
+        byLocus.put(locus, locusSpecific)
         val tips = reconstruction.getTips(locus)
-        for (cell : tips.keySet) 
-          counts.increment(if (tips.get(cell)) 1 else 0, observations.get(cell, locus) as int, 1.0)
+        for (cell : tips.keySet) {
+          for (m : #[counts, locusSpecific])
+            m.increment(if (tips.get(cell)) 1 else 0, observations.get(cell, locus) as int, 1.0)
+        }
       }
     }
-    def double gof() { return (counts.get(0,0) + counts.get(1,1)) / counts.sum }
-    def double empiricalFN() { return counts.get(1, 0) / counts.row(1).sum }
-    def double empiricalFP() { return counts.get(0, 1) / counts.row(0).sum }
+    def double gof(Matrix counts) { return (counts.get(0,0) + counts.get(1,1)) / counts.sum }
+    def static double empiricalFN(Matrix counts) { return counts.get(1, 0) / counts.row(1).sum }
+    def static double empiricalFP(Matrix counts) { return counts.get(0, 1) / counts.row(0).sum }
     def logTo(TabularWriter writer) {
       writer.write(
-        "gof" -> gof,
-        "empiricalFN" -> empiricalFN,
-        "empiricalFP" -> empiricalFP
+        "gof" -> gof(counts),
+        "empiricalFN" -> empiricalFN(counts),
+        "empiricalFP" -> empiricalFP(counts)
       )
+    }
+    def logToByLocus(TabularWriter writer) {
+      for (locus : byLocus.keySet)
+        writer.write(
+          "locus" -> locus,
+          "gof" -> gof(byLocus.get(locus)),
+          "empiricalFN" -> empiricalFN(byLocus.get(locus)),
+          "empiricalFP" -> empiricalFP(byLocus.get(locus))
+        )
     }
   }
   
