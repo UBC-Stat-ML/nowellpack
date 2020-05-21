@@ -25,7 +25,6 @@ class PredictiveMonitor implements TidilySerializable {
     this.errorModel = errorModel
     val _cells = new ArrayList<Cell>(phylo.cells)
     val targetSize = (proportion * phylo.cells.size) as int
-    if (targetSize === 0) throw new RuntimeException
     Collections.shuffle(_cells, new Random(1)) // locus.hashCode)) removed locus specific set of cells to ease plotting
     cells = new ArrayList(_cells.subList(0, targetSize))
   }

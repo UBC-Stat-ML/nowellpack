@@ -110,6 +110,7 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
   def predictiveResults() {
     val outputFolder = results.child("predictivePlots")
     val predictiveTraces = new File(sampleDir, "predictives.csv") 
+    if (BriefIO::readLines(predictiveTraces).head === null) return
     
     val script = '''
     require("ggplot2")
