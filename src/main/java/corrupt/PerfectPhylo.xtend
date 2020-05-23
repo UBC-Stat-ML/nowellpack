@@ -101,6 +101,16 @@ import java.util.Collections
       readParseTree(parsedNode, child) 
   }
   
+  def void set(PerfectPhylo phylo) {
+    if (this.cells != phylo.cells || this.loci != phylo.loci) throw new RuntimeException
+    for (cell : cells)
+      tree.collapseEdge(cell)
+    for (locus : loci)
+      tree.collapseEdge(locus)
+    for (edge : phylo.tree.edges) 
+      this.tree.addEdge(edge.left, edge.right)
+  }
+  
   def void sampleUniform(Random rand) {
     for (cell : cells)
       tree.collapseEdge(cell)

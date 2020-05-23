@@ -21,10 +21,13 @@ model NoisyBinaryModel {
   
   random CorruptPhylo phylo ?: new CorruptPhylo(new NoisyBinaryCLMatrix(binaryMatrix, fpr, fnr))
   
+  param PerfectPhylo initialization ?: null
+  
   param Double predictivesProportion ?: 0.05
   random Map<Locus,PredictiveMonitor> predictives /* dont change that field name */ ?: {
     System.out.println("Number of cells: " + binaryMatrix.cells.size)
     System.out.println("Number of loci:" + binaryMatrix.loci.size)
+    if (initialization !== null) phylo.reconstruction.set(initialization)
     val result = new LinkedHashMap
     for (locus : binaryMatrix.loci) {
       result.put(locus, new PredictiveMonitor(locus, binaryMatrix, phylo.reconstruction, (phylo.tipInclPrs) as NoisyBinaryCLMatrix, predictivesProportion))
