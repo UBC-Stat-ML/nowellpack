@@ -16,28 +16,55 @@ import blang.inits.experiments.Experiment
 import corrupt.Locus
 import java.util.Map
 import java.util.LinkedHashMap
+import corrupt.viz.PerfectPhyloViz
+import viz.core.Viz
+import java.util.Optional
 
 class CorruptPostProcessor extends DefaultPostProcessor  {
   
-  File binaryObservations
+  File binaryObservationsFile
   
   var File sampleDir
   override run() {
+    
     // load run
     sampleDir = new File(blangExecutionDirectory.get, Runner::SAMPLES_FOLDER)
     val args = ConfigFile::parse(new File(blangExecutionDirectory.get, DETAILED_ARGUMENT_FILE))
     val binaryObsPath = args.child("model").child("binaryMatrix").argumentValue.get.join
-    binaryObservations = new File(binaryObsPath)
+    binaryObservationsFile = new File(binaryObsPath)
+    val binaryObservations = BinaryCLMatrix::create(binaryObservationsFile.absolutePath)
     
     // postprocessing steps:
     val consensus = decode()
     predictiveResults()
     goodnessOfFit(consensus)
+    
+    // call viz
+    if (runPxviz) 
+      treeViz(consensus.reconstruction, binaryObservations)
+    
     super.run
   }
   
+  def treeViz(PerfectPhylo reconstruction, BinaryCLMatrix observations) {
+    // for the support values, don't reuse the ones from consensus construction; they might use the logitistic transform!
+    val child = results.child("averagingNoLogisticsTransform")
+    val averager = new AverageCLMatrices => [
+      csvFile = new File(sampleDir, "phylo.csv")
+      results = child
+      logisticTransform = false
+    ]
+    averager.run
+    val supportValues = ReadOnlyCLMatrix::readOnly(averager.average)
+    val convertedObs = ReadOnlyCLMatrix::readOnly(observations)
+    val publicSize = Viz.fixWidth(500)
+    val treeViz = new PerfectPhyloViz(reconstruction, #[supportValues,convertedObs], publicSize)
+    val treeVizResults = results.child("treeViz") 
+    treeViz.output(treeVizResults.getFileInResultFolder("consensus.pdf"))
+  }
+  
   def goodnessOfFit(CorruptPhylo consensus) {
-    val dataMatrix = BinaryCLMatrix::create(binaryObservations.absolutePath)
+    val dataMatrix = BinaryCLMatrix::create(binaryObservationsFile.absolutePath)
     val gofResults = results.child("goodnessOfFit")
     
     // for the consensus
@@ -143,7 +170,7 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
     
     # load data
     
-    dataRaw <- read.csv("«binaryObservations»") 
+    dataRaw <- read.csv("«binaryObservationsFile»") 
         names(dataRaw)[names(dataRaw) == 'cells'] <- 'cell'
         names(dataRaw)[names(dataRaw) == 'loci'] <- 'locus'
     

@@ -161,11 +161,7 @@ class PerfectPhyloViz extends Viz {
     return new PrivateSize(treeViz.publicWidth + matrixViz.publicWidth, treeViz.publicHeight + chrMarkerHeight) 
   }
   
-  public static def void main(String [] args) { 
-    val code = Experiment.start(args) 
-    if (code !== 0)
-      System.exit(code)
-    else
-      {} // Do not exit; drawing thread probably still working
+  static def void main(String [] args) { 
+    Experiment.startAutoExit(args)
   }
 }

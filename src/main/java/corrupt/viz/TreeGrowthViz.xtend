@@ -74,11 +74,7 @@ class TreeGrowthViz extends Experiment {
     return result
   }
   
-  def static void main(String [] args) {
-    val code = Experiment.start(args) 
-    if (code !== 0)
-      System.exit(code)
-    else
-      {} // Do not exit; drawing thread probably still working
+  static def void main(String [] args) { 
+    Experiment.startAutoExit(args)
   }
 }

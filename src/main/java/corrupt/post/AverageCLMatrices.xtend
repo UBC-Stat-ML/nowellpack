@@ -40,9 +40,8 @@ class AverageCLMatrices extends Experiment {
   var SimpleCLMatrix parsedTreeIndicators = null
   var SimpleCLMatrix result = null
   
-  /**
-   * Null if empty.
-   */
+  def SimpleCLMatrix getAverage() { return result }
+  
   def void averageTipIndicators(Iterable<PerfectPhylo> phylos, boolean logisticTransform) {
     var distanceOutput = 
       if (referenceTree === null) 
