@@ -18,7 +18,9 @@ import java.util.Map
 import java.util.LinkedHashMap
 import corrupt.viz.PerfectPhyloViz
 import viz.core.Viz
-import java.util.Optional
+import blang.inits.experiments.tabwriters.factories.CSV
+
+import static blang.inits.experiments.tabwriters.factories.CSV.csvFile 
 
 class CorruptPostProcessor extends DefaultPostProcessor  {
   
@@ -26,7 +28,6 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
   
   var File sampleDir
   override run() {
-    
     // load run
     sampleDir = new File(blangExecutionDirectory.get, Runner::SAMPLES_FOLDER)
     val args = ConfigFile::parse(new File(blangExecutionDirectory.get, DETAILED_ARGUMENT_FILE))
@@ -46,11 +47,13 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
     super.run
   }
   
+  def getCsvFile(File f, String s) { CSV::csvFile(f, s) } // needed to sidestep obscure scope corner case
+  
   def treeViz(PerfectPhylo reconstruction, BinaryCLMatrix observations) {
     // for the support values, don't reuse the ones from consensus construction; they might use the logitistic transform!
     val child = results.child("averagingNoLogisticsTransform")
     val averager = new AverageCLMatrices => [
-      csvFile = new File(sampleDir, "phylo.csv")
+      csvFile = getCsvFile(sampleDir, "phylo")   
       results = child
       logisticTransform = false
     ]
@@ -77,7 +80,7 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
     consensusGof.logToByLocus(consensusGofWriterByLocus)
     
     // for the trace
-    val phyloSamples = new File(sampleDir, "phylo.csv")
+    val phyloSamples = csvFile(sampleDir, "phylo")
     val traceGofWriter = gofResults.getTabularWriter("trace")
     for (line : BriefIO::readLines(phyloSamples).indexCSV) {
       val phyloStr = line.get("value")
@@ -86,22 +89,22 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
       sampleGof.logTo(traceGofWriter.child("sample", line.get("sample"))) 
     }
     
-    gofResults.flushAll
+    gofResults.closeAll
     
     val script = '''
     require("ggplot2")
     require("dplyr")
     
-    trace <- read.csv("«gofResults.getFileInResultFolder(traceGofWriter.name + ".csv")»")
+    trace <- read.csv("«csvFile(gofResults.resultsFolder, traceGofWriter.name)»")
     
-    consensus <- read.csv("«gofResults.getFileInResultFolder(consensusGofWriter.name + ".csv")»")
+    consensus <- read.csv("«csvFile(gofResults.resultsFolder, consensusGofWriter.name)»")
     
     «FOR stat : #["gof", "empiricalFN", "empiricalFP"]»
     p <- ggplot(trace, aes(x = sample, y = «stat»)) + geom_line() + geom_hline(yintercept=consensus$«stat») + theme_bw()
     ggsave("«gofResults.getFileInResultFolder(stat + ".pdf")»", p)
     «ENDFOR»
     
-    consensusByLocus <- read.csv("«gofResults.getFileInResultFolder(consensusGofWriterByLocus.name + ".csv")»")
+    consensusByLocus <- read.csv("«csvFile(gofResults.resultsFolder, consensusGofWriterByLocus.name)»")
     p <- ggplot(consensusByLocus, aes(x = empiricalFN, y = empiricalFP)) + geom_point() + theme_bw()
     ggsave("«gofResults.getFileInResultFolder("consensus-by-locus.pdf")»", p)
     '''
@@ -111,7 +114,7 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
   def CorruptPhylo decode() {
     val child = results.child("averaging")
     val averager = new AverageCLMatrices => [
-      csvFile = new File(sampleDir, "phylo.csv")
+      csvFile = getCsvFile(sampleDir, "phylo")
       results = child
     ]
     averager.run
@@ -161,7 +164,7 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
   
   def predictiveResults() {
     val outputFolder = results.child("predictivePlots")
-    val predictiveTraces = new File(sampleDir, "predictives.csv") 
+    val predictiveTraces = csvFile(sampleDir, "predictives") 
     if (BriefIO::readLines(predictiveTraces).head === null) return
     
     val script = '''
@@ -222,8 +225,6 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
       geom_density() +
       theme_bw()
     ggsave("«outputFolder.getFileInResultFolder("uncertainties.pdf")»", p, height = 10, width = 10, limitsize = FALSE)
-    
-    
     
     # Predictive stuff
         
