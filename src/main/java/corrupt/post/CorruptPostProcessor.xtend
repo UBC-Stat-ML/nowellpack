@@ -128,8 +128,9 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
   }
   
   static class GoodnessOfFit {
-    val Matrix counts = dense(2,2)
-    val Map<Locus,Matrix> byLocus = new LinkedHashMap
+    public val Matrix counts = dense(2,2)
+    public val Map<Locus,Matrix> byLocus = new LinkedHashMap
+    new () {}
     new (BinaryCLMatrix observations, PerfectPhylo reconstruction) {
       for (locus : observations.loci) {
         val locusSpecific = dense(2,2)
@@ -141,7 +142,7 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
         }
       }
     }
-    def double gof(Matrix counts) { return (counts.get(0,0) + counts.get(1,1)) / counts.sum }
+    def static double gof(Matrix counts) { return (counts.get(0,0) + counts.get(1,1)) / counts.sum }
     def static double empiricalFN(Matrix counts) { return counts.get(1, 0) / counts.row(1).sum }
     def static double empiricalFP(Matrix counts) { return counts.get(0, 1) / counts.row(0).sum }
     def logTo(TabularWriter writer) {
