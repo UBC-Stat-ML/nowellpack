@@ -50,7 +50,7 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
   def getCsvFile(File f, String s) { CSV::csvFile(f, s) } // needed to sidestep obscure scope corner case
   
   def treeViz(PerfectPhylo reconstruction, BinaryCLMatrix observations) {
-    // for the support values, don't reuse the ones from consensus construction; they might use the logitistic transform!
+    // for the support values, don't reuse the ones from consensus construction; they might use the logistic transform!
     val child = results.child("averagingNoLogisticsTransform")
     val averager = new AverageCLMatrices => [
       csvFile = getCsvFile(sampleDir, "phylo")   
@@ -170,6 +170,7 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
     val script = '''
     require("ggplot2")
     require("dplyr")
+    library("reshape2")
     
     # load data
     
@@ -201,23 +202,25 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
           summarise(
             simplePresence = mean(value),
             leaveOneOutPresence = 1.0 / mean(weight), # harmonic estimator 
+            hard_simplePrediction = round(mean(value)),
+            hard_leaveOneOutPrediction = round(1.0 / mean(weight)),
             leaveOneOutEffectiveSampleSize = (sum(weight))^2 / sum(weight^2)
           )
           
     calibration <- inner_join(dataRaw, presencePosteriors, by = c("locus", "cell"))
+    names(calibration)[names(calibration) == 'tipInclusionProbabilities'] <- 'truth'
           
     write.csv(calibration, "«outputFolder.getFileInResultFolder("calibration.csv")»")
     binomial_smooth <- function(...) {
       geom_smooth(method = "glm", method.args = list(family = "binomial"), ...)
     }
-    p <- ggplot(calibration, aes(leaveOneOutPresence, tipInclusionProbabilities)) +
+    p <- ggplot(calibration, aes(leaveOneOutPresence, truth)) +
       binomial_smooth(formula=y~x, alpha=0.2, size=2) +
       geom_abline(intercept = 0) +
       xlab("Leave-one-out predictive probability") + 
       ylab("Binomial smoothed coverage") +
       theme_bw()
     ggsave("«outputFolder.getFileInResultFolder("calibration.pdf")»", p, height = 10, width = 10, limitsize = FALSE)
-    
     
     p <- ggplot(calibration, aes(leaveOneOutPresence)) +
       xlab("Leave-one-out predictive probability") + 
@@ -226,7 +229,17 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
       theme_bw()
     ggsave("«outputFolder.getFileInResultFolder("uncertainties.pdf")»", p, height = 10, width = 10, limitsize = FALSE)
     
-    # Predictive stuff
+    
+    # Hard predictive (i.e. either 0 or 1 - corresponds to 0-1 loss)
+        
+    hard_predictives <- calibration %>%
+      group_by(locus, cell) %>%
+      mutate(
+        simplePredictive = 1-abs(truth - hard_simplePrediction),
+        leaveOneOutPredictive = 1-abs(truth - hard_leaveOneOutPrediction)
+      )    
+    
+    # Predictive (soft call, i.e. in the range [0,1] - corresponds to L2 loss)
         
     obsPredictivesTrace <- raw %>% filter(predicted == 'observation')
     
@@ -235,57 +248,59 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
       mutate(weight = 1.0/value) %>%
       summarise(
         simplePredictive = mean(value),
-        leaveOneOutPredictive = 1.0 / mean(weight), # harmonic estimator 
+        leaveOneOutPredictive = 1.0 / mean(weight), # harmonic estimator
         leaveOneOutEffectiveSampleSize = (sum(weight))^2 / sum(weight^2)
       )
       
     write.csv(predictives, "«outputFolder.getFileInResultFolder("predictives.csv")»")
     
-    # By locus, showing the 2 types of predictives side by side
+    # reorg to facilitate plotting
     
-    library(reshape2)
-    reshaped <- melt(predictives, measure.vars = c('leaveOneOutPredictive','simplePredictive'))
-    library(ggplot2)
-    
-    «FOR type : #["locus", "cell"]»
-      p <- ggplot(reshaped, 
-        aes(x = «type», y = value, colour = variable)) +
-        geom_boxplot() +
-        ylab("Leave-one-out predictive probability") + 
-        theme_bw()
-      ggsave("«outputFolder.getFileInResultFolder("predictives_by_" + type + ".pdf")»", p, height = 10, width = 75, limitsize = FALSE)
+    «FOR prediction : #["", "hard_"]»
       
-      predictives_by_«type» <- predictives %>%
-        group_by(«type») %>%
-        summarise(
-          simplePredictiveByLocus = mean(simplePredictive),
-          leaveOneOutPredictive = mean(leaveOneOutPredictive),
-          minESS = min(leaveOneOutEffectiveSampleSize)
-        )
-      write.csv(predictives_by_«type», "«outputFolder.getFileInResultFolder("predictives_by_" + type + ".csv")»")
+      «prediction»reshaped <- melt(«prediction»predictives, measure.vars = c('leaveOneOutPredictive','simplePredictive'))
       
-      predictives_by_«type» <- predictives %>%
-        group_by(«type») %>%
+      «FOR type : #["locus", "cell"]»
+      
+        # By «type», showing the 2 types of predictives side by side
+      
+        p <- ggplot(«prediction»reshaped, 
+          aes(x = «type», y = value, colour = variable)) +
+          geom_boxplot() +
+          ylab("Leave-one-out predictive probability") + 
+          theme_bw()
+        ggsave("«outputFolder.getFileInResultFolder(prediction + "predictives_by_" + type + ".pdf")»", p, height = 10, width = 75, limitsize = FALSE)
+        
+        «prediction»predictives_by_«type» <- «prediction»predictives %>%
+          group_by(«type») %>%
+          summarise(
+            «prediction»simplePredictiveByLocus = mean(simplePredictive),
+            «prediction»leaveOneOutPredictive = mean(leaveOneOutPredictive),
+            «prediction»minESS = min(leaveOneOutEffectiveSampleSize)
+          )
+        write.csv(«prediction»predictives_by_«type», "«outputFolder.getFileInResultFolder(prediction + "predictives_by_" + type + ".csv")»")
+        
+      «ENDFOR»
+      
+      # Summary
+            
+      «prediction»predictives_summary <- «prediction»predictives %>%
+        group_by() %>%
         summarise(
-          simplePredictiveByLocus = mean(simplePredictive),
-          leaveOneOutPredictive = mean(leaveOneOutPredictive),
-          minESS = min(leaveOneOutEffectiveSampleSize)
+          «prediction»simplePredictive = mean(simplePredictive),
+          «prediction»leaveOneOutPredictive = mean(leaveOneOutPredictive),
+          «prediction»minESS = min(leaveOneOutEffectiveSampleSize)
         )
-      write.csv(predictives_by_«type», "«outputFolder.getFileInResultFolder("predictives_by_" + type + ".csv")»")
+        
     «ENDFOR»
     
-    # Overall summary
-          
-    predictives_summary <- predictives %>%
-      group_by() %>%
-      summarise(
-        simplePredictiveByLocus = mean(simplePredictive),
-        leaveOneOutPredictive = mean(leaveOneOutPredictive),
-        minESS = min(leaveOneOutEffectiveSampleSize)
-      )
-      
-    baseline <- calibration %>% summarise(value = mean(tipInclusionProbabilities))
+    # Prepare overall summary
+        
+    baseline <- calibration %>% summarise(value = mean(truth))
     predictives_summary$baseline = max(baseline$value, 1-baseline$value)
+    predictives_summary$hard_simplePredictive = hard_predictives_summary$hard_simplePredictive
+    predictives_summary$hard_leaveOneOutPredictive = hard_predictives_summary$hard_leaveOneOutPredictive
+    predictives_summary$hard_minESS = hard_predictives_summary$hard_minESS
       
     write.csv(predictives_summary, "«outputFolder.getFileInResultFolder("predictives_summary.csv")»")
     
