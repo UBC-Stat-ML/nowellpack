@@ -84,6 +84,7 @@ createScript(project, 'corrupt.pre.GraphViz2Newick',    'corrupt-graphviz2newick
 createScript(project, 'corrupt.post.NoiseEstimator',    'corrupt-noise-estimate')
 createScript(project, 'corrupt.post.RankLoci',          'corrupt-rank-loci')
 createScript(project, 'corrupt.GrowTree',               'corrupt-grow')
+createScript(project, 'corrupt.post.TreeEval',          'corrupt-eval')
 
 createScript(project, 'humi.Preprocess',                'humi-preprocess')
 createScript(project, 'humi.freq.DeltaMethod',          'humi-delta')
