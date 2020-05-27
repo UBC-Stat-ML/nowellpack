@@ -68,6 +68,9 @@ class CLMatrixUtils {
   }
   
   static def SimpleCLMatrix fromCSV(File f) {
+    fromCSV(f, CELLS, LOCI, TIP_INCL_PRS)
+  }
+  static def SimpleCLMatrix fromCSV(File f, String CELLS, String LOCI, String TIP_INCL_PRS) {
     val cells = new ArrayList<Cell>
     val loci = new ArrayList<Locus>
     val values = new ArrayList<Double>

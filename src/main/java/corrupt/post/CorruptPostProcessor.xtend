@@ -99,13 +99,13 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
     
     consensus <- read.csv("«csvFile(gofResults.resultsFolder, consensusGofWriter.name)»")
     
-    «FOR stat : #["gof", "empiricalFN", "empiricalFP"]»
+    «FOR stat : #["acc", "FNR", "FPR"]»
     p <- ggplot(trace, aes(x = sample, y = «stat»)) + geom_line() + geom_hline(yintercept=consensus$«stat») + theme_bw()
     ggsave("«gofResults.getFileInResultFolder(stat + ".pdf")»", p)
     «ENDFOR»
     
     consensusByLocus <- read.csv("«csvFile(gofResults.resultsFolder, consensusGofWriterByLocus.name)»")
-    p <- ggplot(consensusByLocus, aes(x = empiricalFN, y = empiricalFP)) + geom_point() + theme_bw()
+    p <- ggplot(consensusByLocus, aes(x = FNR, y = FPR)) + geom_point() + theme_bw()
     ggsave("«gofResults.getFileInResultFolder("consensus-by-locus.pdf")»", p)
     '''
     callR(gofResults.getFileInResultFolder(".script.r"), script)
@@ -142,24 +142,34 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
         }
       }
     }
-    def static double gof(Matrix counts) { return (counts.get(0,0) + counts.get(1,1)) / counts.sum }
-    def static double empiricalFN(Matrix counts) { return counts.get(1, 0) / counts.row(1).sum }
-    def static double empiricalFP(Matrix counts) { return counts.get(0, 1) / counts.row(0).sum }
-    def logTo(TabularWriter writer) {
+    override toString() {
+      "[simple=" + acc(counts) + ",FN=" + FNR(counts) + ",FP=" + FPR(counts) + "]"
+    }
+    def static double sensitivity(Matrix counts) { return counts.get(1,1) / (counts.get(1,1) + counts.get(1,0))}
+    def static double specifity(Matrix counts) { return counts.get(0,0) / (counts.get(0,0) + counts.get(0,1))}
+    def static double precision(Matrix counts) { return counts.get(1,1) / (counts.get(1,1) + counts.get(0,1))}
+    def static double youden(Matrix counts) { return sensitivity(counts) + specifity(counts) - 1.0}
+    def static double f1(Matrix counts) { return 2.0 * precision(counts) * sensitivity(counts) / (precision(counts) + sensitivity(counts)) }
+    def static double acc(Matrix counts) { return (counts.get(0,0) + counts.get(1,1)) / counts.sum }
+    def static double prevalence(Matrix counts) { return (counts.get(1,0) + counts.get(1,1)) / counts.sum}
+    def static double FNR(Matrix counts) { return counts.get(1, 0) / counts.row(1).sum }
+    def static double FPR(Matrix counts) { return counts.get(0, 1) / counts.row(0).sum }
+    def static logTo(TabularWriter writer, Matrix counts) {
       writer.write(
-        "gof" -> gof(counts),
-        "empiricalFN" -> empiricalFN(counts),
-        "empiricalFP" -> empiricalFP(counts)
+        "acc" -> acc(counts),
+        "FNR" -> FNR(counts),
+        "FPR" -> FPR(counts),
+        "prevalence" -> prevalence(counts),
+        "youden" -> youden(counts),
+        "f1" -> f1(counts)
       )
+    }
+    def logTo(TabularWriter writer) {
+      logTo(writer, counts)
     }
     def logToByLocus(TabularWriter writer) {
       for (locus : byLocus.keySet)
-        writer.write(
-          "locus" -> locus,
-          "gof" -> gof(byLocus.get(locus)),
-          "empiricalFN" -> empiricalFN(byLocus.get(locus)),
-          "empiricalFP" -> empiricalFP(byLocus.get(locus))
-        )
+        logTo(writer.child("locus", locus), byLocus.get(locus))
     }
   }
   
