@@ -20,7 +20,14 @@ import corrupt.viz.PerfectPhyloViz
 import viz.core.Viz
 import blang.inits.experiments.tabwriters.factories.CSV
 
-import static blang.inits.experiments.tabwriters.factories.CSV.csvFile 
+import static extension xlinear.MatrixExtensions.*
+import static  xlinear.MatrixOperations.*
+
+import static extension blang.engines.internals.MathCommonsAutoDiff.*
+
+import static blang.inits.experiments.tabwriters.factories.CSV.csvFile import java.util.Collection
+import corrupt.post.DeltaMethod.Transformation
+import bayonet.math.NumericalUtils
 
 class CorruptPostProcessor extends DefaultPostProcessor  {
   
@@ -147,6 +154,7 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
     }
     def static double sensitivity(Matrix counts) { return counts.get(1,1) / (counts.get(1,1) + counts.get(1,0))}
     def static double specifity(Matrix counts) { return counts.get(0,0) / (counts.get(0,0) + counts.get(0,1))}
+    
     def static double precision(Matrix counts) { return counts.get(1,1) / (counts.get(1,1) + counts.get(0,1))}
     def static double youden(Matrix counts) { return sensitivity(counts) + specifity(counts) - 1.0}
     def static double f1(Matrix counts) { return 2.0 * precision(counts) * sensitivity(counts) / (precision(counts) + sensitivity(counts)) }
@@ -154,7 +162,38 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
     def static double prevalence(Matrix counts) { return (counts.get(1,0) + counts.get(1,1)) / counts.sum}
     def static double FNR(Matrix counts) { return counts.get(1, 0) / counts.row(1).sum }
     def static double FPR(Matrix counts) { return counts.get(0, 1) / counts.row(0).sum }
-    def static logTo(TabularWriter writer, Matrix counts) {
+    
+    def static youdenDeltaMethod(Collection<Matrix> byLocus) {
+      var data = dense(byLocus.size, 3)
+      var i = 0
+      for (locus : byLocus) {
+        val norm = locus.sum
+        data.set(i, 0, locus.get(0,0)/norm)
+        data.set(i, 1, locus.get(0,1)/norm)
+        data.set(i, 2, locus.get(1,0)/norm)
+        i++
+      }
+      data = data.readOnlyView
+      val Transformation transform = [
+        val c00 = get(0); val c01 = get(1)
+        val c10 = get(2); val c11 = 1.0 - c00 - c01 - c10
+        return c11 / (c11 + c10) + c00 / (c00 + c01) - 1.0
+      ]
+      return new DeltaMethod(data, transform)
+    }
+    
+    def static logTo(TabularWriter _writer, Matrix counts, Collection<Matrix> byLocus) {
+      val writer = 
+        if (byLocus === null) 
+          _writer 
+        else 
+        {
+          val deltaMethod = youdenDeltaMethod(byLocus)
+          NumericalUtils.checkIsClose(deltaMethod.estimate, youden(counts))
+          _writer.
+            child("youden_asymptoticVariance", deltaMethod.asymptoticVariance).
+            child("youden_95ciRadius", deltaMethod.confidenceIntervalRadius(0.95))
+        }
       writer.write(
         "acc" -> acc(counts),
         "FNR" -> FNR(counts),
@@ -165,11 +204,11 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
       )
     }
     def logTo(TabularWriter writer) {
-      logTo(writer, counts)
+      logTo(writer, counts, byLocus.values)
     }
     def logToByLocus(TabularWriter writer) {
       for (locus : byLocus.keySet)
-        logTo(writer.child("locus", locus), byLocus.get(locus))
+        logTo(writer.child("locus", locus), byLocus.get(locus), null)
     }
   }
   
