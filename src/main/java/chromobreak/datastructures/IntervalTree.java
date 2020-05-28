@@ -12,7 +12,7 @@ import java.util.Set;
  * The underlying data-structure is a red-black tree largely implemented from
  * CLRS (Introduction to Algorithms, 2nd edition) with the interval-tree
  * extensions mentioned in section 14.3
- * @param <I> - the type of Interval this tree contains
+ *   - the type of Interval this tree contains
  */
 public class IntervalTree<T extends Interval> implements Iterable<T> {
 
@@ -32,7 +32,7 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
     /**
      * Constructs an IntervalTree containing a single node corresponding to
      * the given interval.
-     * @param t - the interval to add to the tree
+     * t - the interval to add to the tree
      */
     public IntervalTree(T t) {
         nil = new Node();
@@ -63,7 +63,7 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
      * The Node in this IntervalTree that contains the given Interval.
      * <p>
      * This method returns the nil Node if the Interval t cannot be found.
-     * @param t - the Interval to search for.
+     * t - the Interval to search for.
      */
     private Node search(T t) {
         return root.search(t);
@@ -71,7 +71,7 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
     
     /**
      * Whether or not this IntervalTree contains the given Interval.
-     * @param t - the Interval to search for
+     * t - the Interval to search for
      */
     public boolean contains(T t) {
         return !search(t).isNil();
@@ -99,7 +99,7 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
     
     /**
      * The next Interval in this IntervalTree
-     * @param t - the Interval to search for
+     * t - the Interval to search for
      * @return an Optional containing, if it exists, the next Interval in this
      * IntervalTree; otherwise (if t is the maximum Interval, or if this
      * IntervalTree does not contain t), an empty Optional.
@@ -120,7 +120,7 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
 
     /**
      * The previous Interval in this IntervalTree
-     * @param t - the Interval to search for
+     * t - the Interval to search for
      * @return an Optional containing, if it exists, the previous Interval in
      * this IntervalTree; otherwise (if t is the minimum Interval, or if this
      * IntervalTree does not contain t), an empty Optional.
@@ -149,7 +149,7 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
     /**
      * An Iterator over the Intervals in this IntervalTree that overlap the
      * given Interval
-     * @param t - the overlapping Interval
+     *  t - the overlapping Interval
      */
     public Iterator<T> overlappers(T t) {
         return root.overlappers(t);
@@ -158,7 +158,7 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
     /**
      * Whether or not any of the Intervals in this IntervalTree overlap the given
      * Interval
-     * @param t - the potentially overlapping Interval
+     *  t - the potentially overlapping Interval
      */
     public boolean overlaps(T t) {
         return !root.anyOverlappingNode(t).isNil();
@@ -167,7 +167,7 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
     /**
      * The number of Intervals in this IntervalTree that overlap the given
      * Interval
-     * @param t - the overlapping Interval
+     *  t - the overlapping Interval
      */
     public int numOverlappers(T t) {
         return root.numOverlappingNodes(t);
@@ -175,7 +175,7 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
     
     /**
      * The least Interval in this IntervalTree that overlaps the given Interval
-     * @param t - the overlapping Interval
+     *  t - the overlapping Interval
      * @return an Optional containing, if it exists, the least Interval in this
      * IntervalTree that overlaps the given Interval; otherwise (i.e., if there
      * is no overlap), an empty Optional
@@ -195,7 +195,7 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
      * This method constructs a new Node containing the given value and places
      * it into the tree. If the value already exists within the tree, the tree
      * remains unchanged.
-     * @param t - the value to place into the tree
+     *  t - the value to place into the tree
      * @return if the value did not already exist, i.e., true if the tree was
      * changed, false if it was not
      */
@@ -247,7 +247,7 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
      * Deletes the given value from this IntervalTree.
      * <p>
      * If the value does not exist, this IntervalTree remains unchanged. 
-     * @param t - the Interval to delete from the tree
+     *  t - the Interval to delete from the tree
      * @return whether or not an Interval was removed from this IntervalTree
      */
     public boolean delete(T t) {    // Node#delete does nothing and returns
@@ -282,7 +282,7 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
      * <p>
      * If there are no overlapping Intervals, this IntervalTree remains
      * unchanged.
-     * @param t - the overlapping Interval
+     *  t - the overlapping Interval
      * @return whether or not an Interval was removed from this IntervalTree
      */
     public boolean deleteOverlappers(T t) {
@@ -337,7 +337,7 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
         
         /**
          * Constructs a Node containing the given Interval.
-         * @param data - the Interval to be contained within this Node
+         *  data - the Interval to be contained within this Node
          */
         public Node(T interval) {
             this.interval = interval;
@@ -377,7 +377,7 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
         
         /**
          * Searches the subtree rooted at this Node for the given Interval.
-         * @param t - the Interval to search for
+         *  t - the Interval to search for
          * @return the Node with the given Interval, if it exists; otherwise,
          * the sentinel Node 
          */
@@ -476,7 +476,7 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
          * determine if any overlap exists between an Interval and any of an
          * IntervalTree's Intervals. The returned Node will be the first
          * overlapping one found.
-         * @param t - the given Interval
+         *  t - the given Interval
          * @return an overlapping Node from this Node's subtree, if one exists;
          * otherwise the sentinel Node
          */
@@ -491,7 +491,7 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
         /**
          * Returns the minimum Node from this Node's subtree that overlaps the
          * given Interval.
-         * @param t - the given Interval
+         *  t - the given Interval
          * @return the minimum Node from this Node's subtree that overlaps the
          * Interval t, if one exists; otherwise, the sentinel Node
          */
@@ -549,7 +549,7 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
         /**
          * An Iterator over all values in this Node's subtree that overlap the
          * given Interval t.
-         * @param t - the overlapping Interval
+         *  t - the overlapping Interval
          */
         private Iterator<T> overlappers(T t) {
             return new OverlapperIterator(this, t);
@@ -558,7 +558,7 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
         /**
          * The next Node (relative to this Node) which overlaps the given
          * Interval t
-         * @param t - the overlapping Interval
+         *  t - the overlapping Interval
          * @return the next Node that overlaps the Interval t, if one exists;
          * otherwise, the sentinel Node
          */
@@ -591,7 +591,7 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
          * iterates over all overlapping Nodes, so if you ultimately need to
          * inspect the Nodes, it will be more efficient to simply create the
          * Iterator yourself.
-         * @param t - the overlapping Interval
+         *  t - the overlapping Interval
          * @return the number of overlapping Nodes
          */
         private int numOverlappingNodes(T t) {
@@ -831,7 +831,7 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
 
         /**
          * Copies the data from a Node into this Node.
-         * @param o - the other Node containing the data to be copied
+         *  o - the other Node containing the data to be copied
          */
         private void copyData(Node o) {
             interval = o.interval;
@@ -961,8 +961,8 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
         /**
          * Whether or not the subtree rooted at this Node is a valid
          * binary-search tree.
-         * @param min - a lower-bound Node
-         * @param max - an upper-bound Node
+         *  min - a lower-bound Node
+         *  max - an upper-bound Node
          */
         private boolean isBST(Node min, Node max) {
             if (isNil()) {
@@ -983,7 +983,7 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
          * Whether or not the subtree rooted at this Node is balanced.
          * <p>
          * Balance determination is done by calculating the black-height.
-         * @param black - the expected black-height of this subtree
+         *  black - the expected black-height of this subtree
          */
         private boolean isBalanced(int black) {
             if (isNil()) {

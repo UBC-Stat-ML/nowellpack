@@ -49,7 +49,7 @@ class TreeEval extends Experiment {
   /**
    * For all possible clades (encoded by the node at the top), compute the score,
    * i.e. counts[truth][guess]
-   * return map of clade -> counts
+   * return map of clade to counts
    * 
    * Not optimized for speed.
    */

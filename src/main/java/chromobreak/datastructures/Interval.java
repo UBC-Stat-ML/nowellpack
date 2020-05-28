@@ -28,7 +28,7 @@ public interface Interval extends Comparable<Interval> {
      * Returns if this interval is adjacent to the specified interval.
      * <p>
      * Two intervals are adjacent if either one ends where the other starts.
-     * @param interval - the interval to compare this one to
+     *  interval - the interval to compare this one to
      * @return if this interval is adjacent to the specified interval.
      */
     default boolean isAdjacent(Interval other) {
