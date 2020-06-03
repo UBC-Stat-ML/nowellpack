@@ -8,7 +8,10 @@ class SamplerOptions {
   @Arg                      @DefaultValue("true")
   public boolean useCellReallocationMove = true
   
-  private static SamplerOptions _instance = null
+  @Arg           @DefaultValue("false")
+  public boolean useMiniMoves = false
+  
+  static SamplerOptions _instance = null
   @DesignatedConstructor
   def static SamplerOptions getInstance() {
     if (_instance === null)
