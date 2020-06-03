@@ -21,13 +21,12 @@ import viz.core.Viz
 import blang.inits.experiments.tabwriters.factories.CSV
 
 import static extension xlinear.MatrixExtensions.*
-import static  xlinear.MatrixOperations.*
 
-import static extension blang.engines.internals.MathCommonsAutoDiff.*
 
 import static blang.inits.experiments.tabwriters.factories.CSV.csvFile import java.util.Collection
-import corrupt.post.DeltaMethod.Transformation
 import bayonet.math.NumericalUtils
+import static extension xlinear.AutoDiff.*
+import xlinear.DeltaMethod
 
 class CorruptPostProcessor extends DefaultPostProcessor  {
   
@@ -59,18 +58,39 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
   def treeViz(PerfectPhylo reconstruction, BinaryCLMatrix observations) {
     // for the support values, don't reuse the ones from consensus construction; they might use the logistic transform!
     val child = results.child("averagingNoLogisticsTransform")
+    val parentBurnIn = burnInFraction
     val averager = new AverageCLMatrices => [
       csvFile = getCsvFile(sampleDir, "phylo")   
       results = child
       logisticTransform = false
+      burnInFraction = parentBurnIn
     ]
     averager.run
     val supportValues = ReadOnlyCLMatrix::readOnly(averager.average)
     val convertedObs = ReadOnlyCLMatrix::readOnly(observations)
+    
     val publicSize = Viz.fixWidth(500)
-    val treeViz = new PerfectPhyloViz(reconstruction, #[supportValues,convertedObs], publicSize)
     val treeVizResults = results.child("treeViz") 
-    treeViz.output(treeVizResults.getFileInResultFolder("consensus.pdf"))
+    
+    new PerfectPhyloViz(reconstruction, #[supportValues,convertedObs], publicSize)
+      .output(treeVizResults.getFileInResultFolder("consensus.pdf"))
+    
+    // for residual analysis:
+    val fp = combine(convertedObs, reconstruction) [truth, guess | Math.max(0,guess - truth)]
+    val fn = combine(convertedObs, reconstruction) [truth, guess | Math.max(0,truth - guess)]
+    new PerfectPhyloViz(reconstruction, #[fp, fn], publicSize)
+      .output(treeVizResults.getFileInResultFolder("residuals.pdf"))
+  }
+  
+  def static ReadOnlyCLMatrix combine(CellLocusMatrix m1, PerfectPhylo m2, (Double,Double)=>Double operator) {
+    if (m1.loci != m2.loci || m1.cells != m2.cells) throw new RuntimeException
+    val result= new SimpleCLMatrix(m1.cells, m1.loci)
+    for (locus : m1.loci) {
+      val tips = m2.getTips(locus)
+      for (cell : m1.cells)
+        result.set(cell, locus, operator.apply(m1.get(cell,locus), if (tips.get(cell)) 1.0 else 0.0))
+    }
+    return ReadOnlyCLMatrix.readOnly(result)
   }
   
   def goodnessOfFit(CorruptPhylo consensus) {
@@ -120,9 +140,11 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
   
   def CorruptPhylo decode() {
     val child = results.child("averaging")
+    val parentBurnIn = burnInFraction
     val averager = new AverageCLMatrices => [
       csvFile = getCsvFile(sampleDir, "phylo")
       results = child
+      burnInFraction = parentBurnIn
     ]
     averager.run
     
@@ -164,7 +186,7 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
     def static double FPR(Matrix counts) { return counts.get(0, 1) / counts.row(0).sum }
     
     def static youdenDeltaMethod(Collection<Matrix> byLocus) {
-      var data = dense(byLocus.size, 3)
+      val data = dense(byLocus.size, 3)
       var i = 0
       for (locus : byLocus) {
         val norm = locus.sum
@@ -173,13 +195,11 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
         data.set(i, 2, locus.get(1,0)/norm)
         i++
       }
-      data = data.readOnlyView
-      val Transformation transform = [
+      return new DeltaMethod(data) [
         val c00 = get(0); val c01 = get(1)
         val c10 = get(2); val c11 = 1.0 - c00 - c01 - c10
         return c11 / (c11 + c10) + c00 / (c00 + c01) - 1.0
       ]
-      return new DeltaMethod(data, transform)
     }
     
     def static logTo(TabularWriter _writer, Matrix counts, Collection<Matrix> byLocus) {

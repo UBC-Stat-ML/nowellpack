@@ -21,6 +21,9 @@ class AverageCLMatrices extends Experiment {
   @Arg                @DefaultValue("true")
   public boolean logisticTransform = true;
   
+  @Arg            @DefaultValue("0.5")
+  public double burnInFraction = 0.5
+  
   @Arg 
   @DefaultValue("value")
   public String field ="value"
@@ -29,7 +32,10 @@ class AverageCLMatrices extends Experiment {
   override run() {
     if (referenceTree.present)
       parsedTreeIndicators = CLMatrixUtils::fromPhylo(PerfectPhylo::parseNewick(referenceTree.get)) 
-    averageTipIndicators(BriefIO.readLines(csvFile).indexCSV.map[new PerfectPhylo(it.get(field))], logisticTransform)
+    val nTrees = BriefIO.readLines(csvFile).indexCSV.size
+    val nToSkip = (burnInFraction * nTrees) as int
+    if (nToSkip == nTrees || nToSkip < 0) throw new RuntimeException
+    averageTipIndicators(BriefIO.readLines(csvFile).indexCSV.skip(nToSkip).map[new PerfectPhylo(it.get(field))], logisticTransform)
     result.toCSV(results.getFileInResultFolder(OUTPUT_NAME), parsedTreeIndicators) 
   }
   
