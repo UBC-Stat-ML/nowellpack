@@ -10,6 +10,7 @@ import java.util.ArrayList
 import java.util.Collections
 import java.util.Collection
 import java.util.LinkedHashSet
+import org.eclipse.xtend.lib.annotations.Data
 
 class GenomeMap {
   
@@ -53,8 +54,14 @@ class GenomeMap {
       current.add(locus)
     }
   }
-  
-  private static class ParsedLocus {
+    
+  /**
+   * When a locus is a difference between consecutive bin, we encode it with 
+   * the left locus. As such, binSize is always for a single bin, not spanning 
+   * 2 or more loci. 
+   */
+  @Data
+  static class ParsedLocus {
     val int chr
     val int leftOneIndexedIncl
     val int rightOneIndexedIncl
@@ -64,6 +71,13 @@ class GenomeMap {
       leftOneIndexedIncl = Integer.parseInt(parsed.get(2))
       rightOneIndexedIncl = Integer.parseInt(parsed.get(3))
     }
+    def int binSize() {
+      return rightOneIndexedIncl - leftOneIndexedIncl + 1
+    }
+  }
+  
+  def static Locus locus(String chr, int left, int right) {
+    return new Locus(chr + "_" + left + "_" + right)
   }
   
   def static int chromosomeIndex(String str) {
