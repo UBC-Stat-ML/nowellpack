@@ -7,6 +7,8 @@ import java.util.Map
 import blang.inits.experiments.tabwriters.TidySerializer
 import briefj.BriefIO
 import java.util.List
+import java.io.Writer
+import static extension blang.inits.experiments.tabwriters.factories.CSV.csvFile
 
 class ChromoPostProcessor extends DefaultPostProcessor {
   
@@ -16,12 +18,12 @@ class ChromoPostProcessor extends DefaultPostProcessor {
     val outputDir = results.getFileInResultFolder("chromoplots")
     val readCountModelName = "readCountModel"
     val sampleDir = new File(blangExecutionDirectory.get, Runner::SAMPLES_FOLDER)
-    val readCountModelCsvFile = new File(sampleDir, readCountModelName + ".csv") 
+    val readCountModelCsvFile = csvFile(sampleDir, readCountModelName) 
     val types = TidySerializer::types(readCountModelCsvFile)
     types.remove("map_key_1") // don't auto-facet this
     
-    val rawData = new File(outputDir, ".raw.csv")
-    val output = BriefIO::output(rawData)
+    val rawData = csvFile(outputDir, ".raw")
+    val output = BriefIO::writer(rawData)
     output.println("chromosomes,positions,logGC,logReads,sample") // log gc , log count, then need to add dummy sample column to make FitPlot r code work
     for (chr : data.chromosomes.indices)
       for (pos : data.positions.indices(chr)) {
@@ -38,7 +40,7 @@ class ChromoPostProcessor extends DefaultPostProcessor {
     )
     
     // state paths
-    val _hmms = new File(sampleDir, "hmms.csv")
+    val _hmms = csvFile(sampleDir, "hmms")
     if (_hmms.exists) {
       // workaround: if we leave this in samples, this will create huge facet plots, 
       // which are not most useful representation; we move them up to avoid this
@@ -159,7 +161,7 @@ class ChromoPostProcessor extends DefaultPostProcessor {
   
   def List<Double> getUnivariateSampleList(String name) {
     val sampleDir = new File(blangExecutionDirectory.get, Runner::SAMPLES_FOLDER)
-    val file = new File(sampleDir, name + ".csv")
+    val file = csvFile(sampleDir, name)
     BriefIO::readLines(file).indexCSV.map[Double.parseDouble(get("value"))].toList
   }
   
@@ -212,4 +214,7 @@ class ChromoPostProcessor extends DefaultPostProcessor {
     }
   }
 
+  def println(Writer writer, Object out) {
+    writer.append(out.toString + "\n")
+  }
 }
