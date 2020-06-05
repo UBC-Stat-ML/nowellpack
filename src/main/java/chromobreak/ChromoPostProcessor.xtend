@@ -22,7 +22,7 @@ class ChromoPostProcessor extends DefaultPostProcessor {
     val types = TidySerializer::types(readCountModelCsvFile)
     types.remove("map_key_1") // don't auto-facet this
     
-    val rawData = csvFile(outputDir, ".raw")
+    val rawData = new File(outputDir, ".raw.gz")
     val output = BriefIO::writer(rawData)
     output.println("chromosomes,positions,logGC,logReads,sample") // log gc , log count, then need to add dummy sample column to make FitPlot r code work
     for (chr : data.chromosomes.indices)
@@ -70,7 +70,7 @@ class ChromoPostProcessor extends DefaultPostProcessor {
     val sds = getUnivariateSampleList("sd")
     val slopes = getUnivariateSampleList("sdSlope")
     val nSamples = f0s.size
-    val thin = nSamples / 10 // create 10 plots to show spread
+    val thin = Math.max(1, nSamples / 10) // create 10 plots to show spread
     for (i : 0 ..< nSamples)
       if (i % thin == 0) {
         val f0 = f0s.get(i)
