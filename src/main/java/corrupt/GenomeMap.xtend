@@ -74,7 +74,7 @@ class GenomeMap {
   @Data
   static class ParsedLocus {
     val int chr
-    val int leftOneIndexedIncl
+    val int leftOneIndexedIncl 
     val int rightOneIndexedIncl
     new (Locus locus) {
       val parsed = locus.toString.split("_")

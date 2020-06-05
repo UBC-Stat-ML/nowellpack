@@ -25,7 +25,7 @@ class Tidify extends Experiment {
     out.close
   }
   
-  public static def void main(String [] args) {
+  static def void main(String [] args) {
     Experiment::startAutoExit(args)
   }
   
