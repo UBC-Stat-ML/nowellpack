@@ -9,8 +9,11 @@ import corrupt.GenomeMap
 import corrupt.GenomeMap.ParsedLocus
 
 /**
- * This will also
+ * This will:
+ * - create tidy formats
  * - re-index loci (and cell if requested)
+ * - create index files
+ * - can split into cell specific directories too
  */
 class TidifyCounts extends Experiment {
   
@@ -22,6 +25,11 @@ class TidifyCounts extends Experiment {
   
   @Arg(description = "Use integer indices for cells") @DefaultValue("false")
   public boolean useInteger = false // set to true for legacy
+  
+  @Arg                @DefaultValue("false")
+  public boolean cellSpecificFiles = false
+  
+  public static String DATA_OUTPUT = "tidy"
   
   override run() {
     val parsed = CLMatrixUtils::fromCSV(countFile)
@@ -36,8 +44,14 @@ class TidifyCounts extends Experiment {
           for (var int posIndex = 0; posIndex < lociList.size; posIndex++)  {
             val locus = lociList.get(posIndex)
             // re-index by position
-            results.getTabularWriter("tidy").write(
-              "cell" -> if (useInteger) cellIndex else cell,
+            val Object cellCode = if (useInteger) cellIndex else cell
+            val writer = 
+              if (cellSpecificFiles) {
+                results.child(DATA_OUTPUT).child(cellCode.toString).getTabularWriter("data")
+              } else 
+                results.getTabularWriter(DATA_OUTPUT).child("cell", cellCode)
+            
+            writer.write(
               "chromosomes" -> chr,
               "positions" -> posIndex,
               "value" -> parsed.get(cell, locus)
