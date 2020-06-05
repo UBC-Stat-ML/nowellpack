@@ -3,11 +3,15 @@ package chromobreak
 import blang.inits.experiments.Experiment
 import blang.inits.Arg
 import java.io.File
+import blang.inits.DefaultValue
 
 class Preprocess extends Experiment {
   
   @Arg File reads
   @Arg File gc
+  
+  @Arg            @DefaultValue("INF")
+  public int maxNCells = Integer.MAX_VALUE
   
   override run() {
     processReads
@@ -23,6 +27,7 @@ class Preprocess extends Experiment {
       useInteger = false
       results = tidifyFolder
       experimentConfigs = configs
+      nCells = maxNCells
     ]
     tidify.run
   }
