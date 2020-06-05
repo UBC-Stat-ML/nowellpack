@@ -45,12 +45,23 @@ class GenomeMap {
     return true
   }
   
+  /**
+   * Warning: do not expose the TreeSet as the ordering assumes comparison
+   * will only be made with loci in same chromosomes.
+   * That's why it's now converted to ArrayList in orderedLoci
+   */
   val Map<Integer,TreeSet<Locus>> byChromosome = new LinkedHashMap
   
   new (Collection<Locus> loci) {
     for (locus : loci) {
       val parsed = new ParsedLocus(locus)
-      val current = BriefMaps.getOrPut(byChromosome, parsed.chr, new TreeSet<Locus>(Comparator::comparing[Locus l | new ParsedLocus(l).leftOneIndexedIncl]))
+      val current = BriefMaps.getOrPut(
+        byChromosome, 
+        parsed.chr, 
+        new TreeSet<Locus>(
+          Comparator::comparing[Locus l | new ParsedLocus(l).leftOneIndexedIncl]
+        )
+      )
       current.add(locus)
     }
   }
@@ -76,18 +87,28 @@ class GenomeMap {
     }
   }
   
+  def static boolean isAdjacent(Locus before, Locus after) {
+    val l0 = new ParsedLocus(before)
+    val l1 = new ParsedLocus(after)
+    if (l0.chr !== l1.chr) return false
+    return l0.rightOneIndexedIncl + 1 === l1.leftOneIndexedIncl
+  }
+  
   def static Locus locus(String chr, int left, int right) {
     return new Locus(chr + "_" + left + "_" + right)
   }
   
   def static int chromosomeIndex(String str) {
     val chrStr = str.toUpperCase
-    if (chrStr == "X")
-      return 23
+    val result = if (chrStr == "X")
+      23
     else if (chrStr == "Y")
-      return 24
+      24
     else
-      return Integer.parseInt(chrStr)
+      Integer.parseInt(chrStr)
+    if (result < 1 || result > 24) 
+      throw new RuntimeException("Using 1-indexed chromosome.")
+    return result
   }
   
   def ArrayList<Locus> neighbors(Locus locus, int neighborhoodSize) {
@@ -105,8 +126,8 @@ class GenomeMap {
     return sortedChrs
   }
   
-  def Collection<Locus> orderedLoci(Integer chr) {
-    return byChromosome.get(chr)
+  def List<Locus> orderedLoci(Integer chr) {
+    return new ArrayList(byChromosome.get(chr))
   }
   
   def List<Locus> orderLoci() {

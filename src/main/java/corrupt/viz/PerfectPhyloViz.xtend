@@ -23,6 +23,8 @@ import java.util.Collection
 import corrupt.Locus
 import processing.core.PApplet
 import corrupt.post.ReadOnlyCLMatrix
+import java.util.LinkedHashSet
+import java.io.File
 
 class PerfectPhyloViz extends Viz {
   val TreeViz<Set<TreeNode>> treeViz
@@ -34,7 +36,7 @@ class PerfectPhyloViz extends Viz {
     PerfectPhylo phylo, 
     List<ReadOnlyCLMatrix> matrices, 
     PublicSize size) {
-    this(phylo, matrices, size, Optional.empty, Optional.empty)
+    this(phylo, matrices, size, Optional.empty, Optional.empty, Optional.empty)
   }
   
   new (
@@ -43,7 +45,27 @@ class PerfectPhyloViz extends Viz {
     PublicSize size,
     PerfectPhylo refPhylo
     ) {
-    this(phylo, matrices, size, Optional.of(refPhylo), Optional.empty)
+    this(phylo, matrices, size, Optional.of(refPhylo), Optional.empty, Optional.empty)
+  }
+  
+  def static void visualizePerChromosome(File directory, PerfectPhylo phylo, List<ReadOnlyCLMatrix> matrices, PublicSize size) {
+    val allLoci = allLoci(matrices)
+    val map = new GenomeMap(allLoci)
+    directory.mkdirs
+    for (chr : map.orderedChromosomes) {
+      val viz = new PerfectPhyloViz(phylo, matrices, size, Optional.empty, Optional.empty, Optional.of(map.orderedLoci(chr).toSet))
+      val outFile = new File(directory, chr + ".pdf") 
+      viz.output(outFile)
+    }
+  } 
+  
+  //public static 
+  
+  def static List<Locus> allLoci(List<? extends CellLocusMatrix> matrices) {
+    val loci = new LinkedHashSet<Locus>
+    for (matrix : matrices)
+      loci.addAll(matrix.loci)
+    return GenomeMap::orderLoci(loci)
   }
   
   @DesignatedConstructor
@@ -52,7 +74,8 @@ class PerfectPhyloViz extends Viz {
     @ConstructorArg("matrices") List<ReadOnlyCLMatrix> _matrices, 
     @ConstructorArg("size") PublicSize size,
     @ConstructorArg("ref") Optional<PerfectPhylo> refPhylo,
-    @ConstructorArg(value = "colourCodes", description = coloursDescriptions) Optional<List<Integer>> codes
+    @ConstructorArg(value = "colourCodes", description = coloursDescriptions) Optional<List<Integer>> codes,
+    @ConstructorArg("restriction") Optional<Set<Locus>> restriction
   ) {
     super(size)
     
@@ -76,9 +99,13 @@ class PerfectPhyloViz extends Viz {
     // overlay matrices 
     nMatrices = matrices.size
     val int groupSize = nMatrices + 1
-    val CellLocusMatrix matrix = matrices.get(0) 
-    loci = matrix.loci 
-    val converted = MatrixOperations::dense(matrix.cells.size, matrix.loci.size * groupSize) 
+    val allCells = matrices.get(0).cells
+     
+    loci = allLoci(matrices)
+    if (restriction.present)
+      loci.retainAll(restriction.get)
+      
+    val converted = MatrixOperations::dense(allCells.size, loci.size * groupSize) 
     var int colIndex = 0
     for (locus : loci) {
       for (entry : treeViz.tipIndices.entrySet) {
@@ -86,8 +113,10 @@ class PerfectPhyloViz extends Viz {
         if (cells.size != 1) 
           throw new RuntimeException
         val cell = cells.iterator.next as Cell 
-        for (i : 0 ..< matrices.size)
-          converted.set(entry.value, groupSize * colIndex + i, matrices.get(i).get(cell, locus))
+        for (i : 0 ..< matrices.size) {
+          val value = if (matrices.get(i).loci.contains(locus)) matrices.get(i).get(cell, locus) else 0.0
+          converted.set(entry.value, groupSize * colIndex + i, value)
+        }
       }
       colIndex++
     }
