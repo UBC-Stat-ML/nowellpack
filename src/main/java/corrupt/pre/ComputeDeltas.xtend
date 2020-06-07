@@ -49,9 +49,9 @@ class ComputeDeltas extends Experiment {
     def  List<ReadOnlyCLMatrix> deltas()
   }
   
-  static val pathToSamples = "results/latest/chromoplots/"
+  static val pathToSamples = "chromoplots"
   static val sampleFilePrefix = "hmms"
-  static val pathToOptions = "results/latest/arguments.tsv"
+  static val pathToOptions = "arguments.tsv"
   static class FromPosteriorSamples implements Source {
     
     @Arg List<File> files
