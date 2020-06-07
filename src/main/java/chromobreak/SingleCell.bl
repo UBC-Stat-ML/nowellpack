@@ -25,18 +25,6 @@ model SingleCell {
   
   // Keeping a copy to easily serialize demarginalized hmms
   random Map<String, SingleCellHMMs> hmms ?: new LinkedHashMap
-  
-//  next steps
-//  - speed things up for quick testing [OK - well check if can reproduce high-ploidity choice]
-//  - better initializations 
-//  - setup appropriate multi-level - optimize schedule by hand
-//  - remove F0 move
-//  - add non-uniform distribution? to make it more costy to assume ploidity change - but that would make it too costy?
-//  - explicit ploidity - with spike and slab prior
-//  - remove random states, just making it hard to change - instead hard set limit
-//  - gof: usage for states
-
-// instead: try to crank up compute
     
   laws {
     

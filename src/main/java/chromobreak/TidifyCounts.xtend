@@ -59,11 +59,8 @@ class TidifyCounts extends Experiment {
             
             // write the index for one cell only
             if (cellIndex === 0) {
-              val parsedLocus = new ParsedLocus(locus)
               results.getTabularWriter("lociIndex").write(
-                "chromosomes" -> chr,
-                "start" -> parsedLocus.leftOneIndexedIncl,
-                "end" -> parsedLocus.rightOneIndexedIncl,
+                "locus" -> locus,
                 "indexInChr" -> posIndex
               )
             }

@@ -23,7 +23,7 @@ import corrupt.GenomeMap
 
 class CLMatrixUtils {
   
-  public static val String CELLS = "cells"
+  public static val String CELLS = "cells" 
   public static val String LOCI = "loci"
   public static val String TIP_INCL_PRS = "tipInclusionProbabilities"
   
