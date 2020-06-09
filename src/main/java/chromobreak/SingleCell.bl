@@ -4,7 +4,6 @@ import chromobreak.SingleCellHMMs
 import chromobreak.SingleCellHMMs.Configs
 import blang.types.internals.RealScalar
 
-@Samplers(F0Sampler)
 model SingleCell {
   param SingleCellData data
   param Configs configs
@@ -12,16 +11,14 @@ model SingleCell {
   param String chromosomeFilter ?: ".*"
   param Double vagueness ?: 10.0
   
-  random Plated<IntVar> nStates 
   random RealVar switchRate ?: latentReal
   random RealVar f0 ?: latentReal
   random RealVar f1 ?: latentReal 
   random RealVar f2 ?: latentReal  
   random RealVar sd ?: latentReal 
-  random RealVar sdSlope ?: latentReal 
   random RealVar p ?: new RealScalar(0.5) 
    
-  random ReadCountModel readCountModel ?: new ReadCountModel(f0, f1, f2, sd, sdSlope)
+  random ReadCountModel readCountModel ?: new ReadCountModel(f0, f1, f2, sd, 0.0)
   
   // Keeping a copy to easily serialize demarginalized hmms
   random Map<String, SingleCellHMMs> hmms ?: new LinkedHashMap
@@ -35,12 +32,10 @@ model SingleCell {
     f2 | vagueness ~ Normal(0, vagueness*vagueness)  
     
     sd ~ Exponential(0.1)
-    sdSlope ~ Exponential(0.1)
     
     p ~ ContinuousUniform(0.0, 1.0)
     
     for (Index<String> chromosome : data.chromosomes.indices.filter[key.matches("^" + chromosomeFilter + "$")]) {  
-      nStates.get(chromosome) | p, int maxState = configs.maxStates ~ Categorical(StaticUtils::truncatedGeometric(p, maxState))
       | SingleCellHMMs hmm = {
           val current = new SingleCellHMMs(
             data, 
@@ -48,7 +43,7 @@ model SingleCell {
             readCountModel, 
             switchRate, 
             configs,
-            nStates.get(chromosome)
+            configs.maxStates
           )
           hmms.put(chromosome.key, current)
           current

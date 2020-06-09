@@ -71,7 +71,7 @@ class ChromoPostProcessor extends DefaultPostProcessor {
     val f1s = getFs(1)
     val f2s = getFs(2)
     val sds = getUnivariateSampleList("sd")
-    val slopes = getUnivariateSampleList("sdSlope")
+    //val slopes = getUnivariateSampleList("sdSlope")
     val nSamples = f0s.size
     val thin = Math.max(1, nSamples / 10) // create 10 plots to show spread
     for (i : 0 ..< nSamples)
@@ -144,7 +144,7 @@ class ChromoPostProcessor extends DefaultPostProcessor {
               merged <- inner_join(data, data2, by = c("chromosomes", "positions")) 
               
               p <- ggplot(merged, aes(x = log(value.x))) +
-                             stat_function(fun = dnorm, n = 1000, args = list(mean = log(«j»), sd = «sds.get(i) + slopes.get(i) * j»), colour = "red") + 
+                             stat_function(fun = dnorm, n = 1000, args = list(mean = log(«j»), sd = «sds.get(i) + 0.0 * j»), colour = "red") + 
                              «verticalLines» + 
                              geom_density() + 
                              theme_bw() +
