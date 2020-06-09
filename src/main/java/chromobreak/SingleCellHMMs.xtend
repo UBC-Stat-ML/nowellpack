@@ -31,15 +31,18 @@ import hmm.SparseTransitionMatrix
 class SingleCellHMMs implements TidilySerializable {
   
   static class Configs {
+    
+    @Arg              @DefaultValue("true")
+    public boolean checkHighCounts = true
+    
     @Arg          @DefaultValue("true")
     public boolean bufferState = true
     
     @Arg                                @DefaultValue("1")
     public Random demarginalizationRandom = new Random(1)
     
-    @Arg(description = "Can be set to infinity but useful to set finite max to control resource usage")          
-            @DefaultValue("20")
-    public int maxStates = 20
+    @Arg    @DefaultValue("10")
+    public int maxStates = 10
     
     val Optional<AnnealingParameter> annealingParameter
     
@@ -128,9 +131,15 @@ class SingleCellHMMs implements TidilySerializable {
     var int len = indices.size 
     logReads = newDoubleArrayOfSize(len)
     logGCs = newDoubleArrayOfSize(len)
+    var boolean detectedHighInteger = false // catch bug where code is called with CN calls instead of reads
     for (Index<Integer> position : indices) {
-      logReads.set(position.key, Math::log(data.readCounts.get(chromosome, position).intValue))
+      val curReads = data.readCounts.get(chromosome, position).intValue
+      logReads.set(position.key, Math::log(curReads))
       logGCs.set(position.key, Math::log(data.gcContents.get(chromosome, position).doubleValue))
+      if (curReads > 50) detectedHighInteger = true
+    }
+    if (configs.checkHighCounts && !detectedHighInteger) {
+      throw new RuntimeException("No read count lower than 50 detected.. input is either cn states instead of read counts, or number of reads dangerously low. Disable this check with option checkHighCounts")
     }
   }
   

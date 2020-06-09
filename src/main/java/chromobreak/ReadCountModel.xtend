@@ -21,7 +21,7 @@ class ReadCountModel implements TidilySerializable {
     if (sd.doubleValue <= 0.0) 
       blang.types.StaticUtils::invalidParameter
     
-    if (Double.isNaN(logGC) || Double.isNaN(logReadCount))
+    if (Double.isNaN(logGC) || Double.isNaN(logReadCount)) // for mappability will need to add: mappability == Double::NEGATIVE_INFINITY)
       return 0.0 // treat as missing 
     
     if (state === 0) { // loss state
