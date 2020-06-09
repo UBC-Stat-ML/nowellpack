@@ -139,7 +139,7 @@ class SingleCellHMMs implements TidilySerializable {
       if (curReads > 50) detectedHighInteger = true
     }
     if (configs.checkHighCounts && !detectedHighInteger) {
-      throw new RuntimeException("No read count lower than 50 detected.. input is either cn states instead of read counts, or number of reads dangerously low. Disable this check with option checkHighCounts")
+      throw new RuntimeException("No read count higher than 50 detected.. input is either cn states instead of read counts, or number of reads dangerously low. Disable this check with option checkHighCounts")
     }
   }
   
