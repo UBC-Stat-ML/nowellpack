@@ -27,11 +27,21 @@ class Filter extends Experiment {
     val data = CLMatrixUtils::fromCSV(input)
     // find set of loci
     val goodLoci = new HashSet
+    var int nLowerEntriesIgnored = 0
+    var int nPositiveWithinLowerEntriesIgnored = 0
     for (locus : data.loci) {
-      val fraction = (data.slice(locus).sum as double) / data.cells.size
+      val nPos = data.slice(locus).sum
+      val fraction = nPos / data.cells.size
       if (fraction >= lowerFraction && fraction <= upperFraction)
         goodLoci.add(locus)
+      // those with small number of event might help estimate the FP rate
+      if (fraction < lowerFraction) {
+        nLowerEntriesIgnored += data.cells.size
+        nPositiveWithinLowerEntriesIgnored += nPos as int
+      }
     }
+    println("nLowerEntriesIgnored = " + nLowerEntriesIgnored)
+    println("nPositiveWithinLowerEntriesIgnored = " + nPositiveWithinLowerEntriesIgnored)
     // filter
     val result = new SimpleCLMatrix(data.cells, goodLoci)
     for (locus : goodLoci) 
