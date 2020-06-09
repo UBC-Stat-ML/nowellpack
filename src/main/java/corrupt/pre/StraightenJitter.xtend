@@ -18,15 +18,10 @@ import static extension xbinc.Extensions.*
 
 
 import static extension xlinear.MatrixExtensions.*
-import static xlinear.MatrixOperations.*
 import corrupt.GenomeMap
 import bayonet.math.NumericalUtils
 import binc.Command
 import blang.inits.experiments.tabwriters.factories.CSV
-import corrupt.viz.PerfectPhyloViz
-import corrupt.PerfectPhylo
-import corrupt.post.ReadOnlyCLMatrix
-import viz.core.Viz
 
 class StraightenJitter extends Experiment {
   
@@ -34,17 +29,14 @@ class StraightenJitter extends Experiment {
   
   @Arg File input
   
-  @Arg           @DefaultValue("0.05") 
-  public double lowerFraction = 0.05
-
-  @Arg           @DefaultValue("1.0")
-  public double upperFraction = 1.0
-  
   @Arg                @DefaultValue("0.5")
   public double posteriorThreshold = 0.5
 
   @Arg                @DefaultValue("Rscript")
   public Command r = Command.byName("Rscript")
+    
+  @Arg                      @DefaultValue("0.05") 
+  public double printDiagnosticThreshold = 0.05
   
   override run() {
     // initialize with input, will move mass around
@@ -56,8 +48,6 @@ class StraightenJitter extends Experiment {
     // order loci by prevalence
     val List<Locus> orderedLoci = orderLoci(result)
     val Set<Locus> consumed = new LinkedHashSet
-    
-    val goodLoci = new LinkedHashSet
     
     for (locus : orderedLoci)
       if (!consumed.contains(locus)) {
@@ -75,12 +65,9 @@ class StraightenJitter extends Experiment {
             consumed.add(neighbor)
           }
         val fraction = sumWithNeighbors / result.cells.size
-        println(fraction)
-        if (fraction >= lowerFraction) {
+        if (fraction >= printDiagnosticThreshold) {
           // report merged locus summary for each above the threshold
           report(locus, result.slice(locus))
-          if (fraction <= upperFraction)
-            goodLoci.add(locus)
         }
       }
       
@@ -93,25 +80,8 @@ class StraightenJitter extends Experiment {
         result.set(cell, locus, binarized)
       }
     }
-    
-    //CLMatrixUtils::toCSV(result, results.getFileInResultFolder("binarized.csv.gz")) 
-    val phylo = PerfectPhylo::parseNewick(new File("/Users/bouchard/experiments/corrupt-nextflow/results/all/2020-06-04-08-23-49-srdge3qP.exec/consensus.newick"))
-    PerfectPhyloViz::visualizePerChromosome(results.getFileInResultFolder("output"), phylo, #[ReadOnlyCLMatrix::readOnly(result)], Viz::fixHeight(300))
-    
-    
-    // heuristic: use the posterior mean of the tail of the last column (least dense ones) 
-    // to set a binarization threshold
-    // TODO
-      
-    // TODO: print the full excess probab matrix
-    
-    
-    // binarise and print full binarised
-    
-    // restrict and print final result as output.csv.gz
-          
-    //if (viz) viz(data.matrix.copy, "final.pdf") 
-    //CLMatrixUtils::toCSV(data, results.getFileInResultFolder("output.csv")) 
+    val basicName = input.name.replaceFirst("[.]gz", "").replaceFirst("[.].csv", "")
+    CLMatrixUtils::toCSV(result, results.getFileInResultFolder("binarized-" + basicName  + "csv.gz")) 
   }
   
   def report(Locus locus, Matrix vector) {
@@ -143,5 +113,4 @@ class StraightenJitter extends Experiment {
   def static void main(String [] args) {
     Experiment::startAutoExit(args)
   }
-  
 }
