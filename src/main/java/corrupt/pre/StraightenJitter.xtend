@@ -82,8 +82,7 @@ class StraightenJitter extends Experiment {
         result.set(cell, locus, binarized)
       }
     }
-    val basicName = input.name.replaceFirst("[.]gz", "").replaceFirst("[.].csv", "")
-    CLMatrixUtils::toCSV(result, results.getFileInResultFolder("binarized-" + basicName  + "csv.gz")) 
+    CLMatrixUtils::toCSV(result, results.getFileInResultFolder("binarized.csv.gz")) 
   }
   
   def report(Locus locus, Matrix vector) {

@@ -72,7 +72,7 @@ class Filter extends Experiment {
         for (cell : data.cells) 
           result.set(cell, locus, data.get(cell, locus))
       val name = if (shrinkLoci) "shrunk" else "full"
-      CLMatrixUtils::toCSV(result, results.getFileInResultFolder("filtered-" + name + ".csv")) 
+      CLMatrixUtils::toCSV(result, results.getFileInResultFolder("filtered-" + name + ".csv.gz")) 
     }
   }
   
