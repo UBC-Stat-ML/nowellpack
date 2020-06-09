@@ -65,7 +65,7 @@ class PerfectPhyloViz extends Viz {
     val loci = new LinkedHashSet<Locus>
     for (matrix : matrices)
       loci.addAll(matrix.loci)
-    return GenomeMap::orderLoci(loci)
+    return GenomeMap::orderedLoci(loci)
   }
   
   @DesignatedConstructor

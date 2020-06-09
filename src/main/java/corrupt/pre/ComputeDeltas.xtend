@@ -82,28 +82,25 @@ class ComputeDeltas extends Experiment {
           val prevLocus = indexers.get(chr).get(pos - 1)
           val prevPrevLocus = indexers.get(chr).get(pos - 2)
 
-          if (prevLocus !== null && prevPrevLocus !== null && !Double.isNaN(curState)) 
-            if (!GenomeMap.isAdjacent(prevPrevLocus, prevLocus) || !GenomeMap.isAdjacent(prevLocus, locus)) {
-              BriefLog::warnOnce("These loci are not adjacent - will not compute diffs based on them:" + prevPrevLocus + " " + prevLocus + " " + locus)
-            } else {
-              val s0 = states.getCount(prevPrevLocus)
-              val s1 = states.getCount(prevLocus)
-              val s2 = curState
-              val delta = 
-                if (!Double.isNaN(s1)) {
-                  // normal jump
-                  s2 - s1
-                } else { // => s0 NA s1
-                  // check
-                  if (Double.isNaN(s0)) throw new RuntimeException
-                  s2 - s0
-                }
-              if (delta < 0)
-                  negative.incrementCount(cell -> locus, 1.0)
-              if (delta > 0)
-                positive.incrementCount(cell -> locus, 1.0)
-              if (delta == 0 && Double.isNaN(s1))
-                jump.incrementCount(cell -> locus, 1.0)
+          if (prevLocus !== null && prevPrevLocus !== null && !Double.isNaN(curState)) {
+            val s0 = states.getCount(prevPrevLocus)
+            val s1 = states.getCount(prevLocus)
+            val s2 = curState
+            val delta = 
+              if (!Double.isNaN(s1)) {
+                // normal jump
+                s2 - s1
+              } else { // => s0 NA s1
+                // check
+                if (Double.isNaN(s0)) throw new RuntimeException
+                s2 - s0
+              }
+            if (delta < 0)
+                negative.incrementCount(cell -> locus, 1.0)
+            if (delta > 0)
+              positive.incrementCount(cell -> locus, 1.0)
+            if (delta == 0 && Double.isNaN(s1))
+              jump.incrementCount(cell -> locus, 1.0)
           }
         }
         if (nSamples === -1)
@@ -135,7 +132,7 @@ class ComputeDeltas extends Experiment {
       for (var int i = 0; i < orderedLoci.size - 1; i++) {
         val locus = orderedLoci.get(i)
         val next = orderedLoci.get(i + 1)
-        if (next !== null && GenomeMap.isAdjacent(locus, next)) {
+        if (next !== null) {
           for (cell : matrix.cells) {
             val delta = matrix.get(cell, next) - matrix.get(cell, locus)
             if (delta < 0)

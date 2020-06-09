@@ -44,6 +44,8 @@ class StraightenJitter extends Experiment {
     val check = result.matrix.sum
     
     val GenomeMap lociMap = new GenomeMap(result.loci) 
+    if (!lociMap.lociAdjacent)
+      throw new RuntimeException("We assume all loci in a chromosome are adjacent after proper sorting. Are you running on a subset of the loci?")
     
     // order loci by prevalence
     val List<Locus> orderedLoci = orderLoci(result)

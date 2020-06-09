@@ -35,6 +35,9 @@ class TidifyCounts extends Experiment {
     val parsed = CLMatrixUtils::fromCSV(countFile)
     val map = new GenomeMap(parsed.loci)
     
+    if (!map.lociAdjacent)
+      throw new RuntimeException("We assume all loci in a chromosome are adjacent after proper sorting. Are you running on a subset of the loci?")
+    
     val cellList = parsed.cells.toList    
     for (var int cellIndex = 0; cellIndex < cellList.size; cellIndex++) 
       if (cellIndex < nCells) {

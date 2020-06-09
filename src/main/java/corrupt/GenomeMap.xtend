@@ -11,13 +11,15 @@ import java.util.Collections
 import java.util.Collection
 import java.util.LinkedHashSet
 import org.eclipse.xtend.lib.annotations.Data
+import corrupt.post.CLMatrixUtils
+import java.io.File
 
 class GenomeMap {
   
-  def static List<Locus> orderLoci(Collection<Locus> _loci) {
+  def static List<Locus> orderedLoci(Collection<Locus> _loci) {
     val lociSet = sanitize(_loci)
     if (genomeMapFormatted(lociSet))
-      return new GenomeMap(lociSet).orderLoci
+      return new GenomeMap(lociSet).orderedLoci
     else
       return lociSet
   }
@@ -121,10 +123,6 @@ class GenomeMap {
       cur = locus; for (i : 1..neighborhoodSize) { if (cur !== null) cur = chrLoci.higher(cur); if (cur !== null) result.add(cur) }
       cur = locus; for (i : 1..neighborhoodSize) { if (cur !== null) cur = chrLoci.lower(cur);  if (cur !== null) result.add(cur) }
     }
-//    if (result.contains(locus)) throw new RuntimeException
-//    for (var int i = 0; i < result.size - 1; i++)
-//      if (!isAdjacent(result.get(i), result.get(i+1)))
-//        return neighbors(locus, neighborhoodSize - 1)
     return result
   }
   
@@ -134,11 +132,21 @@ class GenomeMap {
     return sortedChrs
   }
   
+  def boolean lociAdjacent() {
+    for (chr : orderedChromosomes) {
+      val list = new ArrayList(byChromosome.get(chr))
+      for (i : 0 ..< (list.size - 1))
+        if (!isAdjacent(list.get(i), list.get(i+1)))
+          return false
+    }
+    return true
+  }
+  
   def List<Locus> orderedLoci(Integer chr) {
     return new ArrayList(byChromosome.get(chr))
   }
   
-  def List<Locus> orderLoci() {
+  def List<Locus> orderedLoci() {
     val List<Locus> result = new ArrayList
     for (chr : orderedChromosomes())
       for (locus : byChromosome.get(chr))
@@ -151,6 +159,14 @@ class GenomeMap {
     if (code == 24) return "Y"
     if (code < 1 || code > 24)  throw new RuntimeException
     return "" + code
+  }
+  
+  def static void main(String [] args) {
+    val matrix = CLMatrixUtils::fromCSV(new File(args.get(0)))
+    val map = new GenomeMap(matrix.loci)
+    for (chr : map.orderedChromosomes) {
+      println(prettyPrintChr(chr) + " " + map.orderedLoci(chr).join(" "))
+    }
   }
   
 }
