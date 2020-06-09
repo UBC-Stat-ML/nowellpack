@@ -12,8 +12,6 @@ import corrupt.post.SimpleCLMatrix
 import java.util.List
 import corrupt.Locus
 import corrupt.GenomeMap
-import corrupt.GenomeMap.ParsedLocus
-import corrupt.post.CellLocusMatrix
 
 class Filter extends Experiment {
   @Arg List<File> inputs // typically, one for negative jumps, one for positive jumps
@@ -67,11 +65,15 @@ class Filter extends Experiment {
     println("nLowerEntriesIgnored = " + nLowerEntriesIgnored)
     println("nPositiveWithinLowerEntriesIgnored = " + nPositiveWithinLowerEntriesIgnored)
     // filter
-    val result = new SimpleCLMatrix(data.cells, goodLoci)
-    for (locus : goodLoci) 
-      for (cell : data.cells) 
-        result.set(cell, locus, data.get(cell, locus))
-    CLMatrixUtils::toCSV(result, results.getFileInResultFolder("filtered.csv")) 
+    for (shrinkLoci : #[true, false]) {
+      val loci = if (shrinkLoci) goodLoci else data.loci
+      val result = new SimpleCLMatrix(data.cells, loci)
+      for (locus : loci) 
+        for (cell : data.cells) 
+          result.set(cell, locus, data.get(cell, locus))
+      val name = if (shrinkLoci) "shrunk" else "full"
+      CLMatrixUtils::toCSV(result, results.getFileInResultFolder("filtered-" + name + ".csv")) 
+    }
   }
   
 }
