@@ -9,12 +9,17 @@ import blang.inits.DefaultValue
 
 import static extension xlinear.MatrixExtensions.*
 import corrupt.post.SimpleCLMatrix
+import java.util.List
+import corrupt.Locus
+import corrupt.GenomeMap
+import corrupt.GenomeMap.ParsedLocus
+import corrupt.post.CellLocusMatrix
 
 class Filter extends Experiment {
-  @Arg File input
+  @Arg List<File> inputs // typically, one for negative jumps, one for positive jumps
   
-  @Arg           @DefaultValue("0.0") 
-  public double lowerFraction = 0.0
+  @Arg           @DefaultValue("0.05") 
+  public double lowerFraction = 0.05
 
   @Arg   @DefaultValue("1.0")
   public double upperFraction = 1.0
@@ -24,22 +29,41 @@ class Filter extends Experiment {
   }
   
   override run() {
-    val data = CLMatrixUtils::fromCSV(input)
-    // find set of loci
     val goodLoci = new HashSet
     var int nLowerEntriesIgnored = 0
     var int nPositiveWithinLowerEntriesIgnored = 0
-    for (locus : data.loci) {
-      val nPos = data.slice(locus).sum
-      val fraction = nPos / data.cells.size
-      if (fraction >= lowerFraction && fraction <= upperFraction)
-        goodLoci.add(locus)
-      // those with small number of event might help estimate the FP rate
-      if (fraction < lowerFraction) {
-        nLowerEntriesIgnored += data.cells.size
-        nPositiveWithinLowerEntriesIgnored += nPos as int
+    var int nCollisionsDetected = 0
+    var SimpleCLMatrix data = null
+    for (file : inputs) {
+      data = CLMatrixUtils::fromCSV(file)
+      val map = new GenomeMap(data.loci)
+      for (locus : data.loci) {
+        val nPos = data.slice(locus).sum
+        val fraction = nPos / data.cells.size
+        if (fraction >= lowerFraction && fraction <= upperFraction) {
+          val Locus representative = 
+            if (goodLoci.contains(locus)) {
+              nCollisionsDetected++
+              // sometimes, we may find a positive jump 
+              // at the same place as a negative jump
+              // recode one as the next event (assuming that jitter will 
+              // prevent this other one from being a locus)
+              map.neighbors(locus, 1).get(0)
+            } else {
+              locus
+            }
+          if (goodLoci.contains(representative))
+            throw new RuntimeException
+          goodLoci.add(representative)
+        }
+        // those with small number of event might help estimate the FP rate
+        if (fraction < lowerFraction) {
+          nLowerEntriesIgnored += data.cells.size
+          nPositiveWithinLowerEntriesIgnored += nPos as int
+        }
       }
     }
+    println("nCollisionsDetected = " + nCollisionsDetected)
     println("nLowerEntriesIgnored = " + nLowerEntriesIgnored)
     println("nPositiveWithinLowerEntriesIgnored = " + nPositiveWithinLowerEntriesIgnored)
     // filter
