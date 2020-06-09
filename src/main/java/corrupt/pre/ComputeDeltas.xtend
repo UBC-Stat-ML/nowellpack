@@ -5,11 +5,7 @@ import corrupt.post.CellLocusMatrix
 import corrupt.GenomeMap
 import corrupt.post.CLMatrixUtils
 import java.io.File
-import corrupt.PerfectPhylo
-import corrupt.viz.PerfectPhyloViz
-import viz.core.Viz
 import corrupt.post.ReadOnlyCLMatrix
-import briefj.Indexer
 import java.util.LinkedHashMap
 import corrupt.Locus
 import briefj.BriefIO
@@ -24,10 +20,10 @@ import briefj.collections.Counter
 import corrupt.Cell
 import java.util.LinkedHashSet
 import java.util.ArrayList
-import org.jgraph.graph.CellMapper
 import blang.inits.Implementations
 import blang.inits.parsing.QualifiedName
 import blang.inits.experiments.tabwriters.factories.CSV
+import briefj.BriefLog
 
 class ComputeDeltas extends Experiment {
   
@@ -85,7 +81,9 @@ class ComputeDeltas extends Experiment {
           states.setCount(locus, curState)
           val prevLocus = indexers.get(chr).get(pos - 1)
           val prevPrevLocus = indexers.get(chr).get(pos - 2)
-          if (prevLocus !== null && prevPrevLocus !== null && !Double.isNaN(curState)) {
+          if (!GenomeMap.isAdjacent(prevPrevLocus, prevLocus) || !GenomeMap.isAdjacent(prevLocus, locus)) {
+            BriefLog::warnOnce("These loci are not adjacent - will not compute diffs based on them:" + prevPrevLocus + " " + prevLocus + " " + locus)
+          } else if (prevLocus !== null && prevPrevLocus !== null && !Double.isNaN(curState)) {
             val s0 = states.getCount(prevPrevLocus)
             val s1 = states.getCount(prevLocus)
             val s2 = curState
@@ -148,21 +146,6 @@ class ComputeDeltas extends Experiment {
     }
     return negative -> positive
   }
-  
-//  def static void main(String [] args) {
-//    val cns = CLMatrixUtils::fromCSV(new File(
-//      //"/Users/bouchard/experiments/sitka-nextflow/data/raw/535/cn.csv.gz"))
-//      "/Users/bouchard/experiments/corrupt-nextflow/analysis-chromobreak/data/SA535_uncor_state.csv"))
-//    
-//    val deltas = delta(cns)
-//    val neg = ReadOnlyCLMatrix::readOnly(deltas.key)
-//    val pos = ReadOnlyCLMatrix::readOnly(deltas.value)
-//    val phylo = PerfectPhylo::parseNewick(new File("/Users/bouchard/experiments/corrupt-nextflow/results/all/2020-06-04-08-23-49-srdge3qP.exec/consensus.newick"))
-////    val viz = new PerfectPhyloViz(phylo, #[neg, pos], Viz::fixHeight(300))
-////    viz.output(new File("temp2.pdf"))
-//    val dir = new File("temp3")
-//    PerfectPhyloViz::visualizePerChromosome(dir, phylo, #[neg, pos], Viz::fixHeight(300))
-//  }
   
   override run() {
     val matrices = source.deltas

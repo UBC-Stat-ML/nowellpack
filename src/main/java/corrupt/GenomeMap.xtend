@@ -117,8 +117,14 @@ class GenomeMap {
     val result = new ArrayList<Locus>
     val chrLoci = byChromosome.get(new ParsedLocus(locus).chr)
     var Locus cur = null
-    cur = locus; for (i : 1..neighborhoodSize) { if (cur !== null) cur = chrLoci.higher(cur); if (cur !== null) result.add(cur) }
-    cur = locus; for (i : 1..neighborhoodSize) { if (cur !== null) cur = chrLoci.lower(cur);  if (cur !== null) result.add(cur) }
+    if (neighborhoodSize > 0) {
+      cur = locus; for (i : 1..neighborhoodSize) { if (cur !== null) cur = chrLoci.higher(cur); if (cur !== null) result.add(cur) }
+      cur = locus; for (i : 1..neighborhoodSize) { if (cur !== null) cur = chrLoci.lower(cur);  if (cur !== null) result.add(cur) }
+    }
+//    if (result.contains(locus)) throw new RuntimeException
+//    for (var int i = 0; i < result.size - 1; i++)
+//      if (!isAdjacent(result.get(i), result.get(i+1)))
+//        return neighbors(locus, neighborhoodSize - 1)
     return result
   }
   
@@ -139,4 +145,12 @@ class GenomeMap {
         result.add(locus)
     return result
   }
+  
+  def static prettyPrintChr(Integer code) {
+    if (code == 23) return "X"
+    if (code == 24) return "Y"
+    if (code < 1 || code > 24)  throw new RuntimeException
+    return "" + code
+  }
+  
 }
