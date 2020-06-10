@@ -42,10 +42,10 @@ class TidifyCounts extends Experiment {
     
     val cellList = parsed.cells.toList    
     for (var int cellIndex = 0; cellIndex < cellList.size; cellIndex++) 
-      if (cellIndex <= nCells) {
+      if (cellIndex < nCells) {
         val cell = cellList.get(cellIndex)
         for (chr : map.orderedChromosomes) 
-          if (chr < nChromosomes) {
+          if (chr <= nChromosomes) {
             val lociList = map.orderedLoci(chr)
             for (var int posIndex = 0; posIndex < lociList.size; posIndex++)  {
               val locus = lociList.get(posIndex)
