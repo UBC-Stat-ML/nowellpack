@@ -28,7 +28,7 @@ class SplitPerfectPhyloViz extends Experiment {
     val map = new GenomeMap(allLoci)
     for (chr : map.orderedChromosomes) {
       val viz = new PerfectPhyloViz(phylo, matrices, size, ref, colourCodes, Optional.of(map.orderedLoci(chr).toSet))
-      val outFile = output.getFileInResultFolder("chr_" + chr + (if (suffix.present) "_" + suffix else "") + ".pdf") 
+      val outFile = output.getFileInResultFolder("chr_" + chr + (if (suffix.present) "_" + suffix.get else "") + ".pdf") 
       viz.output(outFile)
     }
   }

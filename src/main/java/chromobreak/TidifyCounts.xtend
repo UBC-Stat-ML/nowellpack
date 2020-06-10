@@ -42,7 +42,7 @@ class TidifyCounts extends Experiment {
     
     val cellList = parsed.cells.toList    
     for (var int cellIndex = 0; cellIndex < cellList.size; cellIndex++) 
-      if (cellIndex < nCells) {
+      if (cellIndex <= nCells) {
         val cell = cellList.get(cellIndex)
         for (chr : map.orderedChromosomes) 
           if (chr < nChromosomes) {
