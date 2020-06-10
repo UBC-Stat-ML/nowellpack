@@ -44,14 +44,15 @@ class Filter extends Experiment {
               nCollisionsDetected++
               // sometimes, we may find a positive jump 
               // at the same place as a negative jump
-              // recode one as the next event (assuming that jitter will 
+              // recode one with a neighbour (the jitter will 
               // prevent this other one from being a locus)
               map.neighbors(locus, 1).get(0)
             } else {
               locus
             }
-          if (goodLoci.contains(representative))
-            throw new RuntimeException
+          // above not guaranteed if you look at 3 matrices
+          // if (goodLoci.contains(representative))
+          //   throw new RuntimeException
           goodLoci.add(representative)
         }
         // those with small number of event might help estimate the FP rate

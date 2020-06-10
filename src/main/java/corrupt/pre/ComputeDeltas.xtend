@@ -23,12 +23,12 @@ import java.util.ArrayList
 import blang.inits.Implementations
 import blang.inits.parsing.QualifiedName
 import blang.inits.experiments.tabwriters.factories.CSV
-import briefj.BriefLog
+import blang.inits.DefaultValue
 
 class ComputeDeltas extends Experiment {
   
   @Arg Source source
-
+  
   def static Map<Integer, Map<Integer,Locus>> loadLocusIndexers(File indexFile) {
     val result = new LinkedHashMap<Integer, Map<Integer,Locus>>() // chr -> index -> locus
     for (line : BriefIO::readLines(indexFile).indexCSV) {
@@ -42,7 +42,7 @@ class ComputeDeltas extends Experiment {
   
   @Implementations(FromPosteriorSamples)
   static interface Source {
-    def  List<ReadOnlyCLMatrix> deltas()
+    def  List<ReadOnlyCLMatrix> deltas(ComputeDeltas computer)
   }
   
   static val pathToSamples = "chromoplots"
@@ -54,7 +54,11 @@ class ComputeDeltas extends Experiment {
     
     @Arg File lociIndexFile
     
-    override deltas() {
+    @Arg            @DefaultValue("0.5")
+    public double burnInFraction = 0.5
+    
+    override deltas(ComputeDeltas computer) {
+      val snapshotDir = computer.results.child("snapshot")
       val indexers = loadLocusIndexers(lociIndexFile) 
       val cells = new LinkedHashSet<Cell>
       val loci = new LinkedHashSet<Locus>
@@ -63,26 +67,47 @@ class ComputeDeltas extends Experiment {
       val jump = new Counter<Pair<Cell, Locus>>
       var nSamples = -1
       for (file : files) {
-        val sampleIndices = new LinkedHashSet<Integer>
+        
         val arguments = CSVFile.parseTSV(new File(file, pathToOptions)).asMap()
         val cell = new Cell(arguments.get(new QualifiedName(#["cell"])).join(" "))
         cells.add(cell)
         val paths = CSV::csvFile(new File(file, pathToSamples), sampleFilePrefix)
         val states = new Counter<Locus>
+        
+        val sampleIndices = new LinkedHashSet<Integer>
+        for (line : BriefIO::readLines(paths).indexCSV) {
+          val sample = Integer.parseInt(line.get("sample"))
+          sampleIndices.add(sample)
+        }
+        if (nSamples === -1)
+          nSamples = sampleIndices.size
+        if (nSamples !== sampleIndices.size)
+          throw new RuntimeException
+        val cutOff = nSamples * burnInFraction 
+        val thin = Math.max(1, nSamples / 5)
+        
         for (line : BriefIO::readLines(paths).indexCSV) {
           val chr = Integer.parseInt(line.get("map_key_0"))
           val pos = Integer.parseInt(line.get("positions"))
           val sample = Integer.parseInt(line.get("sample"))
-          sampleIndices.add(sample)
           val locus = indexers.get(chr).get(pos)
           loci.add(locus)
           val valueStr = line.get("value")
           val curState = if (valueStr == "NA") Double.NaN else Double.parseDouble(valueStr)
+          
+          if (sample % thin == 0) {
+            snapshotDir.getTabularWriter("" + sample).write(
+              CLMatrixUtils::CELLS -> cell,
+              CLMatrixUtils::LOCI -> locus,
+              CLMatrixUtils::TIP_INCL_PRS -> curState
+            )
+          }
+          
           states.setCount(locus, curState)
           val prevLocus = indexers.get(chr).get(pos - 1)
           val prevPrevLocus = indexers.get(chr).get(pos - 2)
 
-          if (prevLocus !== null && prevPrevLocus !== null && !Double.isNaN(curState)) {
+          if (sample > cutOff && prevLocus !== null && prevPrevLocus !== null && !Double.isNaN(curState)) {
             val s0 = states.getCount(prevPrevLocus)
             val s1 = states.getCount(prevLocus)
             val s2 = curState
@@ -103,10 +128,7 @@ class ComputeDeltas extends Experiment {
               jump.incrementCount(cell -> locus, 1.0)
           }
         }
-        if (nSamples === -1)
-          nSamples = sampleIndices.size
-        if (nSamples !== sampleIndices.size)
-          throw new RuntimeException
+        
       }
       val result = new ArrayList<ReadOnlyCLMatrix>
       for (counter : #[negative, positive, jump]) {
@@ -147,7 +169,7 @@ class ComputeDeltas extends Experiment {
   }
   
   override run() {
-    val matrices = source.deltas
+    val matrices = source.deltas(this)
     for (var int i = 0; i < matrices.size; i++) {
       CLMatrixUtils::toCSV(matrices.get(i), results.getFileInResultFolder("matrix-" + i + ".csv.gz"))
     }

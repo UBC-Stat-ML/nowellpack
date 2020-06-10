@@ -9,9 +9,6 @@ import briefj.BriefIO
 import java.util.List
 import java.io.Writer
 import static extension blang.inits.experiments.tabwriters.factories.CSV.csvFile
-import corrupt.post.SimpleCLMatrix
-import java.util.LinkedHashMap
-import briefj.collections.Counter
 
 class ChromoPostProcessor extends DefaultPostProcessor {
   
