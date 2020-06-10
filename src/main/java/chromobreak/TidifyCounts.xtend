@@ -6,7 +6,6 @@ import blang.inits.Arg
 import blang.inits.DefaultValue
 import corrupt.post.CLMatrixUtils
 import corrupt.GenomeMap
-import corrupt.GenomeMap.ParsedLocus
 
 /**
  * This will:
@@ -22,6 +21,9 @@ class TidifyCounts extends Experiment {
   
   @Arg @DefaultValue("INF")
   public int nCells = Integer.MAX_VALUE
+  
+  @Arg @DefaultValue("INF")
+  public int nChromosomes = Integer.MAX_VALUE
   
   @Arg(description = "Use integer indices for cells") @DefaultValue("false")
   public boolean useInteger = false // set to true for legacy
@@ -42,38 +44,39 @@ class TidifyCounts extends Experiment {
     for (var int cellIndex = 0; cellIndex < cellList.size; cellIndex++) 
       if (cellIndex < nCells) {
         val cell = cellList.get(cellIndex)
-        for (chr : map.orderedChromosomes) {
-          val lociList = map.orderedLoci(chr)
-          for (var int posIndex = 0; posIndex < lociList.size; posIndex++)  {
-            val locus = lociList.get(posIndex)
-            // re-index by position
-            val Object cellCode = if (useInteger) cellIndex else cell
-            val writer = 
-              if (cellSpecificFiles) {
-                results.child(DATA_OUTPUT).child(cellCode.toString).getTabularWriter("data")
-              } else 
-                results.getTabularWriter(DATA_OUTPUT).child("cell", cellCode)
-            
-            writer.write(
-              "chromosomes" -> chr,
-              "positions" -> posIndex,
-              "value" -> parsed.get(cell, locus)
-            )
-            
-            // write the index for one cell only
-            if (cellIndex === 0) {
-              results.getTabularWriter("lociIndex").write(
-                "locus" -> locus,
-                "indexInChr" -> posIndex
+        for (chr : map.orderedChromosomes) 
+          if (chr < nChromosomes) {
+            val lociList = map.orderedLoci(chr)
+            for (var int posIndex = 0; posIndex < lociList.size; posIndex++)  {
+              val locus = lociList.get(posIndex)
+              // re-index by position
+              val Object cellCode = if (useInteger) cellIndex else cell
+              val writer = 
+                if (cellSpecificFiles) {
+                  results.child(DATA_OUTPUT).child(cellCode.toString).getTabularWriter("data")
+                } else 
+                  results.getTabularWriter(DATA_OUTPUT).child("cell", cellCode)
+              
+              writer.write(
+                "chromosomes" -> chr,
+                "positions" -> posIndex,
+                "value" -> parsed.get(cell, locus)
               )
-            }
-            
-            if (useInteger) {
-              results.getTabularWriter("cellsIndex").write(
-                "cell" -> cell,
-                "integerId" -> cellIndex
-              )
-            }
+              
+              // write the index for one cell only
+              if (cellIndex === 0) {
+                results.getTabularWriter("lociIndex").write(
+                  "locus" -> locus,
+                  "indexInChr" -> posIndex
+                )
+              }
+              
+              if (useInteger) {
+                results.getTabularWriter("cellsIndex").write(
+                  "cell" -> cell,
+                  "integerId" -> cellIndex
+                )
+              }
           }
         }
     }

@@ -24,7 +24,7 @@ model NoisyBinaryModel {
   param PerfectPhylo initialization ?: null
   
   param Double predictivesProportion ?: 0.05
-  random Map<Locus,PredictiveMonitor> predictives /* dont change that field name */ ?: {
+  random Map<Locus,PredictiveMonitor> predictives /* don't change that field name */ ?: {
     System.out.println("Number of cells: " + binaryMatrix.cells.size)
     System.out.println("Number of loci:" + binaryMatrix.loci.size)
     if (initialization !== null) phylo.reconstruction.set(initialization)

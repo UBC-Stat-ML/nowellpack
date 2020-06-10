@@ -24,7 +24,6 @@ import corrupt.Locus
 import processing.core.PApplet
 import corrupt.post.ReadOnlyCLMatrix
 import java.util.LinkedHashSet
-import java.io.File
 
 class PerfectPhyloViz extends Viz {
   val TreeViz<Set<TreeNode>> treeViz
@@ -47,17 +46,6 @@ class PerfectPhyloViz extends Viz {
     ) {
     this(phylo, matrices, size, Optional.of(refPhylo), Optional.empty, Optional.empty)
   }
-  
-  def static void visualizePerChromosome(File directory, PerfectPhylo phylo, List<ReadOnlyCLMatrix> matrices, PublicSize size) {
-    val allLoci = allLoci(matrices)
-    val map = new GenomeMap(allLoci)
-    directory.mkdirs
-    for (chr : map.orderedChromosomes) {
-      val viz = new PerfectPhyloViz(phylo, matrices, size, Optional.empty, Optional.empty, Optional.of(map.orderedLoci(chr).toSet))
-      val outFile = new File(directory, chr + ".pdf") 
-      viz.output(outFile)
-    }
-  } 
   
   //public static 
   

@@ -13,6 +13,9 @@ class Preprocess extends Experiment {
   @Arg            @DefaultValue("INF")
   public int maxNCells = Integer.MAX_VALUE
   
+  @Arg                  @DefaultValue("INF")
+  public int maxNChromosomes = Integer.MAX_VALUE
+  
   override run() {
     processReads
     processGC
@@ -28,6 +31,7 @@ class Preprocess extends Experiment {
       results = tidifyFolder
       experimentConfigs = configs
       nCells = maxNCells
+      nChromosomes = maxNChromosomes
     ]
     tidify.run
   }
@@ -41,7 +45,8 @@ class Preprocess extends Experiment {
       useInteger = false
       results = tidifyFolder
       experimentConfigs = configs
-      nCells = 1
+      nCells = 1 // assume all cells have same estimated GC profile
+      nChromosomes = maxNChromosomes
     ]
     tidify.run
   }
