@@ -136,10 +136,10 @@ class SingleCellHMMs implements TidilySerializable {
       val curReads = data.readCounts.get(chromosome, position).intValue
       logReads.set(position.key, Math::log(curReads))
       logGCs.set(position.key, Math::log(data.gcContents.get(chromosome, position).doubleValue))
-      if (curReads > 50) detectedHighInteger = true
+      if (curReads > 20) detectedHighInteger = true
     }
-    if (configs.checkHighCounts && !detectedHighInteger) {
-      throw new RuntimeException("No read count higher than 50 detected.. input is either cn states instead of read counts, or number of reads dangerously low. Disable this check with option checkHighCounts")
+    if (configs.checkHighCounts && !detectedHighInteger && chromosome.key == "1") {
+      throw new RuntimeException("No read count higher than 20 detected.. input is either cn states instead of read counts, or number of reads dangerously low. Disable this check with option checkHighCounts")
     }
   }
   
