@@ -30,7 +30,7 @@ class PerfectPhyloViz extends Viz {
   val MatrixViz matrixViz
   val int nMatrices
   val Collection<Locus> loci
-  
+    
   new (
     PerfectPhylo phylo, 
     List<ReadOnlyCLMatrix> matrices, 
@@ -128,13 +128,23 @@ class PerfectPhyloViz extends Viz {
     return result
   }
   
-  static val coloursDescriptions = "list of integers where 0 is greyScale and 1--10 are colour palettes"
+  static val coloursDescriptions = "list of integers where 0 is greyScale; 1--10 are colour palettes; 11 is a rainbow"
   public static val List<CellFiller> colourCodes = new ArrayList => [
     add(MatrixViz::greyScale)
     val nColours = 10
     for (i : 0 ..< nColours)
       add(MatrixViz::colours(i, nColours))
+    add(rainbow)
   ]
+  
+  static def CellFiller rainbow() {
+    val float norm = 12f
+    return [__, ___, v , result | 
+      result.colorMode(PApplet::HSB, 1) 
+      result.fill(v as float / norm, 1, 1)  
+    ]
+  }
+  
   
   override protected draw() {
     addChild(treeViz, 0, 0)

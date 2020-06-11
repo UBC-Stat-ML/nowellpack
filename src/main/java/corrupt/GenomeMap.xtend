@@ -61,7 +61,10 @@ class GenomeMap {
         byChromosome, 
         parsed.chr, 
         new TreeSet<Locus>(
-          Comparator::comparing[Locus l | new ParsedLocus(l).leftOneIndexedIncl]
+          Comparator::comparing[
+            val p = new ParsedLocus(it)
+            p.leftOneIndexedIncl + p.indexInLocus
+          ]
         )
       )
       current.add(locus)
@@ -79,12 +82,15 @@ class GenomeMap {
     val String chrString
     val int leftOneIndexedIncl 
     val int rightOneIndexedIncl
+    val int indexInLocus
     new (Locus locus) {
       val parsed = locus.toString.split("_")
+      if (parsed.size < 4 || parsed.size >5) throw new RuntimeException
       chrString = parsed.get(1)
       chr = chromosomeIndex(chrString)
       leftOneIndexedIncl = Integer.parseInt(parsed.get(2))
       rightOneIndexedIncl = Integer.parseInt(parsed.get(3))
+      indexInLocus = if (parsed.size > 4) Integer.parseInt(parsed.get(4)) else 0
     }
     def int binSize() {
       return rightOneIndexedIncl - leftOneIndexedIncl + 1
@@ -98,9 +104,13 @@ class GenomeMap {
     return l0.rightOneIndexedIncl + 1 === l1.leftOneIndexedIncl
   }
   
-  def static Locus locus(String chr, int left, int right) {
-    return new Locus(chr + "_" + left + "_" + right)
+  def static Locus locus(String chr, int left, int right, int index) {
+    return new Locus(chr + "_" + left + "_" + right + (if (index == 0) "" else "_" + index))
   }
+  
+  def static Locus locus(String chr, int left, int right) {
+    locus(chr, left, right, 0)
+  } 
   
   def static int chromosomeIndex(String str) {
     val chrStr = str.toUpperCase
@@ -168,5 +178,4 @@ class GenomeMap {
       println(prettyPrintChr(chr) + " " + map.orderedLoci(chr).join(" "))
     }
   }
-  
 }
