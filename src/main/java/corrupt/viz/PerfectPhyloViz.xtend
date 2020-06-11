@@ -128,13 +128,14 @@ class PerfectPhyloViz extends Viz {
     return result
   }
   
-  static val coloursDescriptions = "list of integers where 0 is greyScale; 1--10 are colour palettes; 11 is a rainbow"
+  static val coloursDescriptions = "list of integers where 0 is greyScale; 1--10 are colour palettes; 11 is a rainbow; 12 is the standard CN palette"
   public static val List<CellFiller> colourCodes = new ArrayList => [
     add(MatrixViz::greyScale)
     val nColours = 10
     for (i : 0 ..< nColours)
       add(MatrixViz::colours(i, nColours))
     add(rainbow)
+    add(cna)
   ]
   
   static def CellFiller rainbow() {
@@ -145,6 +146,34 @@ class PerfectPhyloViz extends Viz {
     ]
   }
   
+  static def CellFiller cna() {
+    return [__, ___, v , result | 
+      result.colorMode(PApplet::RGB, 255) 
+      if (Double.isNaN(v)) {
+        result.fill(0, 0, 0)
+      } else {
+        if (v < 0.0) throw new RuntimeException
+        val cn = if (v > 11) 11 else v
+        val entry = cnaColours.get(cn as int)
+        result.fill(entry.get(0), entry.get(1), entry.get(2)) 
+      } 
+    ]
+  }
+  
+  static val float[][] cnaColours = #[
+    #[204, 204, 204],
+    #[168, 201, 222],
+    #[204, 204, 204],
+    #[244, 205, 150],
+    #[235, 147, 104],
+    #[208, 86, 67],
+    #[162, 35, 29],
+    #[137, 29, 67],
+    #[201, 57, 118],
+    #[206, 110, 172],
+    #[192, 151, 195],
+    #[207, 187, 215]
+  ]
   
   override protected draw() {
     addChild(treeViz, 0, 0)
