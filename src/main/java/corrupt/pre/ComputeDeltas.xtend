@@ -65,7 +65,8 @@ class ComputeDeltas extends Experiment {
       val negative = new Counter<Pair<Cell, Locus>>
       val positive = new Counter<Pair<Cell, Locus>>
       val jump = new Counter<Pair<Cell, Locus>>
-      var nSamples = -1
+      var nSamplesFull = -1
+      var nSamplesPostBurnIn = -1
       for (file : files) {
         
         val arguments = CSVFile.parseTSV(new File(file, pathToOptions)).asMap()
@@ -79,12 +80,13 @@ class ComputeDeltas extends Experiment {
           val sample = Integer.parseInt(line.get("sample"))
           sampleIndices.add(sample)
         }
-        if (nSamples === -1)
-          nSamples = sampleIndices.size
-        if (nSamples !== sampleIndices.size)
+        if (nSamplesFull === -1)
+          nSamplesFull = sampleIndices.size
+        if (nSamplesFull !== sampleIndices.size)
           throw new RuntimeException
-        val cutOff = nSamples * burnInFraction 
-        val thin = Math.max(1, nSamples / 5)
+        val cutOff = (nSamplesFull * burnInFraction) as int
+        nSamplesPostBurnIn = nSamplesFull - cutOff
+        val thin = Math.max(1, nSamplesFull / 5)
         
         for (line : BriefIO::readLines(paths).indexCSV) {
           val chr = Integer.parseInt(line.get("map_key_0"))
@@ -134,7 +136,7 @@ class ComputeDeltas extends Experiment {
       for (counter : #[negative, positive, jump]) {
         val current = new SimpleCLMatrix(cells, loci)
         for (cellLocusPair : counter.keySet)
-          current.set(cellLocusPair.key, cellLocusPair.value, counter.getCount(cellLocusPair) / nSamples)
+          current.set(cellLocusPair.key, cellLocusPair.value, counter.getCount(cellLocusPair) / nSamplesPostBurnIn)
         result.add(ReadOnlyCLMatrix::readOnly(current))
       }
       return result

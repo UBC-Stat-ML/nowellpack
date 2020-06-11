@@ -25,7 +25,7 @@ import blang.inits.experiments.tabwriters.factories.CSV
 
 class StraightenJitter extends Experiment {
   
-  @Arg @DefaultValue("2") Integer neighborhoodSize = 2
+  @Arg @DefaultValue("4") Integer neighborhoodSize = 4
   
   @Arg File input
   
