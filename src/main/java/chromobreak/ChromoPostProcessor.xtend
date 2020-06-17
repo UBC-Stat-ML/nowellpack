@@ -24,14 +24,13 @@ class ChromoPostProcessor extends DefaultPostProcessor {
     
     val rawData = new File(outputDir, ".raw.gz")
     val output = BriefIO::writer(rawData)
-    output.println("chromosomes,positions,logGC,logMappabilities,logReads,sample") // log gc , log count, then need to add dummy sample column to make FitPlot r code work
+    output.println("chromosomes,positions,logGC,logReads,sample") // log gc , log count, then need to add dummy sample column to make FitPlot r code work
     for (chr : data.chromosomes.indices)
       for (pos : data.positions.indices(chr)) {
         val logRead = Math::log(data.readCounts.get(chr, pos).intValue)
         val logGC = Math::log(data.gcContents.get(chr, pos).doubleValue)
-        val logMappability = Math::log(data.mappabilities.get(chr, pos).doubleValue)
         if (!Double.isNaN(logGC) && !Double.isNaN(logRead))
-         output.println("" + chr.key + "," + pos.key + "," + logGC + "," + logMappability + "," + logRead + ",0")
+         output.println("" + chr.key + "," + pos.key + "," + logGC + "," + logRead + ",0")
       }
     output.close
     
@@ -68,8 +67,6 @@ class ChromoPostProcessor extends DefaultPostProcessor {
     val f0s = getFs(0)
     val f1s = getFs(1)
     val f2s = getFs(2)
-    val g1s = getGs(1)
-    val g2s = getGs(2)
     val sds = getUnivariateSampleList("sd")
     //val slopes = getUnivariateSampleList("sdSlope")
     val nSamples = f0s.size
@@ -79,14 +76,11 @@ class ChromoPostProcessor extends DefaultPostProcessor {
         val f0 = f0s.get(i)
         val f1 = f1s.get(i)
         val f2 = f2s.get(i)
-        val g1 = g1s.get(i)
-        val g2 = g2s.get(i)
+        
         
         val a = f2 / 2.0
         val b = f1 - 2 * a * ReadCountModel::x0
         val c = f0 - a * ReadCountModel::x0 * ReadCountModel::x0 - b * ReadCountModel::x0
-        val d = g2 / 2.0
-        val e = g1 - 2.0 * d * ReadCountModel::x0
         
         { // histogram diagnostic
           val output = new File(outputDir, "fit-hist-" + i + "." + imageFormat)
@@ -96,7 +90,7 @@ class ChromoPostProcessor extends DefaultPostProcessor {
           
           data <- read.csv("«rawData»")
           
-          data <- data %>% mutate(transformed = logReads - «a»*logGC^2 - «b»*logGC - «c» - «d»*logMappabilities*logMappabilities - «e»*logMappabilities)
+          data <- data %>% mutate(transformed = logReads - «a»*logGC^2 - «b»*logGC - «c»)
           
           p <- ggplot(data, aes(x = transformed)) + geom_histogram(bins = 100)  + «verticalLines» + theme_bw()
           ggsave(filename = "«output.absolutePath»", plot = p, width = 10, height = 4, limitsize = FALSE) 
@@ -113,7 +107,7 @@ class ChromoPostProcessor extends DefaultPostProcessor {
           require("dplyr")
           
           data <- read.csv("«rawData»")
-          data <- data %>% mutate(value = exp(logReads - «a»*logGC^2 - «b»*logGC - «c» - «d»*logMappabilities*logMappabilities - «e»*logMappabilities))
+          data <- data %>% mutate(value = exp(logReads - «a»*logGC^2 - «b»*logGC - «c»))
           
           data2 <- read.csv("«paths»") %>% filter(sample == «i»)
           names(data2)[names(data2) == 'map_key_0'] <- 'chromosomes'
@@ -139,7 +133,7 @@ class ChromoPostProcessor extends DefaultPostProcessor {
               require("dplyr")
               
               data <- read.csv("«rawData»")
-              data <- data %>% mutate(value = exp(logReads - «a»*logGC^2 - «b»*logGC - «c» - «d»*logMappabilities*logMappabilities - «e»*logMappabilities))
+              data <- data %>% mutate(value = exp(logReads - «a»*logGC^2 - «b»*logGC - «c»))
               
               data2 <- read.csv("«paths»") %>% filter(sample == «i», value == «j»)
               names(data2)[names(data2) == 'map_key_0'] <- 'chromosomes'              
@@ -163,10 +157,6 @@ class ChromoPostProcessor extends DefaultPostProcessor {
   
   def List<Double> getFs(int i) {
     getUnivariateSampleList("f" + i)
-  }
-  
-  def List<Double> getGs(int i) {
-    getUnivariateSampleList("g" + i)
   }
   
   def List<Double> getUnivariateSampleList(String name) {
