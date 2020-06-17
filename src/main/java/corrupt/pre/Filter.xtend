@@ -19,15 +19,17 @@ import java.util.Collections
 import corrupt.GenomeMap.ParsedLocus
 import java.util.LinkedHashSet
 import java.util.ArrayList
+import blang.inits.experiments.tabwriters.factories.CSV
+import briefj.BriefIO
 
-class Filter extends Experiment {
-  @Arg List<File> inputs // typically, one for negative jumps, one for positive jumps
+class Filter extends Experiment {  // -> will become combine
+  @Arg List<File> inputs // typically, one exec dir for negative jumps, one for positive jumps
   
   @Arg           @DefaultValue("0.05") 
   public double lowerFraction = 0.05
-
-  @Arg   @DefaultValue("1.0")
-  public double upperFraction = 1.0
+  
+  @Arg      @DefaultValue("0.1") 
+  public double maxError = 0.1
   
   def static void main(String [] args) {
     Experiment::startAutoExit(args)
@@ -38,16 +40,22 @@ class Filter extends Experiment {
     var int nPositiveWithinLowerEntriesIgnored = 0
     var int nCollisionsDetected = 0
     var SimpleCLMatrix data = null
+    var int nLociRemaining = 0
     
     val result = new LinkedHashMap<Locus, List<Map<Cell,Double>>>
     
     for (file : inputs) {
-      data = CLMatrixUtils::fromCSV(file)
-      for (locus : data.loci) {
+      val matrix = CSV::csvFile(file, "binarized")
+      data = CLMatrixUtils::fromCSV(matrix)
+      
+      for (locusLine : BriefIO::readLines(CSV::csvFile(file, "loci-statistics")).indexCSV) {
+        val estimatedError = Double::parseDouble(locusLine.get("estimatedError"))
+        val locus = new Locus(locusLine.get("locus"))
         val nPos = data.slice(locus).sum
         val fraction = nPos / data.cells.size
         
-        if (fraction >= lowerFraction && fraction <= upperFraction) {
+        if (fraction >= lowerFraction && estimatedError <= maxError) {
+          nLociRemaining++
           val list = BriefMaps.getOrPutList(result, locus)
           if (!list.empty) nCollisionsDetected++
           val column = new LinkedHashMap
@@ -63,6 +71,7 @@ class Filter extends Experiment {
         }
       }
     }
+    println("nLociRemaining = " + nLociRemaining)
     println("nCollisionsDetected = " + nCollisionsDetected)
     println("nLowerEntriesIgnored = " + nLowerEntriesIgnored)
     println("nPositiveWithinLowerEntriesIgnored = " + nPositiveWithinLowerEntriesIgnored)
