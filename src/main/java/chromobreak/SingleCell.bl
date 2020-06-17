@@ -15,12 +15,10 @@ model SingleCell {
   random RealVar f0 ?: latentReal
   random RealVar f1 ?: latentReal 
   random RealVar f2 ?: latentReal  
-  random RealVar g1 ?: latentReal 
-  random RealVar g2 ?: latentReal  
   random RealVar sd ?: latentReal 
   random RealVar p ?: new RealScalar(0.5) 
    
-  random ReadCountModel readCountModel ?: new ReadCountModel(f0, f1, f2, g1, g2, sd, 0.0)
+  random ReadCountModel readCountModel ?: new ReadCountModel(f0, f1, f2, sd, 0.0)
   
   // Keeping a copy to easily serialize demarginalized hmms
   random Map<String, SingleCellHMMs> hmms ?: new LinkedHashMap
@@ -32,9 +30,6 @@ model SingleCell {
     f0 | vagueness ~ Normal(0, vagueness*vagueness) 
     f1 | vagueness ~ Normal(0, vagueness*vagueness)  
     f2 | vagueness ~ Normal(0, vagueness*vagueness)  
-    
-    g1 | vagueness ~ Normal(0, vagueness*vagueness)  
-    g2 | vagueness ~ Normal(0, vagueness*vagueness)  
     
     sd ~ Exponential(0.1)
     

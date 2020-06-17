@@ -18,7 +18,6 @@ class SingleCellData {
   @Arg public Plate<Integer> positions
   
   @Arg public Plated<RealVar> gcContents
-  @Arg public Plated<RealVar> mappabilities
   @Arg public Plated<IntVar> readCounts
   
   @DesignatedConstructor

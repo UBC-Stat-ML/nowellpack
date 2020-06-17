@@ -110,9 +110,6 @@ class SingleCellHMMs implements TidilySerializable {
   @SkipDependency(isMutable = false)
   val double [] logGCs
   
-  @SkipDependency(isMutable = false)
-  val double [] logMappabilities
-  
   val IntVar _nStates
   
   def int nStates() {
@@ -134,13 +131,11 @@ class SingleCellHMMs implements TidilySerializable {
     var int len = indices.size 
     logReads = newDoubleArrayOfSize(len)
     logGCs = newDoubleArrayOfSize(len)
-    logMappabilities = newDoubleArrayOfSize(len)
     var boolean detectedHighInteger = false // catch bug where code is called with CN calls instead of reads
     for (Index<Integer> position : indices) {
       val curReads = data.readCounts.get(chromosome, position).intValue
       logReads.set(position.key, Math::log(curReads))
       logGCs.set(position.key, Math::log(data.gcContents.get(chromosome, position).doubleValue))
-      logMappabilities.set(position.key, Math::log(data.mappabilities.get(chromosome, position).doubleValue))
       if (curReads > 20) detectedHighInteger = true
     }
     if (configs.checkHighCounts && !detectedHighInteger && chromosome.key == "1") {
@@ -171,7 +166,7 @@ class SingleCellHMMs implements TidilySerializable {
         if (state === hmm.nStates - 1)
           return -Math.log(10)
       }
-      hmm.readCountModel.logDensity(hmm.logGCs.get(t * thinning), hmm.logMappabilities.get(t * thinning), hmm.logReads.get(t * thinning), state) 
+      hmm.readCountModel.logDensity(hmm.logGCs.get(t * thinning), hmm.logReads.get(t * thinning), state) 
     }
   }
   
