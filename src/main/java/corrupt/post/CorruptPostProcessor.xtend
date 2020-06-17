@@ -58,8 +58,10 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
   def treeViz(PerfectPhylo reconstruction, BinaryCLMatrix observations) {
     // for the support values, don't reuse the ones from consensus construction; they might use the logistic transform!
     val child = results.child("averagingNoLogisticsTransform")
+    val parentTabWriter = this.experimentConfigs.tabularWriter
     val parentBurnIn = burnInFraction
     val averager = new AverageCLMatrices => [
+      experimentConfigs.tabularWriter = parentTabWriter
       csvFile = getCsvFile(sampleDir, "phylo")   
       results = child
       logisticTransform = false
@@ -141,7 +143,9 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
   def CorruptPhylo decode() {
     val child = results.child("averaging")
     val parentBurnIn = burnInFraction
+    val parentTabWriter = this.experimentConfigs.tabularWriter
     val averager = new AverageCLMatrices => [
+      experimentConfigs.tabularWriter = parentTabWriter
       csvFile = getCsvFile(sampleDir, "phylo")
       results = child
       burnInFraction = parentBurnIn
@@ -153,6 +157,10 @@ class CorruptPostProcessor extends DefaultPostProcessor  {
     ]
     val consensus = greedyDecoder.infer
     BriefIO::write(results.getFileInResultFolder("consensus.newick"), consensus.toString)
+    results.getTabularWriter("dataSize").write(
+      "nCells" -> consensus.reconstruction.cells.size,
+      "nLoci" -> consensus.reconstruction.loci.size
+    )
     return consensus
   }
   
