@@ -9,7 +9,7 @@ import java.util.LinkedHashMap
 @Data
 class ReadCountModel implements TidilySerializable {
   
-  public val static double x0 = -1.0
+  public val static double x0 = 0.0 //-1.0
   val RealVar f0
   val RealVar f1
   val RealVar f2 
@@ -21,7 +21,7 @@ class ReadCountModel implements TidilySerializable {
     if (sd.doubleValue <= 0.0) 
       blang.types.StaticUtils::invalidParameter
     
-    if (Double.isNaN(logGC) || Double.isNaN(logReadCount)) // for mappability will need to add: mappability == Double::NEGATIVE_INFINITY)
+    if (Double.isNaN(logGC) || Double.isNaN(logReadCount) ||  logGC == Double::NEGATIVE_INFINITY)
       return 0.0 // treat as missing 
     
     if (state === 0) { // loss state
