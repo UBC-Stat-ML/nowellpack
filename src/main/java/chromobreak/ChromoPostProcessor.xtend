@@ -86,7 +86,7 @@ class ChromoPostProcessor extends DefaultPostProcessor {
         val b = f1 - 2 * a * ReadCountModel::x0
         val c = f0 - a * ReadCountModel::x0 * ReadCountModel::x0 - b * ReadCountModel::x0
         val d = g2 / 2.0
-        val e = g1 - 2.0 * d * ReadCountModel::x0
+        val e = g1 
         
         { // histogram diagnostic
           val output = new File(outputDir, "fit-hist-" + i + "." + imageFormat)
@@ -209,17 +209,17 @@ class ChromoPostProcessor extends DefaultPostProcessor {
     }
     override ggCommand() {
       return '''
-      «removeBurnIn»
-      df2 <- read.csv("«rawData.absolutePath»")
-      names(df2)[names(df2) == 'logGC'] <- 'map_key_1'
-      names(df2)[names(df2) == 'logReads'] <- 'value'
-      p <- ggplot(data, aes(x = map_key_1, y = value, colour = factor(«Runner::sampleColumn»))) +
-        geom_line(data = data, alpha = 0.1) + «facetString»
-        geom_point(data = df2, alpha = 0.1) +
-        theme_bw() +
-        theme(legend.position = "none") +
-        ylab("log read count") +
-        xlab("log GC contents") 
+«««      «removeBurnIn»
+«««      df2 <- read.csv("«rawData.absolutePath»")
+«««      names(df2)[names(df2) == 'logGC'] <- 'map_key_1'
+«««      names(df2)[names(df2) == 'logReads'] <- 'value'
+«««      p <- ggplot(data, aes(x = map_key_1, y = value, colour = factor(«Runner::sampleColumn»))) +
+«««        geom_line(data = data, alpha = 0.1) + «facetString»
+«««        geom_point(data = df2, alpha = 0.1) +
+«««        theme_bw() +
+«««        theme(legend.position = "none") +
+«««        ylab("log read count") +
+«««        xlab("log GC contents") 
       '''
     }
   }

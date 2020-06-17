@@ -60,7 +60,7 @@ class ReadCountModel implements TidilySerializable {
     val b = f1 - 2.0 * a * x0
     val c = f0 - a * x0 * x0 - b * x0
     val d = g2 / 2.0
-    val e = g1 - 2.0 * d * x0
+    val e = g1 
     a * logGC * logGC + b * logGC + c + Math::log(state) + d * mappability * mappability + e * mappability
   }
   
