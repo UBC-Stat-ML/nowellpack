@@ -4,17 +4,31 @@ package humi
 model SingleGuide {
   random CountFrequencies frequencies ?: new SimpleCountFrequencies
   random RealVar 
-    mean ?: latentReal, 
-    overdispersion ?: latentReal, 
-    nUMIMean ?: latentReal
+    mean1 ?: latentReal, 
+    overdispersion1 ?: latentReal, 
+    mean2 ?: latentReal, 
+    overdispersion2 ?: latentReal, 
+    nUMIMean ?: latentReal,
+    pi ?: latentReal
     
   laws { 
-    mean ~ Exponential(0.1)
-    overdispersion ~ Exponential(0.1)
+    mean1 ~ Exponential(0.1)
+    overdispersion1 ~ Exponential(0.1)
+    mean2 ~ Exponential(0.1)
+    overdispersion2 ~ Exponential(0.1)
     nUMIMean ~ Exponential(1)
-    frequencies | nUMIMean, mean, overdispersion 
+    pi ~ ContinuousUniform(0, 1.0)
+    frequencies | nUMIMean, pi, mean1, overdispersion1, mean2, overdispersion2
       ~ CensoredExchangeableCounts(
-          NegativeBinomialMeanParam::distribution(mean, overdispersion), nUMIMean
+          IntMixture::distribution({
+                if (pi < 0.0 || pi > 1.0) invalidParameter
+                fixedSimplex(#[pi, 1.0 - pi])
+              }, #[ 
+                NegativeBinomialMeanParam::distribution(mean1, overdispersion1), 
+                NegativeBinomialMeanParam::distribution(mean2, overdispersion2)
+              ]
+            ),
+          nUMIMean
       )
   }
 }
