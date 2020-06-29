@@ -1,18 +1,17 @@
 plugins {
-  id 'org.xtext.xtend' version '1.0.21'
-  id 'org.xtext.builder' version '1.0.21'
+  id 'org.xtext.xtend' version '2.0.5'
+  id 'org.xtext.builder' version '2.0.5'
   id 'java'
   id 'eclipse'
-  id 'maven'
+  id 'application'
 }
 
 dependencies {
-  xtextLanguages "ca.ubc.stat.blang:ca.ubc.stat.blang:4.0.1"
-  compile group: 'ca.ubc.stat', name: 'conifer', version: '2.0.4'
-  compile group: 'ca.ubc.stat', name: 'blangSDK', version: '2.6.1'
-  compile group: 'ca.ubc.stat', name: 'conifer', version: '2.0.4'
-  compile group: 'ca.ubc.stat', name: 'inits', version: '3.3.1'
-  compile group: 'ca.ubc.stat', name: 'pxviz', version: '1.1.0'
+  xtextLanguages "com.github.UBC-Stat-ML.blangDSL:ca.ubc.stat.blang:4.0.1"
+  compile group: 'com.github.UBC-Stat-ML', name: 'conifer', version: '2.0.5'
+  compile group: 'com.github.UBC-Stat-ML', name: 'blangSDK', version: '2.7.0'
+  compile group: 'com.github.UBC-Stat-ML', name: 'inits', version: '3.3.4'
+  compile group: 'com.github.UBC-Stat-ML', name: 'pxviz', version: '1.2.1'
 }
 
 xtext {
@@ -29,9 +28,10 @@ xtext {
 repositories {
   mavenCentral()
   jcenter()
-  maven {
-    url "https://www.stat.ubc.ca/~bouchard/maven/"
-  }
+  maven { url "file:///${System.properties['user.home']}/artifacts/" }
+  maven { url 'https://jitpack.io' }
+  maven { url "https://ubc-stat-ml.github.io/artifacts/" }
+  maven { url "https://www.stat.ubc.ca/~bouchard/maven/" }
 }
 
 xtend {
@@ -40,12 +40,8 @@ xtend {
   }
 }
 
-apply plugin:'application'
 
-configurations.archives.with {
-    artifacts.remove artifacts.find { it.archiveTask.is distZip }
-    artifacts.remove artifacts.find { it.archiveTask.is distTar }
-}  
+
 
 def createScript(project, mainClass, name) {
   project.tasks.create(name: name, type: CreateStartScripts) {
@@ -100,39 +96,3 @@ createScript(project, 'humi.models.YS',       'humi-ys')
 createScript(project, 'humi.models.MixNB',    'humi-mixnb')
 createScript(project, 'humi.models.Poi',      'humi-poi')
 
-uploadArchives {
-  repositories {
-    mavenDeployer {
-      repository(url: "file:///${System.properties['user.home']}/artifacts/")
-      snapshotRepository(url: "file:///${System.properties['user.home']}/artifacts/")
-      pom.version = "1.0.5" 
-      pom.artifactId = "nowellpack"
-      pom.groupId = "ca.ubc.stat"
-    }
-  }
-}
-
-jar {
-    from { fileTree(dir: 'src/main/java', includes: [ '**/*.bl' ]) }
-}
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-  classifier = 'sources'
-  from sourceSets.main.allSource
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-  classifier = 'javadoc'
-  from 'build/docs/javadoc'
-}
-
-artifacts {
-  archives jar
-  archives sourcesJar
-  archives javadocJar
-}
-
-configurations.archives.with {
-    artifacts.remove artifacts.find { it.archiveTask.is distZip }
-    artifacts.remove artifacts.find { it.archiveTask.is distTar }
-}
