@@ -8,7 +8,7 @@ plugins {
 
 dependencies {
   xtextLanguages "com.github.UBC-Stat-ML.blangDSL:ca.ubc.stat.blang:4.0.1"
-  compile group: 'com.github.UBC-Stat-ML', name: 'conifer', version: '2.0.5'
+  compile group: 'com.github.UBC-Stat-ML', name: 'conifer', version: '2.0.6'
   compile group: 'com.github.UBC-Stat-ML', name: 'blangSDK', version: '2.7.0'
   compile group: 'com.github.UBC-Stat-ML', name: 'inits', version: '3.3.4'
   compile group: 'com.github.UBC-Stat-ML', name: 'pxviz', version: '1.2.1'
@@ -39,9 +39,6 @@ xtend {
     javaSourceLevel = 1.8
   }
 }
-
-
-
 
 def createScript(project, mainClass, name) {
   project.tasks.create(name: name, type: CreateStartScripts) {
