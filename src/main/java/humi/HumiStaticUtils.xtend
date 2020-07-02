@@ -11,6 +11,7 @@ import briefj.BriefIO
 import humi.freq.DeltaMethod.Columns
 import binc.Command
 import blang.core.IntDistribution
+import blang.inits.experiments.tabwriters.factories.CSV
 
 class HumiStaticUtils {
   
@@ -19,7 +20,7 @@ class HumiStaticUtils {
     val scriptFile = plotResults.getFileInResultFolder("script.r")
     BriefIO::write(scriptFile, '''
       require("ggplot2")
-      data <- read.csv("«results.getFileInResultFolder("estimates.csv").absolutePath»")
+      data <- read.csv("«CSV::csvFile(results.resultsFolder, "estimates").absolutePath»")
       cols = rainbow(200, s=.6, v=.9)[sample(1:200,200)]
       p <- ggplot(data, aes(x = factor(«data.genes.name»), y = «Columns::logRatio», colour = factor(«data.targets.name»))) + 
         coord_flip() + 
