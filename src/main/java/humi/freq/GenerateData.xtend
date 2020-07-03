@@ -18,6 +18,9 @@ import java.util.List
 import java.util.Random
 import humi.Preprocess
 
+/**
+ * Used to validate the bootstrap method. 
+ */
 class GenerateData extends Experiment {
   @Arg HumiData data
   @Arg List<String> experiments
