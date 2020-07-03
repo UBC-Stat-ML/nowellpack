@@ -107,6 +107,7 @@ class HumiPostProcessor extends DefaultPostProcessor {
             logRatios.add(Math.log(wMeans.get(i) / controlWMeans.get(i)))
           credibleIntervals(sgRNA, gene, logRatios)
         }
+    results.getTabularWriter("estimates").close
   }
   
   def credibleIntervals(Index<Integer> sgRNA, Index<String> gene, List<Double> values) {
