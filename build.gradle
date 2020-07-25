@@ -4,6 +4,7 @@ plugins {
   id 'java'
   id 'eclipse'
   id 'application'
+  id 'maven'
 }
 
 dependencies {
@@ -91,3 +92,14 @@ createScript(project, 'humi.models.YS',       'humi-ys')
 createScript(project, 'humi.models.MixNB',    'humi-mixnb')
 createScript(project, 'humi.models.Poi',      'humi-poi')
 
+uploadArchives {
+  repositories {
+    mavenDeployer {
+      repository(url: "file:///${System.properties['user.home']}/artifacts/")
+      snapshotRepository(url: "file:///${System.properties['user.home']}/artifacts/")
+      pom.version = "0.0.1" 
+      pom.artifactId = "nowellpack"
+      pom.groupId = "com.github.UBC-Stat-ML"
+    }
+  }
+}
