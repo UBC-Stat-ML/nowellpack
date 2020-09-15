@@ -35,7 +35,7 @@ class TreeGrowthViz extends Experiment {
       for (m : matrices)
         restricedMatrices.add(ReadOnlyCLMatrix::readOnly(eraseUnassigned(m, tree)))
       new PerfectPhyloViz(
-        tree, restricedMatrices, size, refPhylo, codes
+        tree, restricedMatrices, size, refPhylo, codes, Optional.empty
       ).output(results.getFileInResultFolder(line.get(iterationColName) + ".pdf"))
       
       if (prevMatrices !== null) {
@@ -43,7 +43,7 @@ class TreeGrowthViz extends Experiment {
         for (var int i = 0; i < prevMatrices.size; i++) 
           deltas.add(ReadOnlyCLMatrix::readOnly(delta(restricedMatrices.get(i), prevMatrices.get(i))))
         new PerfectPhyloViz(
-          tree, deltas, size, refPhylo, codes
+          tree, deltas, size, refPhylo, codes, Optional.empty
         ).output(results.getFileInResultFolder("delta_" + line.get(iterationColName) + ".pdf"))
       }
       
@@ -74,11 +74,7 @@ class TreeGrowthViz extends Experiment {
     return result
   }
   
-  def static void main(String [] args) {
-    val code = Experiment.start(args) 
-    if (code !== 0)
-      System.exit(code)
-    else
-      {} // Do not exit; drawing thread probably still working
+  static def void main(String [] args) { 
+    Experiment.startAutoExit(args)
   }
 }

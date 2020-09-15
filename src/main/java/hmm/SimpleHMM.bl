@@ -1,0 +1,21 @@
+package hmm
+
+@Samplers(SimpleHMMSampler)
+model SimpleHMM {
+  param Simplex initial
+  param int length 
+  param TransitionMatrix dynamics, emissions
+  random List<IntVar> latents ?: latentIntList(length), observations ?: latentIntList(length)
+  
+  laws {
+    for (int i : 0 ..< latents.size) {
+      observations.get(i) | IntVar latent = latents.get(i), emissions ~ Categorical(emissions.row(latent))
+      
+      if (i == 0) {
+        latents.get(0) | initial ~ Categorical(initial)
+      } else {
+        latents.get(i) | IntVar prev = latents.get(i-1), dynamics ~ Categorical(dynamics.row(prev))
+      }
+    }
+  }
+}

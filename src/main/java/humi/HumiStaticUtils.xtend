@@ -11,6 +11,16 @@ import briefj.BriefIO
 import humi.freq.DeltaMethod.Columns
 import binc.Command
 import blang.core.IntDistribution
+import blang.inits.experiments.tabwriters.factories.CSV
+import java.io.File
+import java.util.LinkedHashMap
+import java.util.Map
+import briefj.BriefMaps
+import java.util.List
+import java.util.LinkedHashSet
+import java.util.ArrayList
+import java.util.Collections
+import java.util.Locale
 
 class HumiStaticUtils {
   
@@ -19,7 +29,7 @@ class HumiStaticUtils {
     val scriptFile = plotResults.getFileInResultFolder("script.r")
     BriefIO::write(scriptFile, '''
       require("ggplot2")
-      data <- read.csv("«results.getFileInResultFolder("estimates.csv").absolutePath»")
+      data <- read.csv("«CSV::csvFile(results.resultsFolder, "estimates").absolutePath»")
       cols = rainbow(200, s=.6, v=.9)[sample(1:200,200)]
       p <- ggplot(data, aes(x = factor(«data.genes.name»), y = «Columns::logRatio», colour = factor(«data.targets.name»))) + 
         coord_flip() + 
@@ -68,5 +78,35 @@ class HumiStaticUtils {
     val ParsingConfigs parsingConfigs = new ParsingConfigs
     parsingConfigs.setCreator(creator) 
     return parsingConfigs
+  }
+  
+  def static void main(String [] args) {
+    generateEvidenceTable(new File("../../experiments/humi2/analyses/logNorm3/0/evidence.csv"))
+  }
+  
+  def static void generateEvidenceTable(File f) {
+    val map = new LinkedHashMap<String,Map<String,Double>> //experiment -> model -> score
+    val modelsSet = new LinkedHashSet<String>
+    val experimentsSet = new LinkedHashSet<String>
+    for (line : BriefIO::readLines(f).indexCSV.filter[get("round") == "8"]) {
+      BriefMaps.getOrPutMap(map, line.get("data")).put(line.get("model"), Double.parseDouble(line.get("value")))
+      modelsSet.add(line.get("model"))
+      experimentsSet.add(line.get("data"))
+    }
+    val models = new ArrayList<String>(modelsSet)
+    Collections::sort(models)
+    val experiments = new ArrayList<String>(experimentsSet)
+    Collections::sort(experiments)
+    println('''dataset & «FOR i : 0 ..< models.size» «models.get(i)» «IF i < models.size - 1» & «ENDIF» «ENDFOR» \\''')
+    for (dataset : experiments) {
+      val results = map.get(dataset)
+      val max = results.values.max
+      println('''«dataset.replace(".csv", "").replace("_", "\\_")» & «FOR i : 0 ..< results.size» $«{
+      val cur = results.get(models.get(i));
+      var str = String.format(Locale.US, "%G", Double.valueOf(cur))
+      if (cur == max) str = "{\\bf " + str + "}"
+      str
+      }»$ «IF i < models.size - 1» & «ENDIF» «ENDFOR» \\''')
+    }
   }
 }

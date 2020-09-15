@@ -8,6 +8,7 @@ import static java.util.Collections.emptyList
 import java.util.Collection
 import bayonet.graphs.GraphUtils
 import org.jgrapht.DirectedGraph
+import java.util.Set
 
 @Data class DirectedTree<T> { 
   @Accessors(NONE)
@@ -48,6 +49,8 @@ import org.jgrapht.DirectedGraph
   }
   
   def Collection<T> nodes() { return graph.vertexSet }
+  
+  def edges() { return graph.edgeSet }
   
   def List<T> collapseEdge(T bottomOfEdge) {
     val topOfEdge = parent(bottomOfEdge)

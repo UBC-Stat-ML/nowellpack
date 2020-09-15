@@ -29,7 +29,7 @@ class ParamEstimation {
   @Test
   def void test() {
     val truth = #{"fpr" -> 0.15, "fnr" -> 0.17}
-    val nCells = 10000
+    val nCells = 1000
     val nLoci = 100 
     val rand = new Random(1)
     // generate data

@@ -23,18 +23,19 @@ import java.util.Collection
 import corrupt.Locus
 import processing.core.PApplet
 import corrupt.post.ReadOnlyCLMatrix
+import java.util.LinkedHashSet
 
 class PerfectPhyloViz extends Viz {
   val TreeViz<Set<TreeNode>> treeViz
   val MatrixViz matrixViz
   val int nMatrices
   val Collection<Locus> loci
-  
+    
   new (
     PerfectPhylo phylo, 
     List<ReadOnlyCLMatrix> matrices, 
     PublicSize size) {
-    this(phylo, matrices, size, Optional.empty, Optional.empty)
+    this(phylo, matrices, size, Optional.empty, Optional.empty, Optional.empty)
   }
   
   new (
@@ -43,7 +44,16 @@ class PerfectPhyloViz extends Viz {
     PublicSize size,
     PerfectPhylo refPhylo
     ) {
-    this(phylo, matrices, size, Optional.of(refPhylo), Optional.empty)
+    this(phylo, matrices, size, Optional.of(refPhylo), Optional.empty, Optional.empty)
+  }
+  
+  //public static 
+  
+  def static List<Locus> allLoci(List<? extends CellLocusMatrix> matrices) {
+    val loci = new LinkedHashSet<Locus>
+    for (matrix : matrices)
+      loci.addAll(matrix.loci)
+    return GenomeMap::orderedLoci(loci)
   }
   
   @DesignatedConstructor
@@ -52,7 +62,8 @@ class PerfectPhyloViz extends Viz {
     @ConstructorArg("matrices") List<ReadOnlyCLMatrix> _matrices, 
     @ConstructorArg("size") PublicSize size,
     @ConstructorArg("ref") Optional<PerfectPhylo> refPhylo,
-    @ConstructorArg(value = "colourCodes", description = coloursDescriptions) Optional<List<Integer>> codes
+    @ConstructorArg(value = "colourCodes", description = coloursDescriptions) Optional<List<Integer>> codes,
+    @ConstructorArg("restriction") Optional<Set<Locus>> restriction
   ) {
     super(size)
     
@@ -76,9 +87,13 @@ class PerfectPhyloViz extends Viz {
     // overlay matrices 
     nMatrices = matrices.size
     val int groupSize = nMatrices + 1
-    val CellLocusMatrix matrix = matrices.get(0) 
-    loci = matrix.loci 
-    val converted = MatrixOperations::dense(matrix.cells.size, matrix.loci.size * groupSize) 
+    val allCells = matrices.get(0).cells
+     
+    loci = allLoci(matrices)
+    if (restriction.present)
+      loci.retainAll(restriction.get)
+      
+    val converted = MatrixOperations::dense(allCells.size, loci.size * groupSize) 
     var int colIndex = 0
     for (locus : loci) {
       for (entry : treeViz.tipIndices.entrySet) {
@@ -86,8 +101,10 @@ class PerfectPhyloViz extends Viz {
         if (cells.size != 1) 
           throw new RuntimeException
         val cell = cells.iterator.next as Cell 
-        for (i : 0 ..< matrices.size)
-          converted.set(entry.value, groupSize * colIndex + i, matrices.get(i).get(cell, locus))
+        for (i : 0 ..< matrices.size) {
+          val value = if (matrices.get(i).loci.contains(locus)) matrices.get(i).get(cell, locus) else 0.0
+          converted.set(entry.value, groupSize * colIndex + i, value)
+        }
       }
       colIndex++
     }
@@ -111,12 +128,51 @@ class PerfectPhyloViz extends Viz {
     return result
   }
   
-  static val coloursDescriptions = "list of integers where 0 is greyScale and 1--10 are colour palettes"
+  static val coloursDescriptions = "list of integers where 0 is greyScale; 1--10 are colour palettes; 11 is a rainbow; 12 is the standard CN palette"
   public static val List<CellFiller> colourCodes = new ArrayList => [
     add(MatrixViz::greyScale)
     val nColours = 10
     for (i : 0 ..< nColours)
       add(MatrixViz::colours(i, nColours))
+    add(rainbow)
+    add(cna)
+  ]
+  
+  static def CellFiller rainbow() {
+    val float norm = 12f
+    return [__, ___, v , result | 
+      result.colorMode(PApplet::HSB, 1) 
+      result.fill(v as float / norm, 1, 1)  
+    ]
+  }
+  
+  static def CellFiller cna() {
+    return [__, ___, v , result | 
+      result.colorMode(PApplet::RGB, 255) 
+      if (Double.isNaN(v)) {
+        result.fill(0, 0, 0)
+      } else {
+        if (v < 0.0) throw new RuntimeException
+        val cn = if (v > 11) 11 else v
+        val entry = cnaColours.get(cn as int)
+        result.fill(entry.get(0), entry.get(1), entry.get(2)) 
+      } 
+    ]
+  }
+  
+  static val float[][] cnaColours = #[
+    #[204, 204, 204],
+    #[168, 201, 222],
+    #[204, 204, 204],
+    #[244, 205, 150],
+    #[235, 147, 104],
+    #[208, 86, 67],
+    #[162, 35, 29],
+    #[137, 29, 67],
+    #[201, 57, 118],
+    #[206, 110, 172],
+    #[192, 151, 195],
+    #[207, 187, 215]
   ]
   
   override protected draw() {
@@ -161,11 +217,7 @@ class PerfectPhyloViz extends Viz {
     return new PrivateSize(treeViz.publicWidth + matrixViz.publicWidth, treeViz.publicHeight + chrMarkerHeight) 
   }
   
-  public static def void main(String [] args) { 
-    val code = Experiment.start(args) 
-    if (code !== 0)
-      System.exit(code)
-    else
-      {} // Do not exit; drawing thread probably still working
+  static def void main(String [] args) { 
+    Experiment.startAutoExit(args)
   }
 }

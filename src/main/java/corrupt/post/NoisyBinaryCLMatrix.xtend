@@ -110,14 +110,14 @@ import xlinear.internals.CommonsDenseMatrix
   def double nPositive(int paramIndex) { nPositives.get(paramIndex) }
   
   /**
-   * P(X = 1 | Y = 1)
+   * P(X = 1 | Y = 1) under the local posterior model (assuming uniform prior on X)
    */
   def double p_x1_given_y1(int paramIndex) {
     return (1.0 - fn(paramIndex)) / (1.0 - fn(paramIndex) + fp(paramIndex))
   }
   
   /**
-   * P(X = 1 | Y = 0)
+   * P(X = 1 | Y = 0) under the local posterior model
    */
   def double p_x1_given_y0(int paramIndex) {
     return fn(paramIndex) / (fn(paramIndex) + 1.0 - fp(paramIndex))

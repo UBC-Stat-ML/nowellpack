@@ -50,7 +50,8 @@ class DistributionSummary {
         new RealVar() {
           override doubleValue() {
             val p0 = Math.exp(dist.get.logDensity(0))
-            return (1.0 - p0) * initialPopCount.intValue * lambda.doubleValue
+            val mean = (1.0 - p0) * initialPopCount.intValue * lambda.doubleValue
+            return Generators::poisson(rand, mean)
           }
         }
       } else {
@@ -60,7 +61,8 @@ class DistributionSummary {
           override doubleValue() {
             val p0 = Math.exp(dist.get.logDensity(0))
             val lambda = Generators::gamma(rand, shape.doubleValue, rate.doubleValue) 
-            return (1.0 - p0) * initialPopCount.intValue * lambda
+            val mean = (1.0 - p0) * initialPopCount.intValue * lambda
+            return Generators::poisson(rand, mean)
           }
         }
       }

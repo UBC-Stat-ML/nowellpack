@@ -9,9 +9,12 @@ class TestSingleGuide {
   
   val SingleGuide singleGuideModel = new SingleGuide.Builder()
     .setFrequencies(new SimpleCountFrequencies)
-    .setMean(StaticUtils::latentReal) 
+    .setMean1(StaticUtils::latentReal) 
+    .setMean2(StaticUtils::latentReal) 
+    .setPi(StaticUtils::latentReal) 
     .setNUMIMean(StaticUtils::latentReal)
-    .setOverdispersion(StaticUtils::latentReal)
+    .setOverdispersion1(StaticUtils::latentReal)
+    .setOverdispersion2(StaticUtils::latentReal)
       .build 
       
   val MarginalizedSingleGuide margSingleGuideModel = new MarginalizedSingleGuide.Builder()
@@ -27,8 +30,8 @@ class TestSingleGuide {
     val test = new ExactInvarianceTest
     test.nPosteriorSamplesPerIndep = 500 
     test.add(new Instance(singleGuideModel, 
-      [mean.doubleValue], 
-      [overdispersion.doubleValue], 
+      [mean1.doubleValue], 
+      [overdispersion2.doubleValue], 
       [NUMIMean.doubleValue]
     ))  
     test.add(new Instance(margSingleGuideModel, 

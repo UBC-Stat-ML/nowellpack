@@ -26,11 +26,11 @@ class CorruptStaticUtils {
     else return root
   }
   
-  def static Matrix initializedLatentErrors(double max, int nLoci, boolean global) {
+  def static Matrix initializedLatentErrors(double min, double max, int nLoci, boolean global) {
     val nParams = if (global) 1 else nLoci
     val result = MatrixOperations::dense(nParams)
     for (i : 0 ..< nParams)
-      result.set(i, max / 2.0)
+      result.set(i, min + (max - min) / 2.0)
     return result
   }
 }

@@ -60,7 +60,7 @@ class SplitSampler {
   @Accessors(PUBLIC_GETTER)
   val Indexer<TreeNode> rootLociIndexer = new Indexer
   
-  public new (DirectedTree<TreeNode> phylogeny, Map<Cell, SubtreeLikelihood> cellLikelihoods) {
+  new (DirectedTree<TreeNode> phylogeny, Map<Cell, SubtreeLikelihood> cellLikelihoods) {
     this.phylogeny = phylogeny
     rootLociIndexer.addAllToIndex(phylogeny.lociAndRoot) 
     likelihoods.putAll(cellLikelihoods) // (1)
@@ -112,7 +112,7 @@ class SplitSampler {
     return pair.value
   }
   
-  public def double[] attachProbabilities() {
+  def double[] attachProbabilities() {
     val prs = newDoubleArrayOfSize(rootLociIndexer.size)
     for (parentIndex : 0 ..< rootLociIndexer.size) {
       val node = rootLociIndexer.i2o(parentIndex)

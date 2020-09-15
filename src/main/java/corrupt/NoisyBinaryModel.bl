@@ -4,23 +4,41 @@ import corrupt.post.NoisyBinaryCLMatrix
 
 import static corrupt.CorruptStaticUtils.initializedLatentErrors 
 import corrupt.post.BinaryCLMatrix
+import corrupt.post.PredictiveMonitor
 
 model NoisyBinaryModel {
   
   param SamplerOptions samplerOptions ?: SamplerOptions::instance
   param boolean globalParameterization ?: true
+  
   param Double fprBound ?: 0.2
   param Double fnrBound ?: 0.2
+  param Double minBound ?: 0.01 // to ensure leave-one-out importance sampling estimates have finite variance
+  
   param BinaryCLMatrix binaryMatrix
-  random Matrix fpr ?: initializedLatentErrors(fprBound, binaryMatrix.loci.size, globalParameterization)
-  random Matrix fnr ?: initializedLatentErrors(fnrBound, binaryMatrix.loci.size, globalParameterization)
+  random Matrix fpr ?: initializedLatentErrors(minBound, fprBound, binaryMatrix.loci.size, globalParameterization)
+  random Matrix fnr ?: initializedLatentErrors(minBound, fnrBound, binaryMatrix.loci.size, globalParameterization)
   
   random CorruptPhylo phylo ?: new CorruptPhylo(new NoisyBinaryCLMatrix(binaryMatrix, fpr, fnr))
   
+  param PerfectPhylo initialization ?: null
+  
+  param Double predictivesProportion ?: 0.05
+  random Map<Locus,PredictiveMonitor> predictives /* don't change that field name */ ?: {
+    System.out.println("Number of cells: " + binaryMatrix.cells.size)
+    System.out.println("Number of loci:" + binaryMatrix.loci.size)
+    if (initialization !== null) phylo.reconstruction.set(initialization)
+    val result = new LinkedHashMap
+    for (locus : binaryMatrix.loci) {
+      result.put(locus, new PredictiveMonitor(locus, binaryMatrix, phylo.reconstruction, (phylo.tipInclPrs) as NoisyBinaryCLMatrix, predictivesProportion))
+    }
+    return result
+  }
+  
   laws {
     for (int p : 0 ..< fpr.nEntries) {
-      fpr.getRealVar(p) | fprBound ~ ContinuousUniform(0.0, fprBound) 
-      fnr.getRealVar(p) | fnrBound ~ ContinuousUniform(0.0, fnrBound)
+      fpr.getRealVar(p) | fprBound, minBound ~ ContinuousUniform(minBound, fprBound) 
+      fnr.getRealVar(p) | fnrBound, minBound ~ ContinuousUniform(minBound, fnrBound)
     }
     phylo ~ Uniform
     | phylo, fpr, fnr ~ LogPotential(phylo.logProbability)

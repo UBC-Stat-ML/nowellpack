@@ -26,11 +26,11 @@ import java.util.Collections
   val Set<Locus> loci
   val Set<Cell> cells 
   
-  def public Map<Cell,Boolean> getTips(Locus locus) { 
-      val result = new LinkedHashMap
-      _getTips(locus, result, tree.root, false)
-      return result
-    }
+  def Map<Cell,Boolean> getTips(Locus locus) { 
+    val result = new LinkedHashMap
+    _getTips(locus, result, tree.root, false)
+    return result
+  }
   def private void _getTips(Locus locus, Map<Cell,Boolean> result, TreeNode node, boolean active) {
     switch node {
       Cell : {
@@ -74,21 +74,33 @@ import java.util.Collections
   
   @DesignatedConstructor
   new(@Input(formatDescription = "Newick string (or 'file ' followed by file from which to load such string)") String newickString) {
+    this(
+      simpleTreeParsing(newickString),
+      [parse(it.toString)]
+    )
+  }
+  
+  def static Tree<conifer.TreeNode> simpleTreeParsing(String newickString) {
     val parser = new NewickParser(
       if (newickString.startsWith("file "))
         BriefIO::fileToString(new File(newickString.replaceFirst("file\\s+", "")))  
       else 
-        newickString
-    )
+        newickString)
+    val parseTree = parser.parse
+    if (parse(parseTree.label.toString) != root)
+      throw new RuntimeException("PerfectPhylo newick file should have root called " + root)
+    return parseTree
+  }
+  
+  new(Tree<conifer.TreeNode> parseTree, (conifer.TreeNode)=>TreeNode nodeParser) {
     this.cells = new LinkedHashSet
     this.loci = new LinkedHashSet
     this.tree = new DirectedTree(root)
-    val Tree<conifer.TreeNode> parseTree = parser.parse
-    readParseTree(null, parseTree) 
+    readParseTree(null, parseTree, nodeParser) 
   }
   
-  private def void readParseTree(TreeNode parent, Tree<conifer.TreeNode> parseTree) {
-    val parsedNode = parse(parseTree.label.toString)
+  private def void readParseTree(TreeNode parent, Tree<conifer.TreeNode> parseTree, (conifer.TreeNode)=>TreeNode nodeParser) {
+    val parsedNode = nodeParser.apply(parseTree.label)
     if (parent !== null)
       tree.addEdge(parent, parsedNode)
     switch (parsedNode) {
@@ -96,7 +108,17 @@ import java.util.Collections
       Locus : loci.add(parsedNode)
     }
     for (child : parseTree.children)
-      readParseTree(parsedNode, child) 
+      readParseTree(parsedNode, child, nodeParser) 
+  }
+  
+  def void set(PerfectPhylo phylo) {
+    if (this.cells != phylo.cells || this.loci != phylo.loci) throw new RuntimeException
+    for (cell : cells)
+      tree.collapseEdge(cell)
+    for (locus : loci)
+      tree.collapseEdge(locus)
+    for (edge : phylo.tree.edges) 
+      this.tree.addEdge(edge.left, edge.right)
   }
   
   def void sampleUniform(Random rand) {

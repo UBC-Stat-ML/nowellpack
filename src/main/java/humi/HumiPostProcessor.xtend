@@ -18,6 +18,7 @@ import java.util.Collections
 import blang.inits.DefaultValue
 import blang.inits.experiments.Experiment
 import blang.inits.parsing.Posix
+import blang.inits.experiments.tabwriters.factories.CSV
 
 class HumiPostProcessor extends DefaultPostProcessor {
   
@@ -46,7 +47,7 @@ class HumiPostProcessor extends DefaultPostProcessor {
   def void gofSummary(GofStat stat) {
     val samplesDir = new File(blangExecutionDirectory.get, Runner::SAMPLES_FOLDER)
     
-    val sampleFile = new File(samplesDir, stat.toString + ".csv")
+    val sampleFile = CSV::csvFile(samplesDir, stat.toString)
     val samples = new LinkedHashMap<Object,List<Double>>  // sgrna, experiment -> samples
     for (line : BriefIO::readLines(sampleFile).indexCSV) {
       val sgRNAName = data.targets.name.toString 
@@ -94,7 +95,7 @@ class HumiPostProcessor extends DefaultPostProcessor {
   
   def void computeIntervals() {
     val samplesDir = new File(blangExecutionDirectory.get, Runner::SAMPLES_FOLDER)
-    val condWinMeansFile = new File(samplesDir, "conditionalWinsorizedMeans.csv")
+    val condWinMeansFile = CSV::csvFile(samplesDir, "conditionalWinsorizedMeans")
     val samples = read(condWinMeansFile)
     val controlWMeans = controlWMeans(samples)
     for (gene : data.genes.indices)
@@ -106,6 +107,7 @@ class HumiPostProcessor extends DefaultPostProcessor {
             logRatios.add(Math.log(wMeans.get(i) / controlWMeans.get(i)))
           credibleIntervals(sgRNA, gene, logRatios)
         }
+    results.getTabularWriter("estimates").close
   }
   
   def credibleIntervals(Index<Integer> sgRNA, Index<String> gene, List<Double> values) {

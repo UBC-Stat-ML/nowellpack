@@ -19,7 +19,7 @@ import bayonet.math.SpecialFunctions
   
   new(Collection<Cell> cells, Collection<Locus> loci) {
     this.cellsIdx = new Indexer(GenomeMap::sanitize(cells))
-    this.lociIdx = new Indexer(GenomeMap::orderLoci(loci))
+    this.lociIdx = new Indexer(GenomeMap::orderedLoci(loci))
     this.matrix = MatrixOperations::dense(cellsIdx.size, lociIdx.size)
   }
   
