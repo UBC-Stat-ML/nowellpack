@@ -26,13 +26,19 @@ class HumiPostProcessor extends DefaultPostProcessor {
   
   @Arg                @DefaultValue("0.9")
   public double credibleIntervalPr = 0.9
-  
+    
   var nIterations = 0
   
+  @Arg                   @DefaultValue("false")
+  public boolean onlyComputeEstimates = false
+  
   override run() {
-    super.run
+    if (!onlyComputeEstimates)
+      super.run
     computeIntervals
     results.flushAll
+    if (onlyComputeEstimates)
+      return;
     // GoF diagnostic summary
     for (stat : GofStat.values)
       gofSummary(stat)
