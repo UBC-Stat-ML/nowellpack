@@ -17,8 +17,8 @@ model MultiHit {
     for (Index<String> experiment : data.experiments.indices) {
       lambdas.get(experiment) | vagueRate ~ Exponential(vagueRate)
     }
-    pi ~ ContinuousUniform(0.0, 1.0)
-    doubleHitMultiplier ~ Exponential(1.0) 
+    pi ~ ContinuousUniform(0.5, 1.0)
+    doubleHitMultiplier ~ ContinuousUniform(0.0, 1.0)
     for (Index<Integer> target : data.targets.indices) {
       
       means.get(target) | vagueRate ~ Exponential(vagueRate)
