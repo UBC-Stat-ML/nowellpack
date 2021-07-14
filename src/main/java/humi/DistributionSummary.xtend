@@ -240,6 +240,21 @@ class DistributionSummary {
     }
   }
   
+  def static Supplier<IntDistribution> variableHitNB(RealVar pi, RealVar mean, RealVar od1, RealVar multipleHitMultiplier, RealVar od2) {
+    new Supplier<IntDistribution>() {
+      override IntDistribution get() {
+        return IntMixture::distribution({
+                if (pi.doubleValue < 0.0 || pi.doubleValue > 1.0) StaticUtils::invalidParameter
+                StaticUtils::fixedSimplex(#[pi.doubleValue, 1.0 - pi.doubleValue])
+              }, #[ 
+                NegativeBinomialMeanParam::distribution(mean, od1), 
+                NegativeBinomialMeanParam::distribution([mean.doubleValue * multipleHitMultiplier.doubleValue], od2)
+              ]
+            )
+      }
+    }
+  }
+  
   def static Supplier<IntDistribution> mixYs(RealVar pi, RealVar rho1, RealVar rho2) {
     new Supplier<IntDistribution>() {
       override IntDistribution get() {

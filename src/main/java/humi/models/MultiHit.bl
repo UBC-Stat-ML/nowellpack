@@ -1,0 +1,49 @@
+package humi.models
+import humi.HumiData
+import humi.Monitor
+import java.util.function.Supplier
+import humi.DistributionSummary
+
+model MultiHit { 
+  param HumiData data
+  param Plated<IntVar> initialPopCounts
+  random RealVar pi
+  random RealVar doubleHitMultiplier
+  random Plated<RealVar> means, od1s, od2s, lambdas
+  random Plated<Monitor> visibleCloneNumbers, truncatedMeans, truncatedSqMeans, winsorizedMeans, conditionalWinsorizedMeans /* do not change this variable name - see HumiPostProcessor */
+  param RealVar vagueRate ?: 0.01
+  
+  laws {
+    for (Index<String> experiment : data.experiments.indices) {
+      lambdas.get(experiment) | vagueRate ~ Exponential(vagueRate)
+    }
+    pi ~ ContinuousUniform(0.0, 1.0)
+    doubleHitMultiplier ~ Exponential(1.0) 
+    for (Index<Integer> target : data.targets.indices) {
+      
+      means.get(target) | vagueRate ~ Exponential(vagueRate)
+      od1s.get(target) | vagueRate ~ Exponential(vagueRate)
+      od2s.get(target) | vagueRate ~ Exponential(vagueRate)
+      for (Index<String> experiment : data.experiments.indices(target)) {
+        data.histograms.get(target, experiment) |
+          RealVar lambda = lambdas.get(experiment), 
+          IntVar initialPopCount = initialPopCounts.get(target),
+          Supplier<IntDistribution> dist = {
+            val mean = means.get(target)
+            val od1 = od1s.get(target)
+            val Supplier<IntDistribution> singleHitDist = DistributionSummary::nb(mean, od1)
+            
+            val od2 = od2s.get(target)
+            val Supplier<IntDistribution> variableHitDist = DistributionSummary::variableHitNB(pi, mean, od1, doubleHitMultiplier, od2)
+            //val Supplier<IntDistribution> result = DistributionSummary::mixNb(pi, mean1, od1, mean2, od2)
+            DistributionSummary::registerMonitors(
+              visibleCloneNumbers, truncatedMeans, truncatedSqMeans, winsorizedMeans, conditionalWinsorizedMeans, target, experiment, singleHitDist, 
+              initialPopCounts, lambdas.get(experiment), null
+            )
+            return variableHitDist
+          }
+        ~ CensoredExchangeableCounts(dist.get, lambda * initialPopCount)
+      }   
+    }
+  }
+}
