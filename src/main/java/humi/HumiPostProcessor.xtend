@@ -35,13 +35,16 @@ class HumiPostProcessor extends DefaultPostProcessor {
   override run() {
     if (!onlyComputeEstimates)
       super.run
+      
     computeIntervals
     results.flushAll
-    if (onlyComputeEstimates)
-      return;
+    
     // GoF diagnostic summary
     for (stat : GofStat.values)
       gofSummary(stat)
+      
+    if (onlyComputeEstimates)
+      return;
     // intervals
     HumiStaticUtils::plotIntervals(results, data, rCmd, false, "Bayesian hierarchical model credible intervals")
     // TODO: poset
