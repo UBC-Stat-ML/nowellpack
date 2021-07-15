@@ -3,46 +3,56 @@ import humi.HumiData
 import humi.Monitor
 import java.util.function.Supplier
 import humi.DistributionSummary
+import humi.IntMixture
 
 model MultiHit { 
   param HumiData data
   param Plated<IntVar> initialPopCounts
-  random RealVar pi ?: latentReal
-  random RealVar doubleHitMultiplier ?: latentReal
-  random Plated<RealVar> means, od1s, od2s, lambdas
+  random Plated<RealVar> mean1s, od1s, mean2s, od2s, pis, lambdas
   random Plated<Monitor> visibleCloneNumbers, truncatedMeans, truncatedSqMeans, winsorizedMeans, conditionalWinsorizedMeans /* do not change this variable name - see HumiPostProcessor */
   param RealVar vagueRate ?: 0.01
   
+  // multiple hit globals
+  random Simplex multiHitPi ?: latentSimplex(2)
+  random RealVar multiHitMean ?: latentReal, multiHitOD ?: latentReal
+  
   laws {
+    
+    multiHitPi ~ SimplexUniform(2)
+    multiHitMean | vagueRate ~ Exponential(vagueRate)
+    multiHitOD | vagueRate ~ Exponential(vagueRate)
+    
     for (Index<String> experiment : data.experiments.indices) {
       lambdas.get(experiment) | vagueRate ~ Exponential(vagueRate)
     }
-    pi ~ ContinuousUniform(0.5, 1.0)
-    doubleHitMultiplier ~ ContinuousUniform(0.0, 1.0)
     for (Index<Integer> target : data.targets.indices) {
-      
-      means.get(target) | vagueRate ~ Exponential(vagueRate)
+      pis.get(target) ~ ContinuousUniform(0.0, 1.0) // not using 0.5: see NB below
+      mean1s.get(target) | vagueRate ~ Exponential(vagueRate)
       od1s.get(target) | vagueRate ~ Exponential(vagueRate)
+      mean2s.get(target)  ~ Exponential(1) // NB: if putting vague rate here, cannot find positive probab init...
       od2s.get(target) | vagueRate ~ Exponential(vagueRate)
       for (Index<String> experiment : data.experiments.indices(target)) {
         data.histograms.get(target, experiment) |
+          multiHitPi, multiHitMean, multiHitOD,
           RealVar lambda = lambdas.get(experiment), 
           IntVar initialPopCount = initialPopCounts.get(target),
           Supplier<IntDistribution> dist = {
-            val mean = means.get(target)
+            val pi = pis.get(target)
+            val mean1 = mean1s.get(target)
             val od1 = od1s.get(target)
-            val Supplier<IntDistribution> singleHitDist = DistributionSummary::nb(mean, od1)
-            
+            val mean2 = mean2s.get(target)
             val od2 = od2s.get(target)
-            val Supplier<IntDistribution> variableHitDist = DistributionSummary::variableHitNB(pi, mean, od1, doubleHitMultiplier, od2)
-            //val Supplier<IntDistribution> result = DistributionSummary::mixNb(pi, mean1, od1, mean2, od2)
+            val Supplier<IntDistribution> result = DistributionSummary::mixNb(pi, mean1, od1, mean2, od2)
             DistributionSummary::registerMonitors(
-              visibleCloneNumbers, truncatedMeans, truncatedSqMeans, winsorizedMeans, conditionalWinsorizedMeans, target, experiment, singleHitDist, 
+              visibleCloneNumbers, truncatedMeans, truncatedSqMeans, winsorizedMeans, conditionalWinsorizedMeans, target, experiment, result, 
               initialPopCounts, lambdas.get(experiment), null
             )
-            return variableHitDist
+            return result
           }
-        ~ CensoredExchangeableCounts(dist.get, lambda * initialPopCount)
+        ~ CensoredExchangeableCounts(
+          IntMixture::distribution(multiHitPi, #[NegativeBinomialMeanParam::distribution(multiHitMean, multiHitOD), dist.get]), 
+          lambda * initialPopCount
+        )
       }   
     }
   }
