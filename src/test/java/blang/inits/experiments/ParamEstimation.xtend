@@ -52,7 +52,7 @@ class ParamEstimation {
       results = runner.results 
       nScans = 1000
       initialization = InitType.COPIES
-      nChains = Optional.of(1)
+      //nChains = Optional.of(1)
     ]
     runner.run
     runner.results.closeAll 
