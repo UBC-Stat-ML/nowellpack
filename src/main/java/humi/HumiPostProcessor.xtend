@@ -41,7 +41,11 @@ class HumiPostProcessor extends DefaultPostProcessor {
     
     // GoF diagnostic summary
     for (stat : GofStat.values)
-      gofSummary(stat)
+      try {
+      	gofSummary(stat)
+      } catch (Exception e) {
+      	System.err.println(e)
+      }
       
     if (onlyComputeEstimates)
       return;
