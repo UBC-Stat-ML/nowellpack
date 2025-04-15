@@ -34,23 +34,20 @@ class HumiPostProcessor extends DefaultPostProcessor {
   
   override run() {
     if (!onlyComputeEstimates)
-      super.run
+      try { super.run  } catch (Exception e) { System.err.println(e) }
       
+    
     computeIntervals
-    results.flushAll
+    try { results.flushAll  } catch (Exception e) { System.err.println(e) }
     
     // GoF diagnostic summary
     for (stat : GofStat.values)
-      try {
-      	gofSummary(stat)
-      } catch (Exception e) {
-      	System.err.println(e)
-      }
+      try { gofSummary(stat) } catch (Exception e) { System.err.println(e) }
       
     if (onlyComputeEstimates)
       return;
     // intervals
-    HumiStaticUtils::plotIntervals(results, data, rCmd, false, "Bayesian hierarchical model credible intervals")
+    try { HumiStaticUtils::plotIntervals(results, data, rCmd, false, "Bayesian hierarchical model credible intervals") } catch (Exception e) { System.err.println(e) }
     // TODO: poset
   }
   
